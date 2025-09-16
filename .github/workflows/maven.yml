@@ -28,27 +28,46 @@ jobs:
       - name: Build with Maven
         run: mvn -B package --file pom.xml
 
-      - name: Create Pre-Release
-        id: create_release
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: actions/create-release@v1
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: Pre-Release ${{ github.ref }}
-          body: This is a pre-release.
-          prerelease: true
-          draft: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Get project version
+        id: get_version
+        run: echo "env.PACKAGE_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_OUTPUT
+        shell: bash
+          
+      - name: Get branch name
+        run: echo "BRANCH_NAME=${GITHUB_REF##*/}" >> $GITHUB_ENV
 
-      - name: Attach Artifact to Pre-Release
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          # Path to the ZIP file created by the assembly plugin
-          asset_path: target/${{ github.event.repository.name }}-${{ github.ref_name }}.zip
-          asset_name: ${{ github.event.repository.name }}.zip
-          asset_content_type: application/zip
+      - name: Check if release exists and is prerelease
+        id: check_release
+        run: |
+         if gh release view "_${{ env.BRANCH_NAME }}" --json isPrerelease --jq '.isPrerelease'; then
+           echo "release_exists=true" >> $GITHUB_ENV
+         else
+           echo "release_exists=false" >> $GITHUB_ENV
+         fi
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Delete Prerelease release & Tag
+        if: env.release_exists == 'true'
+        run: |
+           gh release delete _${{ env.BRANCH_NAME }} --cleanup-tag --yes
+           while git fetch --tags --prune-tags; git tag -l | grep _${{ env.BRANCH_NAME }}; do
+               sleep 2;
+               printf "still waiting...\n"
+           done
+        env:
+         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+       
+      - name: Create release
+        run: |
+         gh release create "_${{ github.ref_name }}" --target "${{ env.BRANCH_NAME }}" --prerelease --title "Nighlty Build ${{ env.BRANCH_NAME }}" --notes "Nightly build. Branch: ${{ env.BRANCH_NAME }} Commit: ${{ github.sha }} Package Version: ${{ env.PACKAGE_VERSION }}"
+         echo "release_exists=true" >> $GITHUB_ENV
+        env:
+         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+         
+      - name: Upload assets
+        if: env.release_exists == 'true'
+        run: |
+         gh release upload "_${{ env.BRANCH_NAME }}" target/*.zip
+        env:
+         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
