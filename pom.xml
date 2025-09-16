@@ -28,7 +28,7 @@
         <dependency>
             <artifactId>servoy_shared</artifactId>    
             <groupId>com.servoy</groupId>
-            <version>2025.9.0.4100_rc</version>
+            <version>2025.12.0.4120_rc</version>
         </dependency>
         <dependency>
         	<groupId>com.servoy</groupId>
