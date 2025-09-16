@@ -17,6 +17,13 @@
         <maven.compiler.target>21</maven.compiler.target>
     </properties>
 
+     <repositories>
+         <repository>
+             <id>servoy</id>
+             <url>https://developer.servoy.com/mvn_repository/</url>
+         </repository>
+    </repositories>
+
     <dependencies>
         <dependency>
             <artifactId>servoy_shared</artifactId>    
