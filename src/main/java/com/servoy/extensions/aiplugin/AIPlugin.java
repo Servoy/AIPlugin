@@ -40,7 +40,7 @@ public class AIPlugin implements IClientPlugin {
 		{
 			impl = new AIProvider(access);
 		}
-		return null;
+		return impl;
 	}
 
 	@Override
