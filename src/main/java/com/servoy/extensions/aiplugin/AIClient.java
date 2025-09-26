@@ -1,23 +1,156 @@
 package com.servoy.extensions.aiplugin;
 
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.mozilla.javascript.NativePromise;
 import org.mozilla.javascript.annotations.JSFunction;
 
+import com.servoy.j2db.plugins.IClientPluginAccess;
+import com.servoy.j2db.plugins.IFile;
+import com.servoy.j2db.scripting.Deferred;
 import com.servoy.j2db.scripting.IJavaScriptType;
 import com.servoy.j2db.scripting.IScriptable;
+import com.servoy.j2db.util.MimeTypes;
+import com.servoy.j2db.util.Pair;
+import com.servoy.j2db.util.Utils;
 
-import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.data.message.AudioContent;
+import dev.langchain4j.data.message.Content;
+import dev.langchain4j.data.message.ImageContent;
+import dev.langchain4j.data.message.PdfFileContent;
+import dev.langchain4j.data.message.TextContent;
+import dev.langchain4j.data.message.UserMessage;
+import dev.langchain4j.data.message.VideoContent;
+import dev.langchain4j.model.chat.StreamingChatModel;
+import dev.langchain4j.model.chat.request.ChatRequest;
+import dev.langchain4j.model.chat.response.ChatResponse;
+import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 
 public class AIClient implements IScriptable, IJavaScriptType {
 
-	private ChatModel model;
+	private final StreamingChatModel model;
+	private final IClientPluginAccess access;
+	private final List<Pair<Object, String>> files = new ArrayList<>();
 
-	public AIClient(ChatModel model) {
+	public AIClient(StreamingChatModel model, IClientPluginAccess access) {
 		this.model = model;
+		this.access = access;
 	}
-	
+
 	@JSFunction
-	public String chat(String message) {
-		return model.chat(message);
+	public AIClient addFile(IFile file) {
+		files.add(Pair.create(file, null));
+		return this;
+	}
+
+	@JSFunction
+	public AIClient addFile(IFile file, String contentType) {
+		files.add(Pair.create(file, contentType));
+		return this;
+	}
+
+	@JSFunction
+	public AIClient addBytes(byte[] bytes) {
+		files.add(Pair.create(bytes, null));
+		return this;
+	}
+
+	@JSFunction
+	public AIClient addBytes(byte[] bytes, String contentType) {
+		files.add(Pair.create(bytes, contentType));
+		return this;
+	}
+
+	@JSFunction
+	public NativePromise chat(String userMessage) {
+		Deferred deferred = new Deferred(access);
+		StringBuilder repsonse = new StringBuilder();
+		UserMessage msg = null;
+		;
+		if (files.size() > 0) {
+			List<Content> list = files.stream().map(pair -> createContent(pair.getLeft(), pair.getRight()))
+					.collect(Collectors.toCollection(ArrayList::new));
+			list.add(TextContent.from(userMessage));
+			msg = new UserMessage(list);
+		} else {
+			msg = new UserMessage(userMessage);
+		}
+		model.chat(ChatRequest.builder().messages(msg).build(), new StreamingChatResponseHandler() {
+
+			@Override
+			public void onPartialResponse(String partialResponse) {
+				repsonse.append(partialResponse);
+			}
+
+			@Override
+			public void onCompleteResponse(ChatResponse completeResponse) {
+				deferred.resolve(repsonse.toString());
+			}
+
+			@Override
+			public void onError(Throwable error) {
+				deferred.reject(error);
+			}
+
+		});
+		return deferred.getPromise();
+	}
+
+	private Content createContent(Object fileOrBytes, String contenttType) {
+		String ct = getContentType(fileOrBytes, contenttType);
+		if (ct == null || ct.startsWith("text/")) {
+			try {
+				if (fileOrBytes instanceof byte[] bytes)
+					return TextContent.from(new String(bytes, Charset.forName("UTF-8")));
+				return TextContent.from(Utils.getTXTFileContent(((IFile)fileOrBytes).getInputStream(), Charset.forName("UTF-8")));
+			} catch (IOException e) {
+				throw new RuntimeException("Could not read file " + fileOrBytes, e);
+			}
+		}
+		if (ct.startsWith("image/")) {
+			return ImageContent.from(Base64.getEncoder().encodeToString(getBytes(fileOrBytes)), ct);
+		}
+		if (ct.startsWith("video/")) {
+			return VideoContent.from(Base64.getEncoder().encodeToString(getBytes(fileOrBytes)), ct);
+		}
+		if (ct.startsWith("audio/")) {
+			return AudioContent.from(Base64.getEncoder().encodeToString(getBytes(fileOrBytes)), ct);
+		}
+		if (ct.startsWith("application/pdf")) {
+			return PdfFileContent.from(Base64.getEncoder().encodeToString(getBytes(fileOrBytes)), ct);
+		}
+
+		throw new IllegalArgumentException("File content type not supported: " + ct + " of the file: " + fileOrBytes);
+
+	}
+
+	private byte[] getBytes(Object fileOrBytes) {
+		if (fileOrBytes instanceof byte[] bytes)
+			return bytes;
+		if (fileOrBytes instanceof IFile file)
+			try {
+				return Utils.getBytesFromInputStream(file.getInputStream());
+			} catch (IOException e) {
+				throw new RuntimeException("Could not read file " + fileOrBytes, e);
+			}
+		return null;
+	}
+
+	private String getContentType(Object fileOrBytes, String contenttType) {
+		if (contenttType != null)
+			return contenttType;
+		if (fileOrBytes instanceof IFile file) {
+			return file.getContentType();
+		}
+		if (fileOrBytes instanceof byte[] bytes) {
+			return MimeTypes.getContentType(bytes);
+		}
+		return null;
 	}
 
 }
