@@ -25,12 +25,23 @@ public class AIProvider implements IReturnedTypesProvider, IScriptable {
 
 	@Override
 	public Class<?>[] getAllReturnedTypes() {
-		return new Class[] { AIClient.class };
+		return new Class[] { AIClient.class,GeminiBuilder.class,OpenAiBuilder.class };
+	}
+	
+	
+
+	@JSFunction
+	public GeminiBuilder createGeminiBuilder() {
+		return new GeminiBuilder(access);
 	}
 
 	@JSFunction
+	public OpenAiBuilder createOpenAiBuilder() {
+		return new OpenAiBuilder(access);
+	}
+	@JSFunction
 	public AIClient createGeminiClient(String apiKey, String modelName) {
-		GoogleAiGeminiStreamingChatModel model = GoogleAiGeminiStreamingChatModel.builder().apiKey(apiKey)
+		GoogleAiGeminiStreamingChatModel model = GoogleAiGeminiStreamingChatModel.builder().temperature(null).apiKey(apiKey)
 				.modelName(modelName).build();
 		return new AIClient(model, access);
 	}

@@ -11,6 +11,7 @@ import org.mozilla.javascript.Function;
 import org.mozilla.javascript.NativePromise;
 import org.mozilla.javascript.annotations.JSFunction;
 
+import com.servoy.j2db.documentation.ServoyDocumented;
 import com.servoy.j2db.plugins.IClientPluginAccess;
 import com.servoy.j2db.plugins.IFile;
 import com.servoy.j2db.scripting.Deferred;
@@ -33,6 +34,9 @@ import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 
+
+
+@ServoyDocumented(publicName = "ai", scriptingName = "plugins.ai")
 public class AIClient implements IScriptable, IJavaScriptType {
 
 	private final StreamingChatModel model;
