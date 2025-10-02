@@ -7,12 +7,14 @@ import java.util.Base64;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.mozilla.javascript.Function;
 import org.mozilla.javascript.NativePromise;
 import org.mozilla.javascript.annotations.JSFunction;
 
 import com.servoy.j2db.plugins.IClientPluginAccess;
 import com.servoy.j2db.plugins.IFile;
 import com.servoy.j2db.scripting.Deferred;
+import com.servoy.j2db.scripting.FunctionDefinition;
 import com.servoy.j2db.scripting.IJavaScriptType;
 import com.servoy.j2db.scripting.IScriptable;
 import com.servoy.j2db.util.MimeTypes;
@@ -70,16 +72,7 @@ public class AIClient implements IScriptable, IJavaScriptType {
 	public NativePromise chat(String userMessage) {
 		Deferred deferred = new Deferred(access);
 		StringBuilder repsonse = new StringBuilder();
-		UserMessage msg = null;
-		;
-		if (files.size() > 0) {
-			List<Content> list = files.stream().map(pair -> createContent(pair.getLeft(), pair.getRight()))
-					.collect(Collectors.toCollection(ArrayList::new));
-			list.add(TextContent.from(userMessage));
-			msg = new UserMessage(list);
-		} else {
-			msg = new UserMessage(userMessage);
-		}
+		UserMessage msg = getUserMessage(userMessage);
 		model.chat(ChatRequest.builder().messages(msg).build(), new StreamingChatResponseHandler() {
 
 			@Override
@@ -99,6 +92,58 @@ public class AIClient implements IScriptable, IJavaScriptType {
 
 		});
 		return deferred.getPromise();
+	}
+	
+	@JSFunction
+	public void chat(String userMessage, Function partialRespose, Function onComplete, Function onError) {
+		UserMessage msg = getUserMessage(userMessage);
+		
+		StringBuilder repsonse = new StringBuilder();
+		
+		FunctionDefinition fdPartialRespose = partialRespose != null ? new FunctionDefinition(partialRespose) : null;
+		FunctionDefinition fdOnComplete = onComplete != null ? new FunctionDefinition(onComplete) : null;
+		FunctionDefinition fdOnError = onError != null ? new FunctionDefinition(onError) : null;
+		model.chat(ChatRequest.builder().messages(msg).build(), new StreamingChatResponseHandler() {
+			@Override
+			public void onPartialResponse(String partialResponse) {
+				if (fdPartialRespose != null) {
+					fdPartialRespose.executeAsync(access, new Object[] { partialResponse });
+				}
+				repsonse.append(partialResponse);
+			}
+
+			@Override
+			public void onCompleteResponse(ChatResponse completeResponse) {
+				if (fdOnComplete != null) {
+					fdOnComplete.executeAsync(access, new Object[] { userMessage, repsonse.toString() } );
+				}
+			}
+
+			@Override
+			public void onError(Throwable error) {
+				if (fdOnError != null) {
+					fdOnError.executeAsync(access, new Object[] { error });
+				}
+			}
+		});
+		
+	}
+
+	/**
+	 * @param userMessage
+	 * @return
+	 */
+	public UserMessage getUserMessage(String userMessage) {
+		UserMessage msg;
+		if (files.size() > 0) {
+			List<Content> list = files.stream().map(pair -> createContent(pair.getLeft(), pair.getRight()))
+					.collect(Collectors.toCollection(ArrayList::new));
+			list.add(TextContent.from(userMessage));
+			msg = new UserMessage(list);
+		} else {
+			msg = new UserMessage(userMessage);
+		}
+		return msg;
 	}
 
 	private Content createContent(Object fileOrBytes, String contenttType) {
