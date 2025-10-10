@@ -7,6 +7,7 @@ import org.mozilla.javascript.ScriptRuntime;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.annotations.JSFunction;
 
+import com.servoy.j2db.documentation.ServoyDocumented;
 import com.servoy.j2db.plugins.ClientPluginAccessProvider;
 import com.servoy.j2db.plugins.IClientPluginAccess;
 import com.servoy.j2db.scripting.IReturnedTypesProvider;
@@ -15,6 +16,7 @@ import com.servoy.j2db.scripting.IScriptable;
 import dev.langchain4j.model.googleai.GoogleAiGeminiStreamingChatModel;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
 
+@ServoyDocumented(publicName = "ai", scriptingName = "plugins.ai")
 public class AIProvider implements IReturnedTypesProvider, IScriptable {
 
 	private IClientPluginAccess access;

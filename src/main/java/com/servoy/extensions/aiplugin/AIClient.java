@@ -1,5 +1,6 @@
 package com.servoy.extensions.aiplugin;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -36,7 +37,7 @@ import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 
 
 
-@ServoyDocumented(publicName = "ai", scriptingName = "plugins.ai")
+@ServoyDocumented(scriptingName = "AIClient")
 public class AIClient implements IScriptable, IJavaScriptType {
 
 	private final StreamingChatModel model;
@@ -48,24 +49,42 @@ public class AIClient implements IScriptable, IJavaScriptType {
 		this.access = access;
 	}
 
+	/**
+	 * @param file A JSFile or String (path to a file on the server)
+	 * @return
+	 */
 	@JSFunction
-	public AIClient addFile(IFile file) {
+	public AIClient addFile(Object file) {
 		files.add(Pair.create(file, null));
 		return this;
 	}
 
+	/**
+	 * @param file A JSFile or String (path to a file on the server)
+	 * @param contentType the content the file, must be a image/*, video/*, audio/*, application/pdf or text/ content type
+	 * @return
+	 */
 	@JSFunction
-	public AIClient addFile(IFile file, String contentType) {
+	public AIClient addFile(Object file, String contentType) {
 		files.add(Pair.create(file, contentType));
 		return this;
 	}
 
+	/**
+	 * @param bytes The bytes of that must be send. The content type will be detected automatically.
+	 * @return
+	 */
 	@JSFunction
 	public AIClient addBytes(byte[] bytes) {
 		files.add(Pair.create(bytes, null));
 		return this;
 	}
 
+	/**
+	 * @param bytes The bytes of that must be send. The content type will be detected automatically.
+	 * @param contentType the content the file, must be a image/*, video/*, audio/*, application/pdf or text/ content type
+	 * @return
+	 */
 	@JSFunction
 	public AIClient addBytes(byte[] bytes, String contentType) {
 		files.add(Pair.create(bytes, contentType));
@@ -187,12 +206,18 @@ public class AIClient implements IScriptable, IJavaScriptType {
 			} catch (IOException e) {
 				throw new RuntimeException("Could not read file " + fileOrBytes, e);
 			}
+		if (fileOrBytes instanceof String fileName) {
+			return Utils.readFile(new File(fileName), -1);
+		}
 		return null;
 	}
 
 	private String getContentType(Object fileOrBytes, String contenttType) {
 		if (contenttType != null)
 			return contenttType;
+		if (fileOrBytes instanceof String fileName) {
+			return MimeTypes.getContentType(Utils.readFile(new File(fileName), 32), fileName);
+		}
 		if (fileOrBytes instanceof IFile file) {
 			return file.getContentType();
 		}
