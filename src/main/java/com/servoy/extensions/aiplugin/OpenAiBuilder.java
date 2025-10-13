@@ -5,17 +5,22 @@ import org.mozilla.javascript.annotations.JSFunction;
 import com.servoy.j2db.documentation.ServoyDocumented;
 import com.servoy.j2db.plugins.IClientPluginAccess;
 
+import dev.langchain4j.memory.chat.TokenWindowChatMemory;
 import dev.langchain4j.model.googleai.GoogleAiGeminiStreamingChatModel;
+import dev.langchain4j.model.googleai.GoogleAiGeminiTokenCountEstimator;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
+import dev.langchain4j.model.openai.OpenAiTokenCountEstimator;
+import dev.langchain4j.service.AiServices;
 
-@ServoyDocumented(publicName = "GeminiBuilder", scriptingName = "GeminiBuilder")
+@ServoyDocumented(publicName = "OpenAIBuilder", scriptingName = "OpenAIBuilder")
 public class OpenAiBuilder {
 	
 	private String apiKey;
-	private String modelName = "gemini-2.5-flash";
+	private String modelName = "gpt-5";
 	private Double temperature;
 
 	private IClientPluginAccess access;
+	private Integer tokens;
 	
 	OpenAiBuilder(IClientPluginAccess access) {
 		this.access = access;
@@ -38,10 +43,25 @@ public class OpenAiBuilder {
 		this.temperature = temperature;
 		return this;
 	}
+	
+	@JSFunction
+	public OpenAiBuilder maxMemoryTokens(Integer tokens) {
+		this.tokens = tokens;
+		return this;
+	}
 
 	@JSFunction
 	public AIClient build() {
 		OpenAiStreamingChatModel model = OpenAiStreamingChatModel.builder().apiKey(apiKey).modelName(modelName).temperature(temperature).build();
-		return new AIClient(model, access);
+		AiServices<Assistant> builder = AiServices.builder(Assistant.class);
+		builder.streamingChatModel(model);
+		if (tokens != null) {
+			
+			OpenAiTokenCountEstimator tokenCountEstimator = new OpenAiTokenCountEstimator(modelName);
+			TokenWindowChatMemory tokenWindowChatMemory = TokenWindowChatMemory.builder().maxTokens(tokens, tokenCountEstimator).build();
+			builder.chatMemory(tokenWindowChatMemory);
+		}
+		Assistant assistant = builder.build();
+		return new AIClient(assistant, access);
 	}
 }

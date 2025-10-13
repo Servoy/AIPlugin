@@ -30,22 +30,18 @@ import dev.langchain4j.data.message.PdfFileContent;
 import dev.langchain4j.data.message.TextContent;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.data.message.VideoContent;
-import dev.langchain4j.model.chat.StreamingChatModel;
-import dev.langchain4j.model.chat.request.ChatRequest;
-import dev.langchain4j.model.chat.response.ChatResponse;
-import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 
 
 
 @ServoyDocumented(scriptingName = "AIClient")
 public class AIClient implements IScriptable, IJavaScriptType {
 
-	private final StreamingChatModel model;
+	private final Assistant assistant;
 	private final IClientPluginAccess access;
 	private final List<Pair<Object, String>> files = new ArrayList<>();
 
-	public AIClient(StreamingChatModel model, IClientPluginAccess access) {
-		this.model = model;
+	public AIClient(Assistant assistant, IClientPluginAccess access) {
+		this.assistant = assistant;
 		this.access = access;
 	}
 
@@ -96,24 +92,10 @@ public class AIClient implements IScriptable, IJavaScriptType {
 		Deferred deferred = new Deferred(access);
 		StringBuilder repsonse = new StringBuilder();
 		UserMessage msg = getUserMessage(userMessage);
-		model.chat(ChatRequest.builder().messages(msg).build(), new StreamingChatResponseHandler() {
-
-			@Override
-			public void onPartialResponse(String partialResponse) {
-				repsonse.append(partialResponse);
-			}
-
-			@Override
-			public void onCompleteResponse(ChatResponse completeResponse) {
-				deferred.resolve(repsonse.toString());
-			}
-
-			@Override
-			public void onError(Throwable error) {
-				deferred.reject(error);
-			}
-
-		});
+		assistant.chat(msg)
+			.onPartialResponse(partialResponse -> repsonse.append(partialResponse))
+			.onCompleteResponse(completeResponse -> deferred.resolve(repsonse.toString()))
+			.onError(error -> deferred.reject(error)).start(); 
 		return deferred.getPromise();
 	}
 	
@@ -126,30 +108,23 @@ public class AIClient implements IScriptable, IJavaScriptType {
 		FunctionDefinition fdPartialRespose = partialRespose != null ? new FunctionDefinition(partialRespose) : null;
 		FunctionDefinition fdOnComplete = onComplete != null ? new FunctionDefinition(onComplete) : null;
 		FunctionDefinition fdOnError = onError != null ? new FunctionDefinition(onError) : null;
-		model.chat(ChatRequest.builder().messages(msg).build(), new StreamingChatResponseHandler() {
-			@Override
-			public void onPartialResponse(String partialResponse) {
+		assistant.chat(msg)
+			.onPartialResponse(partialResponse -> {
 				if (fdPartialRespose != null) {
 					fdPartialRespose.executeAsync(access, new Object[] { partialResponse });
 				}
 				repsonse.append(partialResponse);
-			}
-
-			@Override
-			public void onCompleteResponse(ChatResponse completeResponse) {
+			})
+			.onCompleteResponse(completeResponse -> {
 				if (fdOnComplete != null) {
 					fdOnComplete.executeAsync(access, new Object[] { userMessage, repsonse.toString() } );
 				}
-			}
-
-			@Override
-			public void onError(Throwable error) {
+			})
+			.onError(error -> {
 				if (fdOnError != null) {
 					fdOnError.executeAsync(access, new Object[] { error });
 				}
-			}
-		});
-		
+			}).start(); 
 	}
 
 	/**

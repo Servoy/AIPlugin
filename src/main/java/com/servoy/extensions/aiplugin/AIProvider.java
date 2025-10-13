@@ -15,6 +15,7 @@ import com.servoy.j2db.scripting.IScriptable;
 
 import dev.langchain4j.model.googleai.GoogleAiGeminiStreamingChatModel;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
+import dev.langchain4j.service.AiServices;
 
 @ServoyDocumented(publicName = "ai", scriptingName = "plugins.ai")
 public class AIProvider implements IReturnedTypesProvider, IScriptable {
@@ -45,13 +46,17 @@ public class AIProvider implements IReturnedTypesProvider, IScriptable {
 	public AIClient createGeminiClient(String apiKey, String modelName) {
 		GoogleAiGeminiStreamingChatModel model = GoogleAiGeminiStreamingChatModel.builder().temperature(null).apiKey(apiKey)
 				.modelName(modelName).build();
-		return new AIClient(model, access);
+		AiServices<Assistant> builder = AiServices.builder(Assistant.class);
+		builder.streamingChatModel(model);
+		return new AIClient(builder.build(), access);
 	}
 
 	@JSFunction
 	public AIClient createOpenAIClient(String apiKey, String modelName) {
 		OpenAiStreamingChatModel model = OpenAiStreamingChatModel.builder().apiKey(apiKey).modelName(modelName).build();
-		return new AIClient(model, access);
+		AiServices<Assistant> builder = AiServices.builder(Assistant.class);
+		builder.streamingChatModel(model);
+		return new AIClient(builder.build(), access);
 	}
 
 	public static void main(String[] args) {
