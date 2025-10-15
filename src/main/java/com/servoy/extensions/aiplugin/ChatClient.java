@@ -33,14 +33,14 @@ import dev.langchain4j.data.message.VideoContent;
 
 
 
-@ServoyDocumented(scriptingName = "AIClient")
-public class AIClient implements IScriptable, IJavaScriptType {
+@ServoyDocumented(scriptingName = "ChatClient")
+public class ChatClient implements IScriptable, IJavaScriptType {
 
 	private final Assistant assistant;
 	private final IClientPluginAccess access;
 	private final List<Pair<Object, String>> files = new ArrayList<>();
 
-	public AIClient(Assistant assistant, IClientPluginAccess access) {
+	public ChatClient(Assistant assistant, IClientPluginAccess access) {
 		this.assistant = assistant;
 		this.access = access;
 	}
@@ -50,7 +50,7 @@ public class AIClient implements IScriptable, IJavaScriptType {
 	 * @return
 	 */
 	@JSFunction
-	public AIClient addFile(Object file) {
+	public ChatClient addFile(Object file) {
 		files.add(Pair.create(file, null));
 		return this;
 	}
@@ -61,7 +61,7 @@ public class AIClient implements IScriptable, IJavaScriptType {
 	 * @return
 	 */
 	@JSFunction
-	public AIClient addFile(Object file, String contentType) {
+	public ChatClient addFile(Object file, String contentType) {
 		files.add(Pair.create(file, contentType));
 		return this;
 	}
@@ -71,7 +71,7 @@ public class AIClient implements IScriptable, IJavaScriptType {
 	 * @return
 	 */
 	@JSFunction
-	public AIClient addBytes(byte[] bytes) {
+	public ChatClient addBytes(byte[] bytes) {
 		files.add(Pair.create(bytes, null));
 		return this;
 	}
@@ -82,7 +82,7 @@ public class AIClient implements IScriptable, IJavaScriptType {
 	 * @return
 	 */
 	@JSFunction
-	public AIClient addBytes(byte[] bytes, String contentType) {
+	public ChatClient addBytes(byte[] bytes, String contentType) {
 		files.add(Pair.create(bytes, contentType));
 		return this;
 	}

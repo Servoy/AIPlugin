@@ -28,42 +28,52 @@ public class AIProvider implements IReturnedTypesProvider, IScriptable {
 
 	@Override
 	public Class<?>[] getAllReturnedTypes() {
-		return new Class[] { AIClient.class,GeminiBuilder.class,OpenAiBuilder.class };
+		return new Class[] { ChatClient.class,GeminiChatBuilder.class,OpenAiChatBuilder.class, EmbeddingClient.class,
+				GeminiEmbeddingBuilder.class, OpenAiEmbeddingBuilder.class, EmbeddingStore.class };
 	}
 	
-	
-
 	@JSFunction
-	public GeminiBuilder createGeminiBuilder() {
-		return new GeminiBuilder(access);
+	public GeminiEmbeddingBuilder createGeminiEmbeddedBuilder() {
+		return new GeminiEmbeddingBuilder(access);
 	}
 
 	@JSFunction
-	public OpenAiBuilder createOpenAiBuilder() {
-		return new OpenAiBuilder(access);
+	public OpenAiEmbeddingBuilder createOpenAiEmbeddedBuilder() {
+		return new OpenAiEmbeddingBuilder(access);
 	}
+
 	@JSFunction
-	public AIClient createGeminiClient(String apiKey, String modelName) {
+	public GeminiChatBuilder createGeminiChatBuilder() {
+		return new GeminiChatBuilder(access);
+	}
+
+	@JSFunction
+	public OpenAiChatBuilder createOpenAiChatBuilder() {
+		return new OpenAiChatBuilder(access);
+	}
+
+	@JSFunction
+	public ChatClient createGeminiClient(String apiKey, String modelName) {
 		GoogleAiGeminiStreamingChatModel model = GoogleAiGeminiStreamingChatModel.builder().temperature(null).apiKey(apiKey)
 				.modelName(modelName).build();
 		AiServices<Assistant> builder = AiServices.builder(Assistant.class);
 		builder.streamingChatModel(model);
-		return new AIClient(builder.build(), access);
+		return new ChatClient(builder.build(), access);
 	}
 
 	@JSFunction
-	public AIClient createOpenAIClient(String apiKey, String modelName) {
+	public ChatClient createOpenAIClient(String apiKey, String modelName) {
 		OpenAiStreamingChatModel model = OpenAiStreamingChatModel.builder().apiKey(apiKey).modelName(modelName).build();
 		AiServices<Assistant> builder = AiServices.builder(Assistant.class);
 		builder.streamingChatModel(model);
-		return new AIClient(builder.build(), access);
+		return new ChatClient(builder.build(), access);
 	}
 
 	public static void main(String[] args) {
 		try (Context enter = Context.enter()) {
 			enter.initStandardObjects();
 			AIProvider p = new AIProvider(new ClientPluginAccessProvider(new TestApplication()));
-			AIClient geminiClient = p.createGeminiClient(args[0], "gemini-2.5-flash");
+			ChatClient geminiClient = p.createGeminiClient(args[0], "gemini-2.5-flash");
 			NativePromise chat = geminiClient.chat("Wat is het verschil tussen een man en een vrouw?");
 			chat.put("then", chat, new BaseFunction() {
 				@Override
@@ -74,7 +84,7 @@ public class AIProvider implements IReturnedTypesProvider, IScriptable {
 			});
 
 			System.err.println("-------------------");
-			AIClient openAIClient = p.createOpenAIClient(args[1], "gpt-5");
+			ChatClient openAIClient = p.createOpenAIClient(args[1], "gpt-5");
 			chat = openAIClient.chat("Wat is het verschil tussen een man en een vrouw?");
 			chat.put("then", chat, new BaseFunction() {
 				@Override

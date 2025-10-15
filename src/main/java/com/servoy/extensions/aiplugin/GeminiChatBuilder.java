@@ -8,60 +8,60 @@ import com.servoy.j2db.plugins.IClientPluginAccess;
 import dev.langchain4j.memory.chat.TokenWindowChatMemory;
 import dev.langchain4j.model.googleai.GoogleAiGeminiStreamingChatModel;
 import dev.langchain4j.model.googleai.GoogleAiGeminiTokenCountEstimator;
-import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
-import dev.langchain4j.model.openai.OpenAiTokenCountEstimator;
 import dev.langchain4j.service.AiServices;
 
-@ServoyDocumented(publicName = "OpenAIBuilder", scriptingName = "OpenAIBuilder")
-public class OpenAiBuilder {
+@ServoyDocumented(publicName = "GeminiChatBuilder", scriptingName = "GeminiChatBuilder")
+public class GeminiChatBuilder {
 	
 	private String apiKey;
-	private String modelName = "gpt-5";
+	private String modelName = "gemini-2.5-flash";
 	private Double temperature;
-
-	private IClientPluginAccess access;
 	private Integer tokens;
+
+	private final IClientPluginAccess access;
 	
-	OpenAiBuilder(IClientPluginAccess access) {
+	GeminiChatBuilder(IClientPluginAccess access) {
 		this.access = access;
 	}
 	
 	@JSFunction
-	public OpenAiBuilder apiKey(String key) {
+	public GeminiChatBuilder apiKey(String key) {
 		this.apiKey = key;
 		return this;
 	}
 	
 	@JSFunction
-	public OpenAiBuilder modelName(String modelName) {
+	public GeminiChatBuilder modelName(String modelName) {
 		this.modelName = modelName;
 		return this;
 	}
 	
 	@JSFunction
-	public OpenAiBuilder temperature(Double temperature) {
+	public GeminiChatBuilder temperature(Double temperature) {
 		this.temperature = temperature;
 		return this;
 	}
-	
+
 	@JSFunction
-	public OpenAiBuilder maxMemoryTokens(Integer tokens) {
+	public GeminiChatBuilder maxMemoryTokens(Integer tokens) {
 		this.tokens = tokens;
 		return this;
 	}
 
 	@JSFunction
-	public AIClient build() {
-		OpenAiStreamingChatModel model = OpenAiStreamingChatModel.builder().apiKey(apiKey).modelName(modelName).temperature(temperature).build();
+	public ChatClient build() {
+		GoogleAiGeminiStreamingChatModel model = GoogleAiGeminiStreamingChatModel.builder().temperature(temperature).apiKey(apiKey)
+				.modelName(modelName).build();
+		
 		AiServices<Assistant> builder = AiServices.builder(Assistant.class);
 		builder.streamingChatModel(model);
 		if (tokens != null) {
 			
-			OpenAiTokenCountEstimator tokenCountEstimator = new OpenAiTokenCountEstimator(modelName);
+			GoogleAiGeminiTokenCountEstimator tokenCountEstimator = GoogleAiGeminiTokenCountEstimator.builder().apiKey(apiKey).modelName(modelName).build();
 			TokenWindowChatMemory tokenWindowChatMemory = TokenWindowChatMemory.builder().maxTokens(tokens, tokenCountEstimator).build();
 			builder.chatMemory(tokenWindowChatMemory);
 		}
 		Assistant assistant = builder.build();
-		return new AIClient(assistant, access);
+		return new ChatClient(assistant, access);
 	}
 }
