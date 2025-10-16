@@ -55,6 +55,11 @@
             <artifactId>langchain4j-open-ai</artifactId>
             <version>1.7.1</version>
         </dependency>
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-pgvector</artifactId>
+            <version>1.7.1-beta14</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -101,7 +106,8 @@
                         commons-io,
                         org.apache.logging.log4j,
                         com.google.guava,
-                        org.apache.aries.spifly
+                        org.apache.aries.spifly,
+                        org.postgresql
                       </excludeGroupIds>
                     </configuration>
                   </execution>

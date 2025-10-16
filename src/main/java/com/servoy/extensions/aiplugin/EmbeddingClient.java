@@ -6,18 +6,23 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
+import javax.sql.DataSource;
+
 import org.mozilla.javascript.NativePromise;
 import org.mozilla.javascript.annotations.JSFunction;
 
 import com.servoy.j2db.documentation.ServoyDocumented;
+import com.servoy.j2db.persistence.IServerInternal;
 import com.servoy.j2db.plugins.IClientPluginAccess;
 import com.servoy.j2db.scripting.Deferred;
+import com.servoy.j2db.server.shared.ApplicationServerRegistry;
 
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.DimensionAwareEmbeddingModel;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
+import dev.langchain4j.store.embedding.pgvector.PgVectorEmbeddingStore;
 
 @ServoyDocumented(scriptingName = "EmbeddingClient")
 public class EmbeddingClient {
@@ -56,9 +61,22 @@ public class EmbeddingClient {
 	}
 	
 	@JSFunction
-	public EmbeddingStore createStore() {
+	public EmbeddingStore createInMemoryStore() {
 		InMemoryEmbeddingStore<TextSegment> embeddingStore = new InMemoryEmbeddingStore<>();
 		return new EmbeddingStore(embeddingStore, model, access);
+	}
+	
+	@JSFunction
+	public EmbeddingStore createPgVectorStore(String serverName, String tableName) {
+		try {
+			DataSource dataSource = ((IServerInternal)ApplicationServerRegistry.get().getServerManager().getServer(serverName)).getDataSource();
+			PgVectorEmbeddingStore embeddingStore = PgVectorEmbeddingStore.datasourceBuilder().datasource(dataSource).table(tableName).dimension(model.dimension()).createTable(true).build();
+			return new EmbeddingStore(embeddingStore, model, access);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
 	}
 
 }

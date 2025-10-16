@@ -20,18 +20,17 @@ import dev.langchain4j.model.embedding.DimensionAwareEmbeddingModel;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.store.embedding.EmbeddingMatch;
 import dev.langchain4j.store.embedding.EmbeddingSearchRequest;
-import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
 
 @ServoyDocumented(scriptingName = "EmbeddingStore")
 public class EmbeddingStore implements IScriptable, IJavaScriptType{
 
-	private final InMemoryEmbeddingStore<TextSegment> embeddingStore;
+	private final dev.langchain4j.store.embedding.EmbeddingStore<TextSegment> embeddingStore;
 	private final DimensionAwareEmbeddingModel model;
 	private final IClientPluginAccess access;
 	
 	private final AtomicInteger processing = new AtomicInteger(0);
 
-	public EmbeddingStore(InMemoryEmbeddingStore<TextSegment> embeddingStore, DimensionAwareEmbeddingModel model,
+	public EmbeddingStore(dev.langchain4j.store.embedding.EmbeddingStore<TextSegment> embeddingStore, DimensionAwareEmbeddingModel model,
 			IClientPluginAccess access) {
 				this.embeddingStore = embeddingStore;
 				this.model = model;
