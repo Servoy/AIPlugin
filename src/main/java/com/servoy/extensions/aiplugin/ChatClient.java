@@ -32,7 +32,10 @@ import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.data.message.VideoContent;
 
 
-
+/**
+ * This is the ChatClient class that wraps around a LLM to chat with it.
+ * It has support for adding files (images, videos, audio, pdf, text) to the chat.
+ */
 @ServoyDocumented(scriptingName = "ChatClient")
 public class ChatClient implements IScriptable, IJavaScriptType {
 
@@ -46,8 +49,12 @@ public class ChatClient implements IScriptable, IJavaScriptType {
 	}
 
 	/**
+	 * Add a file (String or JSFile) to the chat message.
+	 * The file must be a image/*, video/*, audio/*, application/pdf or text/ content type
+	 * This will be guessed based on the file extension or content.
+	 * 
 	 * @param file A JSFile or String (path to a file on the server)
-	 * @return
+	 * @return The this
 	 */
 	@JSFunction
 	public ChatClient addFile(Object file) {
@@ -56,9 +63,12 @@ public class ChatClient implements IScriptable, IJavaScriptType {
 	}
 
 	/**
+	 * Add a file (String or JSFile) to the chat message.
+	 * The file must be a image/*, video/*, audio/*, application/pdf or text/ content type
+	 * 
 	 * @param file A JSFile or String (path to a file on the server)
 	 * @param contentType the content the file, must be a image/*, video/*, audio/*, application/pdf or text/ content type
-	 * @return
+	 * @return The this
 	 */
 	@JSFunction
 	public ChatClient addFile(Object file, String contentType) {
@@ -67,8 +77,11 @@ public class ChatClient implements IScriptable, IJavaScriptType {
 	}
 
 	/**
+	 * Adds a file by bytes to the chat message.
+	 * The bytes must be a image/*, video/*, audio/*, application/pdf or text/ content type
+	 * 
 	 * @param bytes The bytes of that must be send. The content type will be detected automatically.
-	 * @return
+	 * @return The this
 	 */
 	@JSFunction
 	public ChatClient addBytes(byte[] bytes) {
@@ -77,9 +90,12 @@ public class ChatClient implements IScriptable, IJavaScriptType {
 	}
 
 	/**
+	 * Adds a file by bytes to the chat message.
+	 * The bytes must be a image/*, video/*, audio/*, application/pdf or text/ content type
+	 *
 	 * @param bytes The bytes of that must be send. The content type will be detected automatically.
 	 * @param contentType the content the file, must be a image/*, video/*, audio/*, application/pdf or text/ content type
-	 * @return
+	 * @return The this
 	 */
 	@JSFunction
 	public ChatClient addBytes(byte[] bytes, String contentType) {
@@ -87,6 +103,13 @@ public class ChatClient implements IScriptable, IJavaScriptType {
 		return this;
 	}
 
+	/**
+	 * Send a userMessage to the ai. This will return a promise that will be resolved with the response.
+	 * This respose is the full string or it will be rejected with an error.
+	 * 
+	 * @param userMessage The user message
+	 * @return A promise that will be resolved with the assistant response.
+	 */
 	@JSFunction
 	public NativePromise chat(String userMessage) {
 		Deferred deferred = new Deferred(access);
@@ -99,6 +122,15 @@ public class ChatClient implements IScriptable, IJavaScriptType {
 		return deferred.getPromise();
 	}
 	
+	/**
+	 * Send a userMessage to the ai. This will call the provided functions on partial response, complete response and error.
+	 * So this can be used for streaming responses.
+	 * 
+	 * @param userMessage The user message send to the ai.
+	 * @param partialRespose A function that will be called with each partial response from the ai.
+	 * @param onComplete A function that will be called when the response is complete with the full response.
+	 * @param onError A function that will be called when an error occurs.
+	 */
 	@JSFunction
 	public void chat(String userMessage, Function partialRespose, Function onComplete, Function onError) {
 		UserMessage msg = getUserMessage(userMessage);

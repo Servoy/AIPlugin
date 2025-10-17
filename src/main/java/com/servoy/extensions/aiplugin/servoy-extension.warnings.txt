@@ -1,0 +1,4 @@
+2 warnings
+
+EmptyTag - dev.langchain4j.data.message.UserMessage com.servoy.extensions.aiplugin.ChatClient.getUserMessage(String userMessage): @return is empty.
+ParamTagWithoutContent - dev.langchain4j.data.message.UserMessage com.servoy.extensions.aiplugin.ChatClient.getUserMessage(String userMessage): @param tag without text: 'userMessage'.

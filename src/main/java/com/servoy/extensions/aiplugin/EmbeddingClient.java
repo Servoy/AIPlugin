@@ -24,19 +24,42 @@ import dev.langchain4j.model.output.Response;
 import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
 import dev.langchain4j.store.embedding.pgvector.PgVectorEmbeddingStore;
 
+/**
+ * EmbeddingClient provides methods to generate embeddings for text and manage embedding stores.
+ * It supports in-memory and PostgreSQL (pgvector) embedding stores.
+ */
 @ServoyDocumented(scriptingName = "EmbeddingClient")
 public class EmbeddingClient {
 	// TODO should i shutdown this somewhere?
+	/**
+	 * Executor for running embedding operations asynchronously using virtual threads.
+	 */
 	static ExecutorService virtualThreadExecutor = Executors.newVirtualThreadPerTaskExecutor();
 	
+	/**
+	 * The embedding model used for generating embeddings.
+	 */
 	private final DimensionAwareEmbeddingModel model;
+	/**
+	 * The client plugin access instance for Servoy scripting context.
+	 */
 	private final IClientPluginAccess access;
 
+	/**
+	 * Constructs an EmbeddingClient with the given embedding model and plugin access.
+	 * @param model The embedding model to use.
+	 * @param access The client plugin access instance.
+	 */
 	public EmbeddingClient(DimensionAwareEmbeddingModel model, IClientPluginAccess access) {
 		this.model = model;
 		this.access = access;
 	}
 
+	/**
+	 * Generates embeddings for an array of text strings asynchronously.
+	 * @param texts The array of text strings to embed.
+	 * @return A NativePromise resolving to a 2D float array of embeddings, or null if input is empty.
+	 */
 	@JSFunction
 	public NativePromise embed(String[] texts) {
 		Deferred deferred = new Deferred(access);
@@ -60,12 +83,22 @@ public class EmbeddingClient {
 		return deferred.getPromise();
 	}
 	
+	/**
+	 * Creates an in-memory embedding store for storing and retrieving embeddings.
+	 * @return An EmbeddingStore backed by an in-memory store.
+	 */
 	@JSFunction
 	public EmbeddingStore createInMemoryStore() {
 		InMemoryEmbeddingStore<TextSegment> embeddingStore = new InMemoryEmbeddingStore<>();
 		return new EmbeddingStore(embeddingStore, model, access);
 	}
 	
+	/**
+	 * Creates a PostgreSQL (pgvector) embedding store using the specified server and table.
+	 * @param serverName The name of the Servoy database server.
+	 * @param tableName The name of the table to use for storing embeddings.
+	 * @return An EmbeddingStore backed by a pgvector store, or null if creation fails.
+	 */
 	@JSFunction
 	public EmbeddingStore createPgVectorStore(String serverName, String tableName) {
 		try {
