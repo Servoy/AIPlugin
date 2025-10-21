@@ -60,6 +60,16 @@
             <artifactId>langchain4j-pgvector</artifactId>
             <version>1.7.1-beta14</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.pdfbox</groupId>
+            <artifactId>pdfbox</artifactId>
+            <version>3.0.5</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.pdfbox</groupId>
+            <artifactId>pdfbox-io</artifactId>
+            <version>3.0.5</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -121,7 +131,8 @@
                         org.apache.logging.log4j,
                         com.google.guava,
                         org.apache.aries.spifly,
-                        org.postgresql
+                        org.postgresql,
+                        commons-logging
                       </excludeGroupIds>
                     </configuration>
                   </execution>
