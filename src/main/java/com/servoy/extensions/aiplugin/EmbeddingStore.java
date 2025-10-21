@@ -8,12 +8,15 @@ import java.util.stream.Collectors;
 
 import org.mozilla.javascript.annotations.JSFunction;
 
+import com.servoy.extensions.aiplugin.pdf.ApachePdfBoxDocumentParser;
 import com.servoy.j2db.documentation.ServoyDocumented;
 import com.servoy.j2db.plugins.IClientPluginAccess;
 import com.servoy.j2db.scripting.IJavaScriptType;
 import com.servoy.j2db.scripting.IScriptable;
 
+import dev.langchain4j.data.document.Document;
 import dev.langchain4j.data.document.Metadata;
+import dev.langchain4j.data.document.splitter.DocumentByParagraphSplitter;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.DimensionAwareEmbeddingModel;
@@ -103,6 +106,57 @@ public class EmbeddingStore implements IScriptable, IJavaScriptType{
 				}
 			});
 		}
+	}
+
+	/**
+	 * Embeds a PDF document by splitting it into paragraphs of specified size and overlap
+	 * The text segments are stored in the embedding store and will get metadata from the pdf and if possible also the name of the PDF is set if that is known.
+	 * 
+	 * @param pdfSource This can be JSFile or String represeting a file path, or byte[] representing the PDF content.
+	 * @param maxSegmentSizeInChars How many characters per segment we can have.
+	 * @param maxOverlapSizeInChars	How many characters of overlap between segments.
+	 */
+	@JSFunction
+	public void embed(Object pdfSource,int maxSegmentSizeInChars,int maxOverlapSizeInChars) {
+		embed(pdfSource, maxSegmentSizeInChars, maxOverlapSizeInChars, null);
+	}
+	/**
+	 * Embeds a PDF document by splitting it into paragraphs of specified size and overlap, with metadata.
+	 * The text segments are stored in the embedding store and will get metadata from the pdf and if possible also the name of the PDF is set if that is known.
+	 * Also additional metadata can be provided that will be attached to each segment.
+	 * 
+	 * @param pdfSource This can be JSFile or String represeting a file path, or byte[] representing the PDF content.
+	 * @param maxSegmentSizeInChars How many characters per segment we can have.
+	 * @param maxOverlapSizeInChars	How many characters of overlap between segments.
+	 * @param metaData Metadata to attach to each segment.
+	 */
+	@JSFunction
+	public void embed(Object pdfSource,int maxSegmentSizeInChars,int maxOverlapSizeInChars, Map<String, Object> metaData) {
+		processing.incrementAndGet();
+		EmbeddingClient.virtualThreadExecutor.submit(() -> {
+			try {
+				ApachePdfBoxDocumentParser parser = new ApachePdfBoxDocumentParser(true);
+				Document document = parser.parse(pdfSource);
+				if (metaData != null) {
+					document.metadata().putAll(metaData);
+				}
+				
+				DocumentByParagraphSplitter splitter = new DocumentByParagraphSplitter(maxSegmentSizeInChars, maxOverlapSizeInChars);
+				List<TextSegment> segments = splitter.split(document);
+				Response<List<Embedding>> embeddings = model.embedAll(segments);
+				List<Embedding> content = embeddings.content();
+				embeddingStore.addAll(content, segments);
+				
+			} catch (Exception ex) {
+				ex.printStackTrace();
+			}
+			finally {
+				processing.decrementAndGet();
+				synchronized (processing) {
+					processing.notifyAll();
+				}
+			}
+		});
 	}
 	
 	/**

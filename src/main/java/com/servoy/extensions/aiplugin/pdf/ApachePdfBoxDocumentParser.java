@@ -41,19 +41,26 @@ public class ApachePdfBoxDocumentParser implements DocumentParser {
 			return parse(new java.io.ByteArrayInputStream(bytes));
 		} else if (source instanceof String filename) {
 			try (FileInputStream fis = new FileInputStream(filename)) {
-				return parse(fis);
+				Document document = parse(fis);
+				document.metadata().put("filename", filename);
+				return document;
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
 		} else if (source instanceof File file) {
 			try (FileInputStream fis = new FileInputStream(file)) {
-				return parse(fis);
+				Document document = parse(fis);
+				document.metadata().put("filename", file.getName());
+				return document;
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
 		} else if (source instanceof IFile file) {
 			try (InputStream is = file.getInputStream()) {
-				return parse(is);
+				Document document = parse(is);
+				if(file.getFile() != null )document.metadata().put("filename", file.getFile().getName());
+//				document.metadata().put("filename", file.getName());
+				return document;
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}

@@ -54,11 +54,21 @@ public class EmbeddingClient {
 		this.model = model;
 		this.access = access;
 	}
+	/**
+	 * Gets the dimension of the embeddings produced by the model.
+	 * This can be used when createing a vector column in a database, to use as the "size" of the vector.
+	 * 
+	 * @return The embeddings model dimension.
+	 */
+	@JSFunction
+	public int getDimension() {
+		return model.dimension();
+	}
 
 	/**
 	 * Generates embeddings for an array of text strings asynchronously.
 	 * @param texts The array of text strings to embed.
-	 * @return A NativePromise resolving to a 2D float array of embeddings, or null if input is empty.
+	 * @return A Promise resolving to a float array of embeddings, or null if input is empty.
 	 */
 	@JSFunction
 	public NativePromise embed(String[] texts) {
@@ -95,15 +105,38 @@ public class EmbeddingClient {
 	
 	/**
 	 * Creates a PostgreSQL (pgvector) embedding store using the specified server and table.
+	 * This will drop an existing table if it exists.
+	 * 
 	 * @param serverName The name of the Servoy database server.
 	 * @param tableName The name of the table to use for storing embeddings.
 	 * @return An EmbeddingStore backed by a pgvector store, or null if creation fails.
 	 */
 	@JSFunction
 	public EmbeddingStore createPgVectorStore(String serverName, String tableName) {
+		return openOrCreate(serverName, tableName, true);
+	}
+	
+	/**
+	 * Opens a PostgreSQL (pgvector) embedding store using the specified server and table.
+	 * This will not drop an existing table.
+	 * 
+	 * @param serverName The name of the Servoy database server.
+	 * @param tableName The name of the table to use for storing embeddings.
+	 * @return An EmbeddingStore backed by a pgvector store, or null if creation fails.
+	 */
+	@JSFunction
+	public EmbeddingStore openPgVectorStore(String serverName, String tableName) {
+		return openOrCreate(serverName, tableName, false);
+	}
+
+	/**
+	 * @param serverName
+	 * @param tableName
+	 */
+	private EmbeddingStore openOrCreate(String serverName, String tableName, boolean dropTableFirst) {
 		try {
 			DataSource dataSource = ((IServerInternal)ApplicationServerRegistry.get().getServerManager().getServer(serverName)).getDataSource();
-			PgVectorEmbeddingStore embeddingStore = PgVectorEmbeddingStore.datasourceBuilder().datasource(dataSource).table(tableName).dimension(model.dimension()).createTable(true).build();
+			PgVectorEmbeddingStore embeddingStore = PgVectorEmbeddingStore.datasourceBuilder().datasource(dataSource).dropTableFirst(dropTableFirst).table(tableName).dimension(model.dimension()).createTable(true).build();
 			return new EmbeddingStore(embeddingStore, model, access);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
