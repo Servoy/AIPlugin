@@ -6,6 +6,12 @@ on:
       - 'master'
     tags:
       - 'v*.*.*-pre*'
+  workflow_dispatch:
+    inputs:
+      cache_buster:
+        description: 'Set to any new value (e.g., 1) to force a cache refresh.'
+        required: false
+        default: '0'
 
 jobs:
   build_and_publish:
