@@ -6,12 +6,6 @@ on:
       - 'master'
     tags:
       - 'v*.*.*-pre*'
-  workflow_dispatch:
-    inputs:
-      cache_buster:
-        description: 'Set to any new value (e.g., 1) to force a cache refresh.'
-        required: false
-        default: '0'
 
 jobs:
   build_and_publish:
@@ -32,7 +26,7 @@ jobs:
           cache: 'maven'
           cache-dependency-path:  | 
                         **/pom.xml
-                        ${{ github.event.inputs.cache_buster }}
+                        **/flush.txt
 
       - name: Build with Maven
         run: mvn -U -B package --file pom.xml
