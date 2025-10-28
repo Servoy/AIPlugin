@@ -31,7 +31,8 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
           cache-dependency-path:  | 
-                        **/pom.xml,${{ github.event.inputs.cache_buster }}
+                        **/pom.xml
+                        ${{ github.event.inputs.cache_buster }}
 
       - name: Build with Maven
         run: mvn -U -B package --file pom.xml
