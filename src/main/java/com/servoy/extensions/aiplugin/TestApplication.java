@@ -46,8 +46,6 @@ import com.servoy.j2db.util.RendererParentWrapper;
 public final class TestApplication implements IApplication {
 	@Override
 	public void setI18NMessage(String i18nKey, String value) {
-		// TODO Auto-generated method stub
-
 	}
 
 	@Override

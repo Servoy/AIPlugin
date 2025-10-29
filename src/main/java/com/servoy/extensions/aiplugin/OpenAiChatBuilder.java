@@ -16,19 +16,12 @@ import dev.langchain4j.service.AiServices;
  * Allows setting API key, model name, temperature, and memory token limits for the OpenAI model.
  */
 @ServoyDocumented(publicName = "OpenAiChatBuilder", scriptingName = "OpenAiChatBuilder")
-public class OpenAiChatBuilder {
-	/**
-	 * The client plugin access instance for Servoy scripting context.
-	 */
-	private final IClientPluginAccess access;
+public class OpenAiChatBuilder extends BaseChatBuilder<OpenAiChatBuilder>  {
 	/**
 	 * The builder for the OpenAI streaming chat model.
 	 */
 	private final OpenAiStreamingChatModelBuilder builder;
-	/**
-	 * The AI services builder for the Assistant interface.
-	 */
-	private final AiServices<Assistant> assistent;
+
 	/**
 	 * The OpenAI model name (default: "gpt-5").
 	 */
@@ -43,9 +36,8 @@ public class OpenAiChatBuilder {
 	 * @param access The client plugin access instance.
 	 */
 	OpenAiChatBuilder(IClientPluginAccess access) {
-		this.access = access;
+		super(access);
 		builder = OpenAiStreamingChatModel.builder().modelName(modelName);
-		assistent = AiServices.builder(Assistant.class);
 
 	}
 	
@@ -100,6 +92,7 @@ public class OpenAiChatBuilder {
 	 */
 	@JSFunction
 	public ChatClient build() {
+		AiServices<Assistant> assistent = createAssistentBuilder();
 		assistent.streamingChatModel(builder.build());
 		if (tokens != null) {
 			OpenAiTokenCountEstimator tokenCountEstimator = new OpenAiTokenCountEstimator(modelName);

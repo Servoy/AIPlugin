@@ -2,6 +2,7 @@ package com.servoy.extensions.aiplugin;
 
 import org.mozilla.javascript.annotations.JSFunction;
 
+import com.servoy.extensions.aiplugin.tools.buildin.ServoyBuildInTools;
 import com.servoy.j2db.documentation.ServoyDocumented;
 import com.servoy.j2db.plugins.IClientPluginAccess;
 
@@ -15,7 +16,7 @@ import dev.langchain4j.service.AiServices;
  * Allows setting API key, model name, temperature, and memory token limits for the Gemini model.
  */
 @ServoyDocumented(publicName = "GeminiChatBuilder", scriptingName = "GeminiChatBuilder")
-public class GeminiChatBuilder {
+public class GeminiChatBuilder extends BaseChatBuilder<GeminiChatBuilder> {
 	/**
 	 * The Gemini API key.
 	 */
@@ -34,16 +35,11 @@ public class GeminiChatBuilder {
 	private Integer tokens;
 
 	/**
-	 * The client plugin access instance for Servoy scripting context.
-	 */
-	private final IClientPluginAccess access;
-	
-	/**
 	 * Constructs a GeminiChatBuilder with the given plugin access.
 	 * @param access The client plugin access instance.
 	 */
 	GeminiChatBuilder(IClientPluginAccess access) {
-		this.access = access;
+		super(access);
 	}
 	
 	/**
@@ -96,10 +92,10 @@ public class GeminiChatBuilder {
 	 */
 	@JSFunction
 	public ChatClient build() {
+		AiServices<Assistant> builder = createAssistentBuilder();
 		GoogleAiGeminiStreamingChatModel model = GoogleAiGeminiStreamingChatModel.builder().temperature(temperature).apiKey(apiKey)
 				.modelName(modelName).build();
 		
-		AiServices<Assistant> builder = AiServices.builder(Assistant.class);
 		builder.streamingChatModel(model);
 		if (tokens != null) {
 			GoogleAiGeminiTokenCountEstimator tokenCountEstimator = GoogleAiGeminiTokenCountEstimator.builder().apiKey(apiKey).modelName(modelName).build();
