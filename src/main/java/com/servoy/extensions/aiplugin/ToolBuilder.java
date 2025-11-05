@@ -36,7 +36,7 @@ public class ToolBuilder<T extends BaseChatBuilder<T>> {
     /**
      * The chat builder instance to which this tool builder is attached.
      */
-    private final BaseChatBuilder<T> chatBuilder;
+    private final T chatBuilder;
 
     /**
      * The internal builder for ToolSpecification.
@@ -71,7 +71,7 @@ public class ToolBuilder<T extends BaseChatBuilder<T>> {
      * @param name          the name of the tool
      * @param description   the description of the tool
      */
-    public ToolBuilder(BaseChatBuilder<T> chatBuilder, Function toolFunction, String name, String description) {
+    public ToolBuilder(T chatBuilder, Function toolFunction, String name, String description) {
         this.chatBuilder = chatBuilder;
         this.toolFunction = toolFunction;
         builder = ToolSpecification.builder().description(description).name(name);
@@ -128,7 +128,7 @@ public class ToolBuilder<T extends BaseChatBuilder<T>> {
      * @return the chat builder instance
      */
     @JSFunction
-    public BaseChatBuilder<T> build() {
+    public T build() {
         if (parameterBuilder != null) {
             parameterBuilder.required(requiredParameters);
             builder.parameters(parameterBuilder.build());

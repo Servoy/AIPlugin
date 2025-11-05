@@ -107,7 +107,7 @@ public class BaseChatBuilder<T extends BaseChatBuilder<T>> {
      */
     @JSFunction
     public ToolBuilder<T> createTool(Function toolFunction, String name, String description) {
-        return new ToolBuilder<T>(this, toolFunction, name, description);
+        return new ToolBuilder<T>((T) this, toolFunction, name, description);
     }
 
     /**
