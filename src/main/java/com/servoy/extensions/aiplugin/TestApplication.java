@@ -18,6 +18,7 @@ import com.servoy.j2db.IApplication;
 import com.servoy.j2db.IBasicFormManager;
 import com.servoy.j2db.IDataRendererFactory;
 import com.servoy.j2db.IEventsManager;
+import com.servoy.j2db.IJSComponentManager;
 import com.servoy.j2db.IJSFormManager;
 import com.servoy.j2db.IMenuManager;
 import com.servoy.j2db.IModeManager;
@@ -630,6 +631,12 @@ public final class TestApplication implements IApplication {
 
 	@Override
 	public IValueListManager getValueListManager() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public IJSComponentManager getJSComponentManager() {
 		// TODO Auto-generated method stub
 		return null;
 	}
