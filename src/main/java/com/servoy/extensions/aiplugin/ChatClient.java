@@ -113,11 +113,11 @@ public class ChatClient implements IScriptable, IJavaScriptType {
 	@JSFunction
 	public NativePromise chat(String userMessage) {
 		Deferred deferred = new Deferred(access);
-		StringBuilder repsonse = new StringBuilder();
+		StringBuilder response = new StringBuilder();
 		UserMessage msg = getUserMessage(userMessage);
 		assistant.chat(msg)
-			.onPartialResponse(partialResponse -> repsonse.append(partialResponse))
-			.onCompleteResponse(completeResponse -> deferred.resolve(repsonse.toString()))
+			.onPartialResponse(partialResponse -> response.append(partialResponse))
+			.onCompleteResponse(completeResponse -> deferred.resolve(response.toString()))
 			.onError(error -> deferred.reject(error)).start(); 
 		return deferred.getPromise();
 	}
@@ -127,29 +127,29 @@ public class ChatClient implements IScriptable, IJavaScriptType {
 	 * So this can be used for streaming responses.
 	 * 
 	 * @param userMessage The user message send to the ai.
-	 * @param partialRespose A function that will be called with each partial response from the ai.
+	 * @param partialResponse A function that will be called with each partial response from the ai.
 	 * @param onComplete A function that will be called when the response is complete with the full response.
 	 * @param onError A function that will be called when an error occurs.
 	 */
 	@JSFunction
-	public void chat(String userMessage, Function partialRespose, Function onComplete, Function onError) {
+	public void chat(String userMessage, Function partialResponse, Function onComplete, Function onError) {
 		UserMessage msg = getUserMessage(userMessage);
 		
-		StringBuilder repsonse = new StringBuilder();
+		StringBuilder response = new StringBuilder();
 		
-		FunctionDefinition fdPartialRespose = partialRespose != null ? new FunctionDefinition(partialRespose) : null;
+		FunctionDefinition fdPartialResponse = partialResponse != null ? new FunctionDefinition(partialResponse) : null;
 		FunctionDefinition fdOnComplete = onComplete != null ? new FunctionDefinition(onComplete) : null;
 		FunctionDefinition fdOnError = onError != null ? new FunctionDefinition(onError) : null;
 		assistant.chat(msg)
-			.onPartialResponse(partialResponse -> {
-				if (fdPartialRespose != null) {
-					fdPartialRespose.executeAsync(access, new Object[] { partialResponse });
+			.onPartialResponse(pResonse -> {
+				if (fdPartialResponse != null) {
+					fdPartialResponse.executeAsync(access, new Object[] { pResonse });
 				}
-				repsonse.append(partialResponse);
+				response.append(partialResponse);
 			})
 			.onCompleteResponse(completeResponse -> {
 				if (fdOnComplete != null) {
-					fdOnComplete.executeAsync(access, new Object[] { userMessage, repsonse.toString() } );
+					fdOnComplete.executeAsync(access, new Object[] { userMessage, response.toString() } );
 				}
 			})
 			.onError(error -> {
