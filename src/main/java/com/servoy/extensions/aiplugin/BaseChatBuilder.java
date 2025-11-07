@@ -47,7 +47,7 @@ public class BaseChatBuilder<T extends BaseChatBuilder<T>> {
     /**
      * Indicates whether built-in Servoy tools should be injected into the AI agent.
      */
-    protected boolean useBuildInTools;
+    protected boolean useBuiltInTools;
 
     /**
      * The client plugin access instance for Servoy scripting context.
@@ -75,7 +75,7 @@ public class BaseChatBuilder<T extends BaseChatBuilder<T>> {
      */
     protected AiServices<Assistant> createAssistentBuilder() {
         AiServices<Assistant> builder = AiServices.builder(Assistant.class);
-        if (useBuildInTools) {
+        if (useBuiltInTools) {
             builder.tools(new ServoyBuildInTools(access));
         }
         if (tools.size() > 0) {
@@ -87,13 +87,13 @@ public class BaseChatBuilder<T extends BaseChatBuilder<T>> {
     /**
      * Injects the built-in Servoy tools (such as user info) into the AI agent.
      *
-     * @param useBuildInTools Boolean to indicate whether to use built-in tools.
+     * @param useBuiltInTools Boolean to indicate whether to use built-in tools.
      * @return This builder instance for chaining.
      */
     @SuppressWarnings("unchecked")
     @JSFunction
-    public T useBuildInTools(boolean useBuildInTools) {
-        this.useBuildInTools = useBuildInTools;
+    public T useBuiltInTools(boolean useBuiltInTools) {
+        this.useBuiltInTools = useBuiltInTools;
         return (T) this;
     }
 
