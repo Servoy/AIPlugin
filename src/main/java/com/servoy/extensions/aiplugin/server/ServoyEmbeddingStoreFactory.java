@@ -61,7 +61,7 @@ public class ServoyEmbeddingStoreFactory {
 		ensureTrue(table != null || createTable, "Cannot find source table " + tableName + " in server " + serverName);
 
 		if (table != null && dropTableFirst) {
-			server.dropTable((Table) table);
+			server.removeTable(table);
 			table = null;
 		}
 
@@ -109,7 +109,7 @@ public class ServoyEmbeddingStoreFactory {
 		server.syncTableObjWithDB(table, false, false);
 
 		// Index on source ref
-		server.createIndex(table, "_sv_embedding_ref", sourceRefColumns.toArray(Column[]::new), false);
+		server.createIndex(table, "_sv_embedding_meta_" + tableName , sourceRefColumns.toArray(Column[]::new), false);
 
 		return table;
 	}

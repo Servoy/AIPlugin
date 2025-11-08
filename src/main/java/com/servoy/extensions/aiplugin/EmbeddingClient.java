@@ -1,37 +1,30 @@
 package com.servoy.extensions.aiplugin;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
-import javax.sql.DataSource;
-
+import com.servoy.j2db.util.Debug;
 import org.mozilla.javascript.NativePromise;
 import org.mozilla.javascript.annotations.JSFunction;
 
-import com.pgvector.PGvector;
+import com.servoy.extensions.aiplugin.server.ServoyEmbeddingStore;
 import com.servoy.j2db.dataprocessing.IFoundSet;
 import com.servoy.j2db.documentation.ServoyDocumented;
-import com.servoy.j2db.persistence.IServerInternal;
-import com.servoy.j2db.persistence.RepositoryException;
-import com.servoy.j2db.plugins.IClientPluginAccess;
 import com.servoy.j2db.querybuilder.IQueryBuilder;
 import com.servoy.j2db.querybuilder.IQueryBuilderResult;
 import com.servoy.j2db.scripting.Deferred;
-import com.servoy.j2db.server.shared.ApplicationServerRegistry;
-import com.servoy.j2db.util.DataSourceUtils;
 
+import dev.langchain4j.data.document.Metadata;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.DimensionAwareEmbeddingModel;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
-import dev.langchain4j.store.embedding.pgvector.PgVectorEmbeddingStore;
 
 /**
  * EmbeddingClient provides methods to generate embeddings for text and manage
@@ -54,25 +47,25 @@ public class EmbeddingClient {
 	/**
 	 * The client plugin access instance for Servoy scripting context.
 	 */
-	private final IClientPluginAccess access;
+	private final AIProvider provider;
 
 	/**
 	 * Constructs an EmbeddingClient with the given embedding model and plugin
 	 * access.
-	 * 
-	 * @param model  The embedding model to use.
-	 * @param access The client plugin access instance.
+	 *
+	 * @param model    The embedding model to use.
+	 * @param provider ai plugin remote service.
 	 */
-	public EmbeddingClient(DimensionAwareEmbeddingModel model, IClientPluginAccess access) {
+	public EmbeddingClient(DimensionAwareEmbeddingModel model, AIProvider provider) {
 		this.model = model;
-		this.access = access;
+		this.provider = provider;
 	}
 
 	/**
 	 * Gets the dimension of the embeddings produced by the model. This can be used
 	 * when createing a vector column in a database, to use as the "size" of the
 	 * vector.
-	 * 
+	 *
 	 * @return The embeddings model dimension.
 	 */
 	@JSFunction
@@ -83,7 +76,7 @@ public class EmbeddingClient {
 	/**
 	 * Generates an embedding for a single text string this can be used to use in
 	 * the foundset.sort(vectorColumn, embeddingClient.embed("text"), maxRows);
-	 * 
+	 *
 	 * @param text The text string to create embeddings for.
 	 * @return The embedding as a float array, or null if input is empty.
 	 */
@@ -99,14 +92,14 @@ public class EmbeddingClient {
 
 	/**
 	 * Generates embeddings for an array of text strings asynchronously.
-	 * 
+	 *
 	 * @param texts The array of text strings to embed.
 	 * @return A Promise resolving to a float array of embeddings, or null if input
 	 *         is empty.
 	 */
 	@JSFunction
 	public NativePromise embed(String[] texts) {
-		Deferred deferred = new Deferred(access);
+		Deferred deferred = new Deferred(provider.getApplication());
 		if (texts == null || texts.length == 0) {
 			deferred.resolve(null);
 		} else {
@@ -130,64 +123,49 @@ public class EmbeddingClient {
 	/**
 	 * Generates embeddings for all records in the specified foundset for the given
 	 * textColumns and stores them in the specified vector column.
-	 * 
+	 *
 	 * @param foundset
-	 * @param vectorColumn
+	 * @param embeddingStore
 	 * @param textColumns
 	 * @return A Promise resolving with the given foundset when embeddings are
 	 *         stored, or rejects on error.
 	 */
 	@JSFunction
-	public NativePromise embedAll(IFoundSet foundset, String vectorColumn, String... textColumns) {
-		Deferred deferred = new Deferred(access);
+	public NativePromise embedAll(IFoundSet foundset, EmbeddingStore embeddingStore, String... textColumns) {
+		Deferred deferred = new Deferred(provider.getApplication());
 		virtualThreadExecutor.submit(() -> {
 			try {
 				IQueryBuilder query = foundset.getQuery();
-				IQueryBuilderResult result = query.result().clear().addPk();
-				result.add(vectorColumn);
-				Arrays.asList(textColumns).forEach(col -> {
-					try {
-						result.add(col);
-					} catch (RepositoryException e) {
-						throw new RuntimeException(e);
-					}
-				});
-
-				String sql = query.getSQL();
-				String serverName = DataSourceUtils.getDataSourceServerName(foundset.getDataSource());
-				DataSource dataSource = ((IServerInternal) ApplicationServerRegistry.get().getServerManager()
-						.getServer(serverName)).getDataSource();
-
-				try (Connection connection = dataSource.getConnection()) {
-					PGvector.registerTypes(connection);
-					connection.setAutoCommit(false);
-					PreparedStatement statement = connection.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE,
-							ResultSet.CONCUR_UPDATABLE);
-					Object[] sqlParameters = query.getSQLParameters();
-					if (sqlParameters != null) 
-					{
-						for (int i = 0; i < sqlParameters.length; i++) {
-							statement.setObject(i + 1, sqlParameters[i]);
-						}
-					}
-					try (ResultSet rs = statement.executeQuery()) {
-						while (rs.next()) {
-							StringBuilder text = new StringBuilder();
-							for(String col : textColumns) {
-								String colText = rs.getString(col);
-								text.append(colText).append("\n\n");
-							}
-							
-							float[] embed = embed(text.toString());
-							rs.updateObject(vectorColumn, new PGvector(embed));
-							rs.updateRow();
-						}
-					}
-					connection.commit();
+				query.sort().clear();
+				IQueryBuilderResult result = query.result().clear();
+				for (String textColumn : textColumns) {
+					result.add(textColumn);
 				}
+				query.result().addPk();
 
+				provider.getDatabaseManager().loadDataSetsByQuery(query, 0, 100, (dataSet) -> {
+					var segments = new ArrayList<TextSegment>(dataSet.getRowCount() * textColumns.length);
+					dataSet.getRows().forEach((row) -> {
+						var metaData = new HashMap<String, Object>();
+						// pk column names
+						for (int i = textColumns.length; i < dataSet.getColumnCount(); i++) {
+							metaData.put(dataSet.getColumnNames()[i], row[i]);
+						}
+
+						// text columns
+						for (int i = 0; i < textColumns.length; i++) {
+							if (row[i] != null) {
+								segments.add(TextSegment.textSegment(row[i].toString(), Metadata.from(metaData)));
+							}
+						}
+
+						Response<List<Embedding>> embeddings = model.embedAll(segments);
+						embeddingStore.getEmbeddingStore().addAll(embeddings.content(), segments);
+					});
+
+					return true;
+				});
 				deferred.resolve(foundset);
-
 			} catch (Exception ex) {
 				deferred.reject(ex);
 			}
@@ -197,58 +175,51 @@ public class EmbeddingClient {
 
 	/**
 	 * Creates an in-memory embedding store for storing and retrieving embeddings.
-	 * 
+	 *
 	 * @return An EmbeddingStore backed by an in-memory store.
 	 */
 	@JSFunction
 	public EmbeddingStore createInMemoryStore() {
 		InMemoryEmbeddingStore<TextSegment> embeddingStore = new InMemoryEmbeddingStore<>();
-		return new EmbeddingStore(embeddingStore, model, access);
+		return new EmbeddingStore(embeddingStore, model);
 	}
 
 	/**
-	 * Creates a PostgreSQL (pgvector) embedding store using the specified server
-	 * and table. This will drop an existing table if it exists.
-	 * 
-	 * @param serverName The name of the Servoy database server.
+     * Creates a Servoy embedding store for the specified source table, the emmbeddings will be saved in the specified
+     * table in the same server. This will not drop an existing table.
+	 *
+	 * @param dataSource The source table.
 	 * @param tableName  The name of the table to use for storing embeddings.
-	 * @return An EmbeddingStore backed by a pgvector store, or null if creation
+	 * @return An EmbeddingStore backed by a servoy store, or null if creation
 	 *         fails.
 	 */
 	@JSFunction
-	public EmbeddingStore createPgVectorStore(String serverName, String tableName) {
-		return openOrCreate(serverName, tableName, true);
+	public EmbeddingStore createServoyEmbeddingStore(String dataSource, String tableName) {
+		return openOrCreate(dataSource, tableName, true);
 	}
 
 	/**
-	 * Opens a PostgreSQL (pgvector) embedding store using the specified server and
-	 * table. This will not drop an existing table.
-	 * 
-	 * @param serverName The name of the Servoy database server.
-	 * @param tableName  The name of the table to use for storing embeddings.
-	 * @return An EmbeddingStore backed by a pgvector store, or null if creation
-	 *         fails.
+	 * Opens a Servoy embedding store for the specified source table, the emmbeddings will be saved in the specified
+     * table in ghe same server. This will not drop an existing table.
+	 *
+     * @param dataSource The source table.
+     * @param tableName  The name of the table to use for storing embeddings.
+     * @return An EmbeddingStore backed by a servoy store, or null if creation
+     *         fails.
 	 */
 	@JSFunction
-	public EmbeddingStore openPgVectorStore(String serverName, String tableName) {
-		return openOrCreate(serverName, tableName, false);
+	public EmbeddingStore openServoyEmbeddingStore(String dataSource, String tableName) {
+		return openOrCreate(dataSource, tableName, false);
 	}
 
-	/**
-	 * @param serverName
-	 * @param tableName
-	 */
-	private EmbeddingStore openOrCreate(String serverName, String tableName, boolean dropTableFirst) {
+	private EmbeddingStore openOrCreate(String dataSource, String tableName, boolean dropTableFirst) {
 		try {
-			DataSource dataSource = ((IServerInternal) ApplicationServerRegistry.get().getServerManager()
-					.getServer(serverName)).getDataSource();
-			PgVectorEmbeddingStore embeddingStore = PgVectorEmbeddingStore.datasourceBuilder().datasource(dataSource)
-					.dropTableFirst(dropTableFirst).table(tableName).dimension(model.dimension()).createTable(true)
-					.build();
-			return new EmbeddingStore(embeddingStore, model, access);
+			ServoyEmbeddingStore embeddingStore = provider.getAiPluginService().embeddingStoreBuilder()
+					.clientId(provider.getClientID()).source(dataSource).tableName(tableName)
+					.dropTableFirst(dropTableFirst).createTable(true).dimension(model.dimension()).build();
+			return new EmbeddingStore(embeddingStore, model);
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+            Debug.error(e);
 		}
 		return null;
 	}

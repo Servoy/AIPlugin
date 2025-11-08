@@ -16,9 +16,9 @@ import dev.langchain4j.model.openai.OpenAiEmbeddingModel.OpenAiEmbeddingModelBui
 public class OpenAiEmbeddingBuilder {
 
 	/**
-	 * The client plugin access instance for Servoy scripting context.
+	 * The  ai provider plugin.
 	 */
-	private final IClientPluginAccess access;
+	private final AIProvider provider;
 	/**
 	 * The builder for the OpenAI embedding model.
 	 */
@@ -26,10 +26,10 @@ public class OpenAiEmbeddingBuilder {
 
 	/**
 	 * Constructs an OpenAiEmbeddingBuilder with the given plugin access.
-	 * @param access The client plugin access instance.
+	 * @param provider ai provider plugin.
 	 */
-	public OpenAiEmbeddingBuilder(IClientPluginAccess access) {
-		this.access = access;
+	public OpenAiEmbeddingBuilder(AIProvider provider) {
+		this.provider = provider;
 		builder = OpenAiEmbeddingModel.builder();
 	}
 
@@ -62,6 +62,6 @@ public class OpenAiEmbeddingBuilder {
 	@JSFunction
 	public EmbeddingClient build() {
 		OpenAiEmbeddingModel model = builder.build();
-		return new EmbeddingClient(model, access);
+		return new EmbeddingClient(model, provider);
 	}
 }

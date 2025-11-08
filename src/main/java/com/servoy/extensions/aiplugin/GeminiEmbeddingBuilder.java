@@ -20,16 +20,16 @@ public class GeminiEmbeddingBuilder {
 	 */
 	private final GoogleAiEmbeddingModelBuilder builder;
 	/**
-	 * The client plugin access instance for Servoy scripting context.
+	 * The ai provider plugin.
 	 */
-	private final IClientPluginAccess access;
+	private final AIProvider provider;
 
 	/**
 	 * Constructs a GeminiEmbeddingBuilder with the given plugin access.
-	 * @param access The client plugin access instance.
+	 * @param provider  ai provider plugin.
 	 */
-	public GeminiEmbeddingBuilder(IClientPluginAccess access) {
-		this.access = access;
+	public GeminiEmbeddingBuilder(AIProvider provider) {
+		this.provider = provider;
 		builder = GoogleAiEmbeddingModel.builder();
 	}
 	
@@ -62,7 +62,7 @@ public class GeminiEmbeddingBuilder {
 	@JSFunction
 	public EmbeddingClient build() {
 		GoogleAiEmbeddingModel model = builder.build();
-		return new EmbeddingClient(model, access);
+		return new EmbeddingClient(model, provider);
 	}
 
 }

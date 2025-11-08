@@ -14,7 +14,7 @@ public class AiServerPlugin implements IServerPlugin {
     @Override
     public void initialize(IServerAccess serverAccess) throws PluginException {
         try {
-            serverAccess.registerRMIService(AIPLUGIN_SERVICE, new AiPluginServiceImpl(serverAccess));
+            serverAccess.registerRemoteService(AIPLUGIN_SERVICE, new AiPluginServiceImpl(serverAccess));
         } catch (Exception e) {
             throw new PluginException(e);
         }

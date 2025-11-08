@@ -10,7 +10,6 @@ import org.mozilla.javascript.annotations.JSFunction;
 
 import com.servoy.extensions.aiplugin.pdf.ApachePdfBoxDocumentParser;
 import com.servoy.j2db.documentation.ServoyDocumented;
-import com.servoy.j2db.plugins.IClientPluginAccess;
 import com.servoy.j2db.scripting.IJavaScriptType;
 import com.servoy.j2db.scripting.IScriptable;
 
@@ -40,10 +39,6 @@ public class EmbeddingStore implements IScriptable, IJavaScriptType{
 	 */
 	private final DimensionAwareEmbeddingModel model;
 	/**
-	 * The client plugin access instance for Servoy scripting context.
-	 */
-	private final IClientPluginAccess access;
-	/**
 	 * Tracks the number of ongoing embedding operations.
 	 */
 	private final AtomicInteger processing = new AtomicInteger(0);
@@ -52,13 +47,18 @@ public class EmbeddingStore implements IScriptable, IJavaScriptType{
 	 * Constructs an EmbeddingStore with the given embedding store, model, and plugin access.
 	 * @param embeddingStore The embedding store implementation to use.
 	 * @param model The embedding model to use.
-	 * @param access The client plugin access instance.
 	 */
-	public EmbeddingStore(dev.langchain4j.store.embedding.EmbeddingStore<TextSegment> embeddingStore, DimensionAwareEmbeddingModel model,
-			IClientPluginAccess access) {
+	public EmbeddingStore(dev.langchain4j.store.embedding.EmbeddingStore<TextSegment> embeddingStore, DimensionAwareEmbeddingModel model) {
 				this.embeddingStore = embeddingStore;
 				this.model = model;
-				this.access = access;
+	}
+
+	dev.langchain4j.store.embedding.EmbeddingStore<TextSegment> getEmbeddingStore() {
+		return embeddingStore;
+	}
+
+	DimensionAwareEmbeddingModel getModel() {
+		return model;
 	}
 
 	/**
