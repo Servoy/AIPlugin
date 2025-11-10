@@ -65,7 +65,7 @@ public class AIProvider implements IReturnedTypesProvider, IScriptable {
 	@Override
 	public Class<?>[] getAllReturnedTypes() {
 		return new Class[] { ChatClient.class, GeminiChatBuilder.class, OpenAiChatBuilder.class, EmbeddingClient.class,
-				GeminiEmbeddingBuilder.class, OpenAiEmbeddingBuilder.class, EmbeddingStore.class };
+				GeminiEmbeddingBuilder.class, OpenAiEmbeddingBuilder.class, EmbeddingStore.class, ChatResponse.class  };
 	}
 
 	/**

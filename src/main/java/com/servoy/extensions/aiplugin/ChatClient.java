@@ -105,7 +105,7 @@ public class ChatClient implements IScriptable, IJavaScriptType {
 
 	/**
 	 * Send a userMessage to the ai. This will return a promise that will be resolved with the response.
-	 * This respose is the full string or it will be rejected with an error.
+	 * This respose is the ChatResponse object or it will be rejected with an error.
 	 * 
 	 * @param userMessage The user message
 	 * @return A promise that will be resolved with the assistant response.
@@ -117,7 +117,7 @@ public class ChatClient implements IScriptable, IJavaScriptType {
 		UserMessage msg = getUserMessage(userMessage);
 		assistant.chat(msg)
 			.onPartialResponse(partialResponse -> response.append(partialResponse))
-			.onCompleteResponse(completeResponse -> deferred.resolve(response.toString()))
+			.onCompleteResponse(completeResponse ->  deferred.resolve(new ChatResponse(completeResponse, response.toString()) ))
 			.onError(error -> deferred.reject(error)).start(); 
 		return deferred.getPromise();
 	}
@@ -128,7 +128,7 @@ public class ChatClient implements IScriptable, IJavaScriptType {
 	 * 
 	 * @param userMessage The user message send to the ai.
 	 * @param partialResponse A function that will be called with each partial response from the ai.
-	 * @param onComplete A function that will be called when the response is complete with the full response.
+	 * @param onComplete A function that will be called when the response is complete, it will be called with the ChatResponse object.
 	 * @param onError A function that will be called when an error occurs.
 	 */
 	@JSFunction
@@ -149,7 +149,7 @@ public class ChatClient implements IScriptable, IJavaScriptType {
 			})
 			.onCompleteResponse(completeResponse -> {
 				if (fdOnComplete != null) {
-					fdOnComplete.executeAsync(access, new Object[] { userMessage, response.toString() } );
+					fdOnComplete.executeAsync(access, new Object[] { new ChatResponse(completeResponse, response.toString()) } );
 				}
 			})
 			.onError(error -> {
