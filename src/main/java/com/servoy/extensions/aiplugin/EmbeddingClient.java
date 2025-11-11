@@ -200,7 +200,7 @@ public class EmbeddingClient {
 
 	/**
 	 * Opens a Servoy embedding store for the specified source table, the emmbeddings will be saved in the specified
-     * table in ghe same server. This will not drop an existing table.
+     * table in the same server. This will not drop an existing table.
 	 *
      * @param dataSource The source table.
      * @param tableName  The name of the table to use for storing embeddings.
