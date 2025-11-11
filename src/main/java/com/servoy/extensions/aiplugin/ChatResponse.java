@@ -13,15 +13,18 @@ public class ChatResponse {
 	// Wrapper around the langchain4j ChatResponse and a pre-formatted full response string.
 	private final dev.langchain4j.model.chat.response.ChatResponse chatResponse;
 	private final String fullResponse;
+	private final String userMessage;
 
 	/**
 	 * Creates a new ChatResponse wrapper.
+	 * @param userMessage 
 	 *
 	 * @param chatResponse the original langchain4j ChatResponse instance returned by the model; must not be null
 	 * @param fullResponse the full textual response as presented to the user (may be the same as the AI message content
 	 *                     or may include aggregated/processed content); must not be null
 	 */
-	public ChatResponse(dev.langchain4j.model.chat.response.ChatResponse chatResponse, String fullResponse) {
+	public ChatResponse(String userMessage, dev.langchain4j.model.chat.response.ChatResponse chatResponse, String fullResponse) {
+		this.userMessage = userMessage;
 		this.chatResponse = chatResponse;
 		this.fullResponse = fullResponse;
 	}
@@ -49,7 +52,17 @@ public class ChatResponse {
 	@JSFunction
 	public String getThinking() {
 		return chatResponse.aiMessage().thinking();
-	}	
+	}
+	/**
+	 * Returns the original user prompt that led to this response.
+	 *
+	 * @return the user prompt
+	 */
+	@JSFunction
+	public String getPrompt() {
+		return userMessage;
+	}
+
 	/**
 	 * Returns the full response text that should be shown to the end user.
 	 * This value was provided when constructing this wrapper and may include

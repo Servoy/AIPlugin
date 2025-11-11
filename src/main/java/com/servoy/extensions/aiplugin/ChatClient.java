@@ -117,7 +117,7 @@ public class ChatClient implements IScriptable, IJavaScriptType {
 		UserMessage msg = getUserMessage(userMessage);
 		assistant.chat(msg)
 			.onPartialResponse(partialResponse -> response.append(partialResponse))
-			.onCompleteResponse(completeResponse ->  deferred.resolve(new ChatResponse(completeResponse, response.toString()) ))
+			.onCompleteResponse(completeResponse ->  deferred.resolve(new ChatResponse(userMessage,completeResponse, response.toString()) ))
 			.onError(error -> deferred.reject(error)).start(); 
 		return deferred.getPromise();
 	}
@@ -149,7 +149,7 @@ public class ChatClient implements IScriptable, IJavaScriptType {
 			})
 			.onCompleteResponse(completeResponse -> {
 				if (fdOnComplete != null) {
-					fdOnComplete.executeAsync(access, new Object[] { new ChatResponse(completeResponse, response.toString()) } );
+					fdOnComplete.executeAsync(access, new Object[] { new ChatResponse(userMessage, completeResponse, response.toString()) } );
 				}
 			})
 			.onError(error -> {
