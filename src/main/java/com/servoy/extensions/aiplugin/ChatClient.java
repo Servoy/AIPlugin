@@ -145,7 +145,7 @@ public class ChatClient implements IScriptable, IJavaScriptType {
 				if (fdPartialResponse != null) {
 					fdPartialResponse.executeAsync(access, new Object[] { pResonse });
 				}
-				response.append(partialResponse);
+				response.append(pResonse);
 			})
 			.onCompleteResponse(completeResponse -> {
 				if (fdOnComplete != null) {
