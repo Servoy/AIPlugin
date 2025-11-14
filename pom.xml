@@ -10,7 +10,7 @@
     <packaging>jar</packaging>
 
     <name>Servoy AI Plugin</name>
-    <description>Een plugin voor Servoy met AI-functionaliteit</description>
+    <description>A plugin for Servoy with AI-functionality</description>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>

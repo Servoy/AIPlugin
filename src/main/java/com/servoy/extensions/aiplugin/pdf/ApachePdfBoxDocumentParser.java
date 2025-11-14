@@ -35,39 +35,44 @@ public class ApachePdfBoxDocumentParser implements DocumentParser {
 	}
 
 	public Document parse(Object source) {
-		if (source instanceof InputStream is) {
-			return parse(is);
-		} else if (source instanceof byte[] bytes) {
-			return parse(new java.io.ByteArrayInputStream(bytes));
-		} else if (source instanceof String filename) {
-			try (FileInputStream fis = new FileInputStream(filename)) {
-				Document document = parse(fis);
-				document.metadata().put("filename", filename);
-				return document;
-			} catch (IOException e) {
-				throw new RuntimeException(e);
-			}
-		} else if (source instanceof File file) {
-			try (FileInputStream fis = new FileInputStream(file)) {
-				Document document = parse(fis);
-				document.metadata().put("filename", file.getName());
-				return document;
-			} catch (IOException e) {
-				throw new RuntimeException(e);
-			}
-		} else if (source instanceof IFile file) {
-			try (InputStream is = file.getInputStream()) {
-				Document document = parse(is);
-				if(file.getFile() != null )document.metadata().put("filename", file.getFile().getName());
+        switch (source) {
+            case InputStream is -> {
+                return parse(is);
+            }
+            case byte[] bytes -> {
+                return parse(new java.io.ByteArrayInputStream(bytes));
+            }
+            case String filename -> {
+                try (FileInputStream fis = new FileInputStream(filename)) {
+                    Document document = parse(fis);
+                    document.metadata().put("filename", filename);
+                    return document;
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            case File file -> {
+                try (FileInputStream fis = new FileInputStream(file)) {
+                    Document document = parse(fis);
+                    document.metadata().put("filename", file.getName());
+                    return document;
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            case IFile file -> {
+                try (InputStream is = file.getInputStream()) {
+                    Document document = parse(is);
+                    if (file.getFile() != null) document.metadata().put("filename", file.getFile().getName());
 //				document.metadata().put("filename", file.getName());
-				return document;
-			} catch (IOException e) {
-				throw new RuntimeException(e);
-			}
-		}
-		else {
-			throw new IllegalArgumentException("Unsupported source type: " + source.getClass().getName());
-		}
+                    return document;
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            default ->
+                    throw new IllegalArgumentException("Unsupported source type: " + source.getClass().getName());
+        }
 	}
 
 	@Override

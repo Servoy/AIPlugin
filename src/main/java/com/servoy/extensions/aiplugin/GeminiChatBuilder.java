@@ -2,7 +2,6 @@ package com.servoy.extensions.aiplugin;
 
 import org.mozilla.javascript.annotations.JSFunction;
 
-import com.servoy.extensions.aiplugin.tools.buildin.ServoyBuildInTools;
 import com.servoy.j2db.documentation.ServoyDocumented;
 import com.servoy.j2db.plugins.IClientPluginAccess;
 
@@ -92,7 +91,7 @@ public class GeminiChatBuilder extends BaseChatBuilder<GeminiChatBuilder> {
 	 */
 	@JSFunction
 	public ChatClient build() {
-		AiServices<Assistant> builder = createAssistentBuilder();
+		AiServices<Assistant> builder = createAssistantBuilder();
 		GoogleAiGeminiStreamingChatModel model = GoogleAiGeminiStreamingChatModel.builder().temperature(temperature).apiKey(apiKey)
 				.modelName(modelName).build();
 		

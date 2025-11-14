@@ -25,7 +25,6 @@ import com.servoy.j2db.persistence.DummyValidator;
 import com.servoy.j2db.persistence.IServerInternal;
 import com.servoy.j2db.persistence.ITable;
 import com.servoy.j2db.persistence.RepositoryException;
-import com.servoy.j2db.persistence.Table;
 import com.servoy.j2db.plugins.IServerAccess;
 import com.servoy.j2db.query.ColumnType;
 import com.servoy.j2db.util.DataSourceUtils;
@@ -122,7 +121,7 @@ public class ServoyEmbeddingStoreFactory {
 		ensureTrue(pkColumn.isDatabasePK(),
 				"Table not usable as for embedding store: Column is not PK: " + EMBEDDING_ID_COLUMN);
 		ensureTrue(pkColumn.hasFlag(UUID_COLUMN),
-				"Table not usable as for embedding storee: Column is not UUID: " + EMBEDDING_ID_COLUMN);
+				"Table not usable as for embedding store: Column is not UUID: " + EMBEDDING_ID_COLUMN);
 		columnTypes.put(EMBEDDING_ID_COLUMN, pkColumn.getColumnType());
 
 		var sourceColumns = new ArrayList<String>();

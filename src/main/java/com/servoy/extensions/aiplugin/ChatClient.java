@@ -2,7 +2,6 @@ package com.servoy.extensions.aiplugin;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -30,6 +29,8 @@ import dev.langchain4j.data.message.PdfFileContent;
 import dev.langchain4j.data.message.TextContent;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.data.message.VideoContent;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 
 /**
@@ -118,7 +119,7 @@ public class ChatClient implements IScriptable, IJavaScriptType {
 		assistant.chat(msg)
 			.onPartialResponse(partialResponse -> response.append(partialResponse))
 			.onCompleteResponse(completeResponse ->  deferred.resolve(new ChatResponse(userMessage,completeResponse, response.toString()) ))
-			.onError(error -> deferred.reject(error)).start(); 
+			.onError(error -> deferred.reject(error)).start();
 		return deferred.getPromise();
 	}
 	
@@ -165,7 +166,7 @@ public class ChatClient implements IScriptable, IJavaScriptType {
 	 */
 	public UserMessage getUserMessage(String userMessage) {
 		UserMessage msg;
-		if (files.size() > 0) {
+		if (!files.isEmpty()) {
 			List<Content> list = files.stream().map(pair -> createContent(pair.getLeft(), pair.getRight()))
 					.collect(Collectors.toCollection(ArrayList::new));
 			list.add(TextContent.from(userMessage));
@@ -181,8 +182,8 @@ public class ChatClient implements IScriptable, IJavaScriptType {
 		if (ct == null || ct.startsWith("text/")) {
 			try {
 				if (fileOrBytes instanceof byte[] bytes)
-					return TextContent.from(new String(bytes, Charset.forName("UTF-8")));
-				return TextContent.from(Utils.getTXTFileContent(((IFile)fileOrBytes).getInputStream(), Charset.forName("UTF-8")));
+					return TextContent.from(new String(bytes, UTF_8));
+				return TextContent.from(Utils.getTXTFileContent(((IFile)fileOrBytes).getInputStream(), UTF_8));
 			} catch (IOException e) {
 				throw new RuntimeException("Could not read file " + fileOrBytes, e);
 			}

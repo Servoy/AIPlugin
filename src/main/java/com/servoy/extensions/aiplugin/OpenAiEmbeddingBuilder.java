@@ -3,7 +3,6 @@ package com.servoy.extensions.aiplugin;
 import org.mozilla.javascript.annotations.JSFunction;
 
 import com.servoy.j2db.documentation.ServoyDocumented;
-import com.servoy.j2db.plugins.IClientPluginAccess;
 
 import dev.langchain4j.model.openai.OpenAiEmbeddingModel;
 import dev.langchain4j.model.openai.OpenAiEmbeddingModel.OpenAiEmbeddingModelBuilder;

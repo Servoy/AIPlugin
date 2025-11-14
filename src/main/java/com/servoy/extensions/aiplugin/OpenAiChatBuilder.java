@@ -38,7 +38,6 @@ public class OpenAiChatBuilder extends BaseChatBuilder<OpenAiChatBuilder>  {
 	OpenAiChatBuilder(IClientPluginAccess access) {
 		super(access);
 		builder = OpenAiStreamingChatModel.builder().modelName(modelName);
-
 	}
 	
 	/**
@@ -92,13 +91,13 @@ public class OpenAiChatBuilder extends BaseChatBuilder<OpenAiChatBuilder>  {
 	 */
 	@JSFunction
 	public ChatClient build() {
-		AiServices<Assistant> assistent = createAssistentBuilder();
-		assistent.streamingChatModel(builder.build());
+		AiServices<Assistant> assistant = createAssistantBuilder();
+		assistant.streamingChatModel(builder.build());
 		if (tokens != null) {
 			OpenAiTokenCountEstimator tokenCountEstimator = new OpenAiTokenCountEstimator(modelName);
 			TokenWindowChatMemory tokenWindowChatMemory = TokenWindowChatMemory.builder().maxTokens(tokens, tokenCountEstimator).build();
-			assistent.chatMemory(tokenWindowChatMemory);
+			assistant.chatMemory(tokenWindowChatMemory);
 		}
-		return new ChatClient(assistent.build(), access);
+		return new ChatClient(assistant.build(), access);
 	}
 }

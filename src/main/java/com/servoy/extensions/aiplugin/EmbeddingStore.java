@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
+import com.servoy.j2db.util.Debug;
 import org.mozilla.javascript.annotations.JSFunction;
 
 import com.servoy.extensions.aiplugin.pdf.ApachePdfBoxDocumentParser;
@@ -96,7 +96,7 @@ public class EmbeddingStore implements IScriptable, IJavaScriptType{
 					embeddingStore.addAll(content, segments);
 					
 				} catch (Exception ex) {
-					ex.printStackTrace();
+					Debug.error(ex);
 				}
 				finally {
 					processing.decrementAndGet();
@@ -148,7 +148,7 @@ public class EmbeddingStore implements IScriptable, IJavaScriptType{
 				embeddingStore.addAll(content, segments);
 				
 			} catch (Exception ex) {
-				ex.printStackTrace();
+				Debug.error(ex);
 			}
 			finally {
 				processing.decrementAndGet();
@@ -173,8 +173,7 @@ public class EmbeddingStore implements IScriptable, IJavaScriptType{
 				try {
 					processing.wait();
 				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					Debug.error(e);
 				}
 			}
 		}
@@ -184,12 +183,8 @@ public class EmbeddingStore implements IScriptable, IJavaScriptType{
                 .maxResults(maxResults)
                 .build();
         List<EmbeddingMatch<TextSegment>> matches = embeddingStore.search(embeddingSearchRequest).matches();
-        
-        if (matches.size() > 0)	{
-        	List<SearchResult> collect = matches.stream().map(m -> new SearchResult(m.score(), m.embedded().text(), m.embedded().metadata())).collect(Collectors.toList());
-        	return collect.toArray(new SearchResult[collect.size()]);
-        }
-        return new SearchResult[0];
+		return matches.stream()
+				.map(m -> new SearchResult(m.score(), m.embedded().text(), m.embedded().metadata()))
+				.toArray(SearchResult[]::new);
 	}
-
 }

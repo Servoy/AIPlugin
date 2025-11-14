@@ -105,13 +105,12 @@ public class EmbeddingClient {
 		} else {
 			virtualThreadExecutor.submit(() -> {
 				try {
-					List<TextSegment> segments = Arrays.asList(texts).stream().map(t -> TextSegment.textSegment(t))
+					List<TextSegment> segments = Arrays.stream(texts).map(t -> TextSegment.textSegment(t))
 							.collect(Collectors.toList());
 					Response<List<Embedding>> embeddings = model.embedAll(segments);
 					List<Embedding> content = embeddings.content();
-					List<float[]> collect = content.stream().map(e -> e.vector()).collect(Collectors.toList());
-					deferred.resolve(collect.toArray(new float[collect.size()][]));
-
+					float[][] vectors = content.stream().map(e -> e.vector()).toArray(float[][]::new);
+					deferred.resolve(vectors);
 				} catch (Exception ex) {
 					deferred.reject(ex);
 				}
@@ -195,7 +194,7 @@ public class EmbeddingClient {
 	 */
 	@JSFunction
 	public EmbeddingStore createServoyEmbeddingStore(String dataSource, String tableName) {
-		return openOrCreate(dataSource, tableName, true);
+		return openOrCreate(dataSource, tableName, true, false);
 	}
 
 	/**
@@ -209,14 +208,14 @@ public class EmbeddingClient {
 	 */
 	@JSFunction
 	public EmbeddingStore openServoyEmbeddingStore(String dataSource, String tableName) {
-		return openOrCreate(dataSource, tableName, false);
+		return openOrCreate(dataSource, tableName, false, false);
 	}
 
-	private EmbeddingStore openOrCreate(String dataSource, String tableName, boolean dropTableFirst) {
+	private EmbeddingStore openOrCreate(String dataSource, String tableName, boolean dropTableFirst, boolean addText) {
 		try {
 			ServoyEmbeddingStore embeddingStore = provider.getAiPluginService().embeddingStoreBuilder()
 					.clientId(provider.getClientID()).source(dataSource).tableName(tableName)
-					.dropTableFirst(dropTableFirst).createTable(true).dimension(model.dimension()).build();
+					.dropTableFirst(dropTableFirst).createTable(true).dimension(model.dimension()).addText(addText).build();
 			return new EmbeddingStore(embeddingStore, model);
 		} catch (Exception e) {
             Debug.error(e);

@@ -1,14 +1,14 @@
-package com.servoy.extensions.aiplugin.tools.buildin;
+package com.servoy.extensions.aiplugin.tools.builtin;
 
 import com.servoy.j2db.plugins.IClientPluginAccess;
 
 import dev.langchain4j.agent.tool.Tool;
 
-public class ServoyBuildInTools {
+public class ServoyBuiltInTools {
 	
-	private IClientPluginAccess access;
+	private final IClientPluginAccess access;
 
-	public ServoyBuildInTools(IClientPluginAccess access) {
+	public ServoyBuiltInTools(IClientPluginAccess access) {
 		this.access = access;
 	}
 

@@ -5,19 +5,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.servoy.j2db.util.Debug;
 import org.jabsorb.serializer.MarshallException;
 import org.json.JSONObject;
 import org.mozilla.javascript.Function;
 import org.mozilla.javascript.annotations.JSFunction;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.util.JSONPObject;
-import com.servoy.extensions.aiplugin.tools.buildin.ServoyBuildInTools;
+import com.servoy.extensions.aiplugin.tools.builtin.ServoyBuiltInTools;
 import com.servoy.j2db.plugins.IClientPluginAccess;
 import com.servoy.j2db.scripting.FunctionDefinition;
-import com.servoy.j2db.util.ServoyJSONObject;
 import com.servoy.j2db.util.serialize.JSONSerializerWrapper;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
@@ -33,7 +29,7 @@ import dev.langchain4j.service.tool.ToolExecutor;
  * <p>
  * Key features:
  * <ul>
- *   <li>Supports built-in Servoy tools via {@link #useBuildInTools(boolean)}</li>
+ *   <li>Supports built-in Servoy tools via {@link #useBuiltInTools(boolean)}</li>
  *   <li>Allows dynamic creation and registration of custom tools using {@link #createTool(Function, String, String)}</li>
  *   <li>Handles tool execution requests and argument mapping for AI agent workflows</li>
  * </ul>
@@ -57,7 +53,7 @@ public class BaseChatBuilder<T extends BaseChatBuilder<T>> {
     /**
      * Map of tool specifications to their executors for the AI agent.
      */
-    private Map<ToolSpecification, ToolExecutor> tools = new HashMap<>();
+    private final Map<ToolSpecification, ToolExecutor> tools = new HashMap<>();
 
     /**
      * Constructs a new BaseChatBuilder with the given Servoy client plugin access.
@@ -73,14 +69,12 @@ public class BaseChatBuilder<T extends BaseChatBuilder<T>> {
      *
      * @return a configured AiServices builder for Assistant
      */
-    protected AiServices<Assistant> createAssistentBuilder() {
+    protected AiServices<Assistant> createAssistantBuilder() {
         AiServices<Assistant> builder = AiServices.builder(Assistant.class);
         if (useBuiltInTools) {
-            builder.tools(new ServoyBuildInTools(access));
+            builder.tools(new ServoyBuiltInTools(access));
         }
-        if (tools.size() > 0) {
-            builder.tools(tools);
-        }
+        builder.tools(tools);
         return builder;
     }
 
@@ -126,7 +120,7 @@ public class BaseChatBuilder<T extends BaseChatBuilder<T>> {
                 FunctionDefinition fd = new FunctionDefinition(toolFunction);
 
                 List<Object> arguments = null;
-                if (parameters.size() > 0 && request.arguments() != null && !request.arguments().isBlank()) {
+                if (!parameters.isEmpty() && request.arguments() != null && !request.arguments().isBlank()) {
                     arguments = new ArrayList<>();
                     JSONObject argsJson = new JSONObject(request.arguments());
                     for (String paramName : parameters) {
@@ -137,18 +131,16 @@ public class BaseChatBuilder<T extends BaseChatBuilder<T>> {
                 if (retValue == null) {
                     return "Success"; // see DefaultToolExecutor
                 }
-                if (retValue instanceof String) {
-                    return retValue.toString();
+                if (retValue instanceof String str) {
+                    return str;
                 }
                 try {
                     return new JSONSerializerWrapper(false).toJSON(retValue).toString();
                 } catch (MarshallException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
+                    Debug.error(e);
                 }
                 return "Failure";
             }
-
         });
     }
 
