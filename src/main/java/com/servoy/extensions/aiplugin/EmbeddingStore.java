@@ -5,13 +5,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.servoy.j2db.util.Debug;
 import org.mozilla.javascript.annotations.JSFunction;
 
 import com.servoy.extensions.aiplugin.pdf.ApachePdfBoxDocumentParser;
+import com.servoy.extensions.aiplugin.server.SupportsTransaction;
 import com.servoy.j2db.documentation.ServoyDocumented;
 import com.servoy.j2db.scripting.IJavaScriptType;
 import com.servoy.j2db.scripting.IScriptable;
+import com.servoy.j2db.util.Debug;
 
 import dev.langchain4j.data.document.Document;
 import dev.langchain4j.data.document.Metadata;
@@ -24,11 +25,12 @@ import dev.langchain4j.store.embedding.EmbeddingMatch;
 import dev.langchain4j.store.embedding.EmbeddingSearchRequest;
 
 /**
- * EmbeddingStore provides methods to embed text data and perform similarity search using embeddings.
- * It supports asynchronous embedding and blocking search, and can be backed by various embedding store implementations.
+ * EmbeddingStore provides methods to embed text data and perform similarity
+ * search using embeddings. It supports asynchronous embedding and blocking
+ * search, and can be backed by various embedding store implementations.
  */
 @ServoyDocumented(scriptingName = "EmbeddingStore")
-public class EmbeddingStore implements IScriptable, IJavaScriptType{
+public class EmbeddingStore implements IScriptable, IJavaScriptType {
 
 	/**
 	 * The underlying embedding store implementation.
@@ -44,40 +46,45 @@ public class EmbeddingStore implements IScriptable, IJavaScriptType{
 	private final AtomicInteger processing = new AtomicInteger(0);
 
 	/**
-	 * Constructs an EmbeddingStore with the given embedding store, model, and plugin access.
+	 * Constructs an EmbeddingStore with the given embedding store, model, and
+	 * plugin access.
+	 *
 	 * @param embeddingStore The embedding store implementation to use.
-	 * @param model The embedding model to use.
+	 * @param model          The embedding model to use.
 	 */
-	public EmbeddingStore(dev.langchain4j.store.embedding.EmbeddingStore<TextSegment> embeddingStore, DimensionAwareEmbeddingModel model) {
-				this.embeddingStore = embeddingStore;
-				this.model = model;
+	public EmbeddingStore(dev.langchain4j.store.embedding.EmbeddingStore<TextSegment> embeddingStore,
+			DimensionAwareEmbeddingModel model) {
+		this.embeddingStore = embeddingStore;
+		this.model = model;
 	}
 
-	dev.langchain4j.store.embedding.EmbeddingStore<TextSegment> getEmbeddingStore() {
-		return embeddingStore;
-	}
-
-	DimensionAwareEmbeddingModel getModel() {
-		return model;
+	dev.langchain4j.store.embedding.EmbeddingStore<TextSegment> getEmbeddingStore(String transactionID) {
+		return (embeddingStore instanceof SupportsTransaction<?> txStore) ? txStore.withTransactionId(transactionID)
+				: embeddingStore;
 	}
 
 	/**
-	 * Asynchronously embeds an array of text data using the configured model and stores the results.
+	 * Asynchronously embeds an array of text data using the configured model and
+	 * stores the results.
+	 *
 	 * @param data The array of text strings to embed.
 	 */
 	@JSFunction
 	public void embed(String[] data) {
 		embed(data, null);
 	}
-	
+
 	/**
-	 * Asynchronously embeds an array of text data with optional metadata and stores the results.
-	 * @param data The array of text strings to embed.
-	 * @param metaData An array of metadata maps, one for each text string (may be null).
+	 * Asynchronously embeds an array of text data with optional metadata and stores
+	 * the results.
+	 *
+	 * @param data     The array of text strings to embed.
+	 * @param metaData An array of metadata maps, one for each text string (may be
+	 *                 null).
 	 */
 	@JSFunction
 	public void embed(String[] data, Map<String, Object>[] metaData) {
-		if (data != null &&  data.length > 0) {
+		if (data != null && data.length > 0) {
 			processing.incrementAndGet();
 			EmbeddingClient.virtualThreadExecutor.submit(() -> {
 				try {
@@ -89,16 +96,15 @@ public class EmbeddingStore implements IScriptable, IJavaScriptType{
 						} else {
 							segments.add(TextSegment.textSegment(data[i]));
 						}
-					} 					
+					}
 
 					Response<List<Embedding>> embeddings = model.embedAll(segments);
 					List<Embedding> content = embeddings.content();
 					embeddingStore.addAll(content, segments);
-					
+
 				} catch (Exception ex) {
 					Debug.error(ex);
-				}
-				finally {
+				} finally {
 					processing.decrementAndGet();
 					synchronized (processing) {
 						processing.notifyAll();
@@ -109,29 +115,37 @@ public class EmbeddingStore implements IScriptable, IJavaScriptType{
 	}
 
 	/**
-	 * Embeds a PDF document by splitting it into paragraphs of specified size and overlap
-	 * The text segments are stored in the embedding store and will get metadata from the pdf and if possible also the name of the PDF is set if that is known.
-	 * 
-	 * @param pdfSource This can be JSFile or String represeting a file path, or byte[] representing the PDF content.
+	 * Embeds a PDF document by splitting it into paragraphs of specified size and
+	 * overlap The text segments are stored in the embedding store and will get
+	 * metadata from the pdf and if possible also the name of the PDF is set if that
+	 * is known.
+	 *
+	 * @param pdfSource             This can be JSFile or String represeting a file
+	 *                              path, or byte[] representing the PDF content.
 	 * @param maxSegmentSizeInChars How many characters per segment we can have.
-	 * @param maxOverlapSizeInChars	How many characters of overlap between segments.
+	 * @param maxOverlapSizeInChars How many characters of overlap between segments.
 	 */
 	@JSFunction
-	public void embed(Object pdfSource,int maxSegmentSizeInChars,int maxOverlapSizeInChars) {
+	public void embed(Object pdfSource, int maxSegmentSizeInChars, int maxOverlapSizeInChars) {
 		embed(pdfSource, maxSegmentSizeInChars, maxOverlapSizeInChars, null);
 	}
+
 	/**
-	 * Embeds a PDF document by splitting it into paragraphs of specified size and overlap, with metadata.
-	 * The text segments are stored in the embedding store and will get metadata from the pdf and if possible also the name of the PDF is set if that is known.
-	 * Also additional metadata can be provided that will be attached to each segment.
-	 * 
-	 * @param pdfSource This can be JSFile or String represeting a file path, or byte[] representing the PDF content.
+	 * Embeds a PDF document by splitting it into paragraphs of specified size and
+	 * overlap, with metadata. The text segments are stored in the embedding store
+	 * and will get metadata from the pdf and if possible also the name of the PDF
+	 * is set if that is known. Also additional metadata can be provided that will
+	 * be attached to each segment.
+	 *
+	 * @param pdfSource             This can be JSFile or String represeting a file
+	 *                              path, or byte[] representing the PDF content.
 	 * @param maxSegmentSizeInChars How many characters per segment we can have.
-	 * @param maxOverlapSizeInChars	How many characters of overlap between segments.
-	 * @param metaData Metadata to attach to each segment.
+	 * @param maxOverlapSizeInChars How many characters of overlap between segments.
+	 * @param metaData              Metadata to attach to each segment.
 	 */
 	@JSFunction
-	public void embed(Object pdfSource,int maxSegmentSizeInChars,int maxOverlapSizeInChars, Map<String, Object> metaData) {
+	public void embed(Object pdfSource, int maxSegmentSizeInChars, int maxOverlapSizeInChars,
+			Map<String, Object> metaData) {
 		processing.incrementAndGet();
 		EmbeddingClient.virtualThreadExecutor.submit(() -> {
 			try {
@@ -140,17 +154,17 @@ public class EmbeddingStore implements IScriptable, IJavaScriptType{
 				if (metaData != null) {
 					document.metadata().putAll(metaData);
 				}
-				
-				DocumentByParagraphSplitter splitter = new DocumentByParagraphSplitter(maxSegmentSizeInChars, maxOverlapSizeInChars);
+
+				DocumentByParagraphSplitter splitter = new DocumentByParagraphSplitter(maxSegmentSizeInChars,
+						maxOverlapSizeInChars);
 				List<TextSegment> segments = splitter.split(document);
 				Response<List<Embedding>> embeddings = model.embedAll(segments);
 				List<Embedding> content = embeddings.content();
 				embeddingStore.addAll(content, segments);
-				
+
 			} catch (Exception ex) {
 				Debug.error(ex);
-			}
-			finally {
+			} finally {
 				processing.decrementAndGet();
 				synchronized (processing) {
 					processing.notifyAll();
@@ -158,11 +172,13 @@ public class EmbeddingStore implements IScriptable, IJavaScriptType{
 			}
 		});
 	}
-	
+
 	/**
-	 * Performs a blocking similarity search for the given text, returning the best matches from the store.
-	 * Waits for all ongoing embedding operations to complete before searching.
-	 * @param text The query text to search for.
+	 * Performs a blocking similarity search for the given text, returning the best
+	 * matches from the store. Waits for all ongoing embedding operations to
+	 * complete before searching.
+	 *
+	 * @param text       The query text to search for.
 	 * @param maxResults The maximum number of results to return.
 	 * @return An array of SearchResult objects representing the best matches.
 	 */
@@ -177,14 +193,11 @@ public class EmbeddingStore implements IScriptable, IJavaScriptType{
 				}
 			}
 		}
-        Embedding queryEmbedding = model.embed(text).content();
-        EmbeddingSearchRequest embeddingSearchRequest = EmbeddingSearchRequest.builder()
-                .queryEmbedding(queryEmbedding)
-                .maxResults(maxResults)
-                .build();
-        List<EmbeddingMatch<TextSegment>> matches = embeddingStore.search(embeddingSearchRequest).matches();
-		return matches.stream()
-				.map(m -> new SearchResult(m.score(), m.embedded().text(), m.embedded().metadata()))
+		Embedding queryEmbedding = model.embed(text).content();
+		EmbeddingSearchRequest embeddingSearchRequest = EmbeddingSearchRequest.builder().queryEmbedding(queryEmbedding)
+				.maxResults(maxResults).build();
+		List<EmbeddingMatch<TextSegment>> matches = embeddingStore.search(embeddingSearchRequest).matches();
+		return matches.stream().map(m -> new SearchResult(m.score(), m.embedded().text(), m.embedded().metadata()))
 				.toArray(SearchResult[]::new);
 	}
 }

@@ -15,6 +15,10 @@
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
+        
+        <servoy.version>2025.12.0.4120_rc</servoy.version>
+        <langchain4j.version>1.8.0</langchain4j.version>
+        <pdfbox.version>3.0.5</pdfbox.version>
     </properties>
 
      <repositories>
@@ -28,12 +32,12 @@
         <dependency>
             <artifactId>servoy_shared</artifactId>    
             <groupId>com.servoy</groupId>
-            <version>2025.12.0.4120_rc</version>
+            <version>${servoy.version}</version>
         </dependency>
         <dependency>
             <artifactId>servoy_base</artifactId>    
             <groupId>com.servoy</groupId>
-            <version>2025.12.0.4120_rc</version>
+            <version>${servoy.version}</version>
         </dependency>
         <dependency>
         	<groupId>com.servoy</groupId>
@@ -43,32 +47,32 @@
         <dependency>
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j</artifactId>
-            <version>1.8.0</version>
+            <version>${langchain4j.version}</version>
         </dependency>        
         <dependency>
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j-google-ai-gemini</artifactId>
-            <version>1.8.0</version>
+            <version>${langchain4j.version}</version>
         </dependency>
         <dependency>
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j-open-ai</artifactId>
-            <version>1.8.0</version>
+            <version>${langchain4j.version}</version>
         </dependency>
         <dependency>
-            <groupId>dev.langchain4j</groupId>
-            <artifactId>langchain4j-pgvector</artifactId>
-            <version>1.8.0-beta15</version>
+            <groupId>com.pgvector</groupId>
+            <artifactId>pgvector</artifactId>
+            <version>0.1.6</version>
         </dependency>
         <dependency>
             <groupId>org.apache.pdfbox</groupId>
             <artifactId>pdfbox</artifactId>
-            <version>3.0.5</version>
+            <version>${pdfbox.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.pdfbox</groupId>
             <artifactId>pdfbox-io</artifactId>
-            <version>3.0.5</version>
+            <version>${pdfbox.version}</version>
         </dependency>
         <dependency>
             <groupId>com.servoy</groupId>

@@ -18,12 +18,8 @@ import com.servoy.j2db.IApplication;
 import com.servoy.j2db.IBasicFormManager;
 import com.servoy.j2db.IDataRendererFactory;
 import com.servoy.j2db.IEventsManager;
-import com.servoy.j2db.IJSComponentManager;
-import com.servoy.j2db.IJSFormManager;
 import com.servoy.j2db.IMenuManager;
 import com.servoy.j2db.IModeManager;
-import com.servoy.j2db.IPermissionManager;
-import com.servoy.j2db.IValueListManager;
 import com.servoy.j2db.RuntimeWindowManager;
 import com.servoy.j2db.cmd.ICmdManager;
 import com.servoy.j2db.dataprocessing.ClientInfo;
@@ -58,11 +54,6 @@ public final class TestApplication implements IApplication {
 	@Override
 	public String getI18NMessage(String i18nKey, Object[] array, String language, String country) {
 		// TODO Auto-generated method stub
-		return null;
-	}
-	
-	@Override
-	public IJSFormManager getJSFormManager() {
 		return null;
 	}
 
@@ -492,12 +483,6 @@ public final class TestApplication implements IApplication {
 	}
 
 	@Override
-	public IPermissionManager getPermissionManager() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
 	public PageFormat getPageFormat() {
 		// TODO Auto-generated method stub
 		return null;
@@ -626,18 +611,6 @@ public final class TestApplication implements IApplication {
 	@Override
 	public void invokeLater(Runnable arg0, boolean arg1) {
 		// TODO Auto-generated method stub
-		
-	}
 
-	@Override
-	public IValueListManager getValueListManager() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public IJSComponentManager getJSComponentManager() {
-		// TODO Auto-generated method stub
-		return null;
 	}
 }

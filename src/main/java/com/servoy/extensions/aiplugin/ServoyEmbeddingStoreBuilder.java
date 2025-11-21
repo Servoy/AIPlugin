@@ -8,7 +8,8 @@ public class ServoyEmbeddingStoreBuilder {
 
 	private final IServerAccess serverAccess;
 	private String clientId;
-	private String source;
+	private String serverName;
+	private String sourceTableName;
 	private String tableName;
 	private boolean dropTableFirst = false;
 	private boolean createTable = false;
@@ -19,8 +20,13 @@ public class ServoyEmbeddingStoreBuilder {
 		this.serverAccess = serverAccess;
 	}
 
-	public ServoyEmbeddingStoreBuilder source(String dataSource) {
-		this.source = dataSource;
+	public ServoyEmbeddingStoreBuilder serverName(String serverName) {
+		this.serverName = serverName;
+		return this;
+	}
+
+	public ServoyEmbeddingStoreBuilder sourceTableName(String sourceTableName) {
+		this.sourceTableName = sourceTableName;
 		return this;
 	}
 
@@ -55,7 +61,7 @@ public class ServoyEmbeddingStoreBuilder {
 	}
 
 	public ServoyEmbeddingStore build() throws Exception {
-		return ServoyEmbeddingStoreFactory.createStore(serverAccess, clientId, source, tableName, dropTableFirst,
-				createTable, dimension, addText);
+		return ServoyEmbeddingStoreFactory.createStore(serverAccess, clientId, serverName, sourceTableName, tableName,
+				dropTableFirst, createTable, dimension, addText);
 	}
 }

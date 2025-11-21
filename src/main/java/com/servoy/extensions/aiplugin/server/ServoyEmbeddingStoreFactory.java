@@ -27,34 +27,34 @@ import com.servoy.j2db.persistence.ITable;
 import com.servoy.j2db.persistence.RepositoryException;
 import com.servoy.j2db.plugins.IServerAccess;
 import com.servoy.j2db.query.ColumnType;
-import com.servoy.j2db.util.DataSourceUtils;
 
 public class ServoyEmbeddingStoreFactory {
 
-	public static ServoyEmbeddingStore createStore(IServerAccess serverAccess, String clientId, String source,
-			String tableName, boolean dropTableFirst, boolean createTable, int dimension, boolean addText)
-			throws Exception {
+	public static ServoyEmbeddingStore createStore(IServerAccess serverAccess, String clientId, String serverName,
+			String sourceTableName, String tableName, boolean dropTableFirst, boolean createTable, int dimension,
+			boolean addText) throws Exception {
 		ensureNotNull(clientId, "clientId");
-		ensureTrue(DataSourceUtils.isDatasourceUri(source), "source should be a valid Servoy data source");
+		ensureNotNull(serverName, "serverName");
+		ensureNotNull(sourceTableName, "sourceTableName");
 		ensureNotNull(tableName, "tableName");
 		if (createTable)
 			ensureGreaterThanZero(dimension, "dimension");
 
-		var tableModel = initializeStore(serverAccess, source, tableName, dropTableFirst, createTable, dimension,
-				addText);
+		var tableModel = initializeStore(serverAccess, serverName, sourceTableName, tableName, dropTableFirst,
+				createTable, dimension, addText);
 		return new ServoyEmbeddingStore(serverAccess, clientId, null, tableModel);
 	}
 
-	private static TableModel initializeStore(IServerAccess serverAccess, String source, String tableName,
-			boolean dropTableFirst, boolean createTable, int dimension, boolean addText) throws Exception {
-		var serverName = DataSourceUtils.getDataSourceServerName(source);
+	private static TableModel initializeStore(IServerAccess serverAccess, String serverName, String sourceTableName,
+			String tableName, boolean dropTableFirst, boolean createTable, int dimension, boolean addText)
+			throws Exception {
 		var server = (IServerInternal) ensureNotNull(serverAccess.getDBServer(serverName, true, true),
-				"Cannot find server from source %s", source);
+				"Cannot find server %s", serverName);
 
-		var sourceTable = ensureNotNull(server.getTable(DataSourceUtils.getDataSourceTableName(source)),
-				"Cannot find source table %s", source);
+		var sourceTable = ensureNotNull(server.getTable(sourceTableName), "Cannot find source table %s",
+				sourceTableName);
 		var sourcePkColumns = sourceTable.getRowIdentColumns();
-		ensureTrue(!sourcePkColumns.isEmpty(), "Cannot work without PK column on source table " + source);
+		ensureTrue(!sourcePkColumns.isEmpty(), "Cannot work without PK column on source table " + sourceTableName);
 
 		var table = server.getTable(tableName);
 		ensureTrue(table != null || createTable, "Cannot find source table " + tableName + " in server " + serverName);
@@ -108,7 +108,7 @@ public class ServoyEmbeddingStoreFactory {
 		server.syncTableObjWithDB(table, false, false);
 
 		// Index on source ref
-		server.createIndex(table, "_sv_embedding_meta_" + tableName , sourceRefColumns.toArray(Column[]::new), false);
+		server.createIndex(table, "_sv_embedding_meta_" + tableName, sourceRefColumns.toArray(Column[]::new), false);
 
 		return table;
 	}

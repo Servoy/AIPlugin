@@ -1,14 +1,16 @@
 package com.servoy.extensions.aiplugin;
 
+import static com.servoy.j2db.util.DataSourceUtils.getDataSourceServerName;
+import static java.util.Arrays.stream;
+import static java.util.stream.Collectors.toList;
+
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
 
-import com.servoy.j2db.util.Debug;
 import org.mozilla.javascript.NativePromise;
 import org.mozilla.javascript.annotations.JSFunction;
 
@@ -18,6 +20,8 @@ import com.servoy.j2db.documentation.ServoyDocumented;
 import com.servoy.j2db.querybuilder.IQueryBuilder;
 import com.servoy.j2db.querybuilder.IQueryBuilderResult;
 import com.servoy.j2db.scripting.Deferred;
+import com.servoy.j2db.util.DataSourceUtils;
+import com.servoy.j2db.util.Debug;
 
 import dev.langchain4j.data.document.Metadata;
 import dev.langchain4j.data.embedding.Embedding;
@@ -99,24 +103,12 @@ public class EmbeddingClient {
 	 */
 	@JSFunction
 	public NativePromise embed(String[] texts) {
-		Deferred deferred = new Deferred(provider.getApplication());
-		if (texts == null || texts.length == 0) {
-			deferred.resolve(null);
-		} else {
-			virtualThreadExecutor.submit(() -> {
-				try {
-					List<TextSegment> segments = Arrays.stream(texts).map(t -> TextSegment.textSegment(t))
-							.collect(Collectors.toList());
-					Response<List<Embedding>> embeddings = model.embedAll(segments);
-					List<Embedding> content = embeddings.content();
-					float[][] vectors = content.stream().map(e -> e.vector()).toArray(float[][]::new);
-					deferred.resolve(vectors);
-				} catch (Exception ex) {
-					deferred.reject(ex);
-				}
-			});
-		}
-		return deferred.getPromise();
+		return async((texts == null || texts.length == 0) ? null : () -> {
+			List<TextSegment> segments = stream(texts).map(text -> TextSegment.textSegment(text)).collect(toList());
+			Response<List<Embedding>> embeddings = model.embedAll(segments);
+			List<Embedding> content = embeddings.content();
+			return content.stream().map(e -> e.vector()).toArray(float[][]::new);
+		});
 	}
 
 	/**
@@ -131,45 +123,43 @@ public class EmbeddingClient {
 	 */
 	@JSFunction
 	public NativePromise embedAll(IFoundSet foundset, EmbeddingStore embeddingStore, String... textColumns) {
-		Deferred deferred = new Deferred(provider.getApplication());
-		virtualThreadExecutor.submit(() -> {
-			try {
-				IQueryBuilder query = foundset.getQuery();
-				query.sort().clear();
-				IQueryBuilderResult result = query.result().clear();
-				for (String textColumn : textColumns) {
-					result.add(textColumn);
-				}
-				query.result().addPk();
-
-				provider.getDatabaseManager().loadDataSetsByQuery(query, 0, 100, (dataSet) -> {
-					var segments = new ArrayList<TextSegment>(dataSet.getRowCount() * textColumns.length);
-					dataSet.getRows().forEach((row) -> {
-						var metaData = new HashMap<String, Object>();
-						// pk column names
-						for (int i = textColumns.length; i < dataSet.getColumnCount(); i++) {
-							metaData.put(dataSet.getColumnNames()[i], row[i]);
-						}
-
-						// text columns
-						for (int i = 0; i < textColumns.length; i++) {
-							if (row[i] != null) {
-								segments.add(TextSegment.textSegment(row[i].toString(), Metadata.from(metaData)));
-							}
-						}
-
-						Response<List<Embedding>> embeddings = model.embedAll(segments);
-						embeddingStore.getEmbeddingStore().addAll(embeddings.content(), segments);
-					});
-
-					return true;
-				});
-				deferred.resolve(foundset);
-			} catch (Exception ex) {
-				deferred.reject(ex);
+		return async(() -> {
+			IQueryBuilder query = foundset.getQuery();
+			query.sort().clear();
+			IQueryBuilderResult result = query.result().clear();
+			for (String textColumn : textColumns) {
+				result.add(textColumn);
 			}
+			query.result().addPk();
+
+			String transactionID = provider.getDatabaseManager()
+					.getTransactionID(getDataSourceServerName(foundset.getDataSource()));
+			var segmentStore = embeddingStore.getEmbeddingStore(transactionID);
+
+			provider.getDatabaseManager().loadDataSetsByQuery(query, 0, 100, (dataSet) -> {
+				var segments = new ArrayList<TextSegment>(dataSet.getRowCount() * textColumns.length);
+				dataSet.getRows().forEach((row) -> {
+					var metaData = new HashMap<String, Object>();
+					// pk column names
+					for (int i = textColumns.length; i < dataSet.getColumnCount(); i++) {
+						metaData.put(dataSet.getColumnNames()[i], row[i]);
+					}
+
+					// text columns
+					for (int i = 0; i < textColumns.length; i++) {
+						if (row[i] != null) {
+							segments.add(TextSegment.textSegment(row[i].toString(), Metadata.from(metaData)));
+						}
+					}
+
+					Response<List<Embedding>> embeddings = model.embedAll(segments);
+					segmentStore.addAll(embeddings.content(), segments);
+				});
+
+				return true; // process all dataset chunks
+			});
+			return foundset;
 		});
-		return deferred.getPromise();
 	}
 
 	/**
@@ -184,8 +174,9 @@ public class EmbeddingClient {
 	}
 
 	/**
-     * Creates a Servoy embedding store for the specified source table, the emmbeddings will be saved in the specified
-     * table in the same server. This will not drop an existing table.
+	 * Creates a Servoy embedding store for the specified source table, the
+	 * emmbeddings will be saved in the specified table in the same server. This
+	 * will not drop an existing table.
 	 *
 	 * @param dataSource The source table.
 	 * @param tableName  The name of the table to use for storing embeddings.
@@ -198,13 +189,14 @@ public class EmbeddingClient {
 	}
 
 	/**
-	 * Opens a Servoy embedding store for the specified source table, the emmbeddings will be saved in the specified
-     * table in the same server. This will not drop an existing table.
+	 * Opens a Servoy embedding store for the specified source table, the
+	 * emmbeddings will be saved in the specified table in the same server. This
+	 * will not drop an existing table.
 	 *
-     * @param dataSource The source table.
-     * @param tableName  The name of the table to use for storing embeddings.
-     * @return An EmbeddingStore backed by a servoy store, or null if creation
-     *         fails.
+	 * @param dataSource The source table.
+	 * @param tableName  The name of the table to use for storing embeddings.
+	 * @return An EmbeddingStore backed by a servoy store, or null if creation
+	 *         fails.
 	 */
 	@JSFunction
 	public EmbeddingStore openServoyEmbeddingStore(String dataSource, String tableName) {
@@ -213,14 +205,35 @@ public class EmbeddingClient {
 
 	private EmbeddingStore openOrCreate(String dataSource, String tableName, boolean dropTableFirst, boolean addText) {
 		try {
+			String serverName = getDataSourceServerName(dataSource);
+			String sourceTableName = DataSourceUtils.getDataSourceTableName(dataSource);
+			String remoteServerName = provider.getDatabaseManager().getSwitchedToServerName(serverName);
+
 			ServoyEmbeddingStore embeddingStore = provider.getAiPluginService().embeddingStoreBuilder()
-					.clientId(provider.getClientID()).source(dataSource).tableName(tableName)
-					.dropTableFirst(dropTableFirst).createTable(true).dimension(model.dimension()).addText(addText).build();
+					.clientId(provider.getClientID()).serverName(remoteServerName).sourceTableName(sourceTableName)
+					.tableName(tableName).dropTableFirst(dropTableFirst).createTable(true).dimension(model.dimension())
+					.addText(addText).build();
 			return new EmbeddingStore(embeddingStore, model);
 		} catch (Exception e) {
-            Debug.error(e);
+			Debug.error(e);
 		}
 		return null;
 	}
 
+	private NativePromise async(Callable<?> callable) {
+		Deferred deferred = new Deferred(provider.getApplication());
+		if (callable == null) {
+			deferred.resolve(null);
+		} else {
+			virtualThreadExecutor.submit(() -> {
+				try {
+					deferred.resolve(callable.call());
+				} catch (Exception ex) {
+					Debug.error(ex);
+					deferred.reject(ex);
+				}
+			});
+		}
+		return deferred.getPromise();
+	}
 }

@@ -21,11 +21,12 @@ import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.store.embedding.EmbeddingSearchRequest;
 import dev.langchain4j.store.embedding.EmbeddingSearchResult;
+import dev.langchain4j.store.embedding.EmbeddingStore;
 
-public class ServoyEmbeddingStore implements dev.langchain4j.store.embedding.EmbeddingStore<TextSegment> {
-	static final String EMBEDDING_ID_COLUMN = "_sv_embedding_id";
-	static final String EMBEDDING_COLUMN = "_sv_embedding";
-	static final String TEXT_COLUMN = "_sv_text";
+public class ServoyEmbeddingStore implements EmbeddingStore<TextSegment>, SupportsTransaction<ServoyEmbeddingStore> {
+	static final String EMBEDDING_ID_COLUMN = "embedding_id";
+	static final String EMBEDDING_COLUMN = "embedding";
+	static final String TEXT_COLUMN = "text";
 
 	private final IServerAccess serverAccess;
 	private final String clientId;
