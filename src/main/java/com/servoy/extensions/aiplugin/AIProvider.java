@@ -2,10 +2,6 @@ package com.servoy.extensions.aiplugin;
 
 import static com.servoy.extensions.aiplugin.AiPluginService.AIPLUGIN_SERVICE;
 
-import org.mozilla.javascript.BaseFunction;
-import org.mozilla.javascript.Context;
-import org.mozilla.javascript.NativePromise;
-import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.annotations.JSFunction;
 
 import com.servoy.j2db.IApplication;
@@ -140,40 +136,4 @@ public class AIProvider implements IReturnedTypesProvider, IScriptable {
 		builder.streamingChatModel(model);
 		return new ChatClient(builder.build(), access);
 	}
-
-	/**
-	 * Main method for manual testing. Creates Gemini and OpenAI chat clients and
-	 * sends a test message.
-	 *
-	 * @param args Command line arguments: args[0] = Gemini API key, args[1] =
-	 *             OpenAI API key.
-	 */
-	public static void main(String[] args) {
-		try (Context enter = Context.enter()) {
-			enter.initStandardObjects();
-			AIProvider p = new AIProvider(new ClientPluginAccessProvider(new TestApplication()));
-			ChatClient geminiClient = p.createGeminiClient(args[0], "gemini-2.5-flash");
-			NativePromise chat = geminiClient.chat("Wat is het verschil tussen een man en een vrouw?");
-			chat.put("then", chat, new BaseFunction() {
-				@Override
-				public Object call(Context cx, Scriptable scope, Scriptable thisObj, Object[] args) {
-					System.err.println(args);
-					return super.call(cx, scope, thisObj, args);
-				}
-			});
-
-			System.err.println("-------------------");
-			ChatClient openAIClient = p.createOpenAIClient(args[1], "gpt-5");
-			chat = openAIClient.chat("Wat is het verschil tussen een man en een vrouw?");
-			chat.put("then", chat, new BaseFunction() {
-				@Override
-				public Object call(Context cx, Scriptable scope, Scriptable thisObj, Object[] args) {
-					System.err.println(args);
-					return super.call(cx, scope, thisObj, args);
-				}
-			});
-			System.err.println(chat);
-		}
-	}
-
 }
