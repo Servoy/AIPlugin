@@ -21,8 +21,23 @@ public class PostgresqlHandler implements PostgresqlConnectionInitializer, Prepa
 	public boolean setParameter(PreparedStatement ps, int paramIndex, TypeInfo typeInfo, Object qd)
 			throws SQLException {
 		if (typeInfo.getColumnType().getSqlType() == Types.OTHER) {
+			float[] floats = null;
 			if (qd instanceof float[] flarray) {
-				PGvector vector = new PGvector(flarray);
+				floats = flarray;
+			} else if (qd instanceof Object[] array) {
+				float[] flarray = new float[array.length];
+				for (int i = 0; i < array.length; i++) {
+					if (array[i] instanceof Number number) {
+						flarray[i] = number.floatValue();
+					} else {
+						flarray = null;
+						break;
+					}
+				}
+				floats = flarray;
+			}
+			if (floats != null) {
+				PGvector vector = new PGvector(floats);
 				ps.setObject(paramIndex, vector);
 				return true;
 			}
