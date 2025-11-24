@@ -20,7 +20,8 @@ public class PostgresqlHandler implements PostgresqlConnectionInitializer, Prepa
 	@Override
 	public boolean setParameter(PreparedStatement ps, int paramIndex, TypeInfo typeInfo, Object qd)
 			throws SQLException {
-		if (typeInfo.getColumnType().getSqlType() == Types.OTHER) {
+		if ("vector".equalsIgnoreCase(typeInfo.getNativeTypename())) {
+			// nulls are handled inside servoy itself
 			float[] floats = null;
 			if (qd instanceof float[] flarray) {
 				floats = flarray;
