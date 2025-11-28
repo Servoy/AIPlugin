@@ -3,7 +3,7 @@ package com.servoy.extensions.aiplugin;
 import java.rmi.Remote;
 
 public interface AiPluginService extends Remote {
-    String AIPLUGIN_SERVICE = "servoy.aiPluginService";
+	String AIPLUGIN_SERVICE = "servoy.aiPluginService";
 
-    ServoyEmbeddingStoreBuilder embeddingStoreBuilder();
+	ServoyEmbeddingStoreFactory embeddingStoreFactory();
 }

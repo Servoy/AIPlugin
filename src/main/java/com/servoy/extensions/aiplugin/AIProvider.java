@@ -2,6 +2,11 @@ package com.servoy.extensions.aiplugin;
 
 import static com.servoy.extensions.aiplugin.AiPluginService.AIPLUGIN_SERVICE;
 
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import org.mozilla.javascript.NativePromise;
 import org.mozilla.javascript.annotations.JSFunction;
 
 import com.servoy.j2db.IApplication;
@@ -9,8 +14,10 @@ import com.servoy.j2db.dataprocessing.IDatabaseManager;
 import com.servoy.j2db.documentation.ServoyDocumented;
 import com.servoy.j2db.plugins.ClientPluginAccessProvider;
 import com.servoy.j2db.plugins.IClientPluginAccess;
+import com.servoy.j2db.scripting.Deferred;
 import com.servoy.j2db.scripting.IReturnedTypesProvider;
 import com.servoy.j2db.scripting.IScriptable;
+import com.servoy.j2db.util.Debug;
 
 import dev.langchain4j.model.googleai.GoogleAiGeminiStreamingChatModel;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
@@ -24,6 +31,12 @@ import dev.langchain4j.service.AiServices;
 public class AIProvider implements IReturnedTypesProvider, IScriptable {
 	private final IClientPluginAccess access;
 	private AiPluginService aiPluginService;
+
+	/**
+	 * Executor for running embedding operations asynchronously using virtual
+	 * threads.
+	 */
+	private static ExecutorService virtualThreadExecutor = Executors.newVirtualThreadPerTaskExecutor();
 
 	AiPluginService getAiPluginService() throws Exception {
 		if (aiPluginService == null) {
@@ -60,28 +73,29 @@ public class AIProvider implements IReturnedTypesProvider, IScriptable {
 	 */
 	@Override
 	public Class<?>[] getAllReturnedTypes() {
-		return new Class[] { ChatClient.class, GeminiChatBuilder.class, OpenAiChatBuilder.class, EmbeddingClient.class,
-				GeminiEmbeddingBuilder.class, OpenAiEmbeddingBuilder.class, EmbeddingStore.class, ChatResponse.class };
+		return new Class[] { ChatClient.class, GeminiChatBuilder.class, OpenAiChatBuilder.class,
+				GeminiEmbeddingModelBuilder.class, OpenAiEmbeddingModelBuilder.class, EmbeddingStore.class,
+				ChatResponse.class };
 	}
 
 	/**
 	 * Creates a builder for Gemini embeddings.
 	 *
-	 * @return GeminiEmbeddingBuilder instance.
+	 * @return GeminiEmbeddingModelBuilder instance.
 	 */
 	@JSFunction
-	public GeminiEmbeddingBuilder createGeminiEmbeddedBuilder() {
-		return new GeminiEmbeddingBuilder(this);
+	public GeminiEmbeddingModelBuilder createGeminiEmbeddingModelBuilder() {
+		return new GeminiEmbeddingModelBuilder(this);
 	}
 
 	/**
-	 * Creates a builder for OpenAI embeddings.
+	 * Creates a builder for OpenAI store.
 	 *
-	 * @return OpenAiEmbeddingBuilder instance.
+	 * @return OpenAiEmbeddingModelBuilder instance.
 	 */
 	@JSFunction
-	public OpenAiEmbeddingBuilder createOpenAiEmbeddedBuilder() {
-		return new OpenAiEmbeddingBuilder(this);
+	public OpenAiEmbeddingModelBuilder createOpenAiEmbeddingModelBuilder() {
+		return new OpenAiEmbeddingModelBuilder(this);
 	}
 
 	/**
@@ -135,5 +149,22 @@ public class AIProvider implements IReturnedTypesProvider, IScriptable {
 		AiServices<Assistant> builder = AiServices.builder(Assistant.class);
 		builder.streamingChatModel(model);
 		return new ChatClient(builder.build(), access);
+	}
+
+	public NativePromise async(Callable<?> callable) {
+		Deferred deferred = new Deferred(getApplication());
+		if (callable == null) {
+			deferred.resolve(null);
+		} else {
+			virtualThreadExecutor.submit(() -> {
+				try {
+					deferred.resolve(callable.call());
+				} catch (Exception ex) {
+					Debug.error(ex);
+					deferred.reject(ex);
+				}
+			});
+		}
+		return deferred.getPromise();
 	}
 }

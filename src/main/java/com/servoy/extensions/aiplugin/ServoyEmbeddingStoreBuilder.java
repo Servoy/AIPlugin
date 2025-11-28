@@ -1,67 +1,108 @@
 package com.servoy.extensions.aiplugin;
 
+import static com.servoy.j2db.util.DataSourceUtils.getDataSourceServerName;
+import static com.servoy.j2db.util.DataSourceUtils.getDataSourceTableName;
+
+import org.mozilla.javascript.annotations.JSFunction;
+
 import com.servoy.extensions.aiplugin.server.ServoyEmbeddingStore;
-import com.servoy.extensions.aiplugin.server.ServoyEmbeddingStoreFactory;
-import com.servoy.j2db.plugins.IServerAccess;
+import com.servoy.j2db.util.Debug;
+
+import dev.langchain4j.model.embedding.DimensionAwareEmbeddingModel;
 
 public class ServoyEmbeddingStoreBuilder {
+	/**
+	 * The ai provider plugin.
+	 */
+	private final AIProvider provider;
+	private final DimensionAwareEmbeddingModel model;
 
-	private final IServerAccess serverAccess;
-	private String clientId;
-	private String serverName;
-	private String sourceTableName;
-	private String tableName;
-	private boolean dropTableFirst = false;
-	private boolean createTable = false;
-	private int dimension = 0;
+	private boolean recreate = false;
 	private boolean addText = false;
+	private String dataSource;
+	private String tableName;
 
-	public ServoyEmbeddingStoreBuilder(IServerAccess serverAccess) {
-		this.serverAccess = serverAccess;
+	/**
+	 * Constructs a GeminiEmbeddingModelBuilder with the given plugin access.
+	 *
+	 * @param provider ai provider plugin.
+	 * @param model    embedding model.
+	 */
+	public ServoyEmbeddingStoreBuilder(AIProvider provider, DimensionAwareEmbeddingModel model) {
+		this.provider = provider;
+		this.model = model;
 	}
 
-	public ServoyEmbeddingStoreBuilder serverName(String serverName) {
-		this.serverName = serverName;
+	/**
+	 * Sets the recreate option (remove persistent storage) before opening the
+	 * store.
+	 *
+	 * @param recreate recreate option.
+	 * @return This builder instance.
+	 */
+	@JSFunction
+	public ServoyEmbeddingStoreBuilder recreate(boolean recreate) {
+		this.recreate = recreate;
 		return this;
 	}
 
-	public ServoyEmbeddingStoreBuilder sourceTableName(String sourceTableName) {
-		this.sourceTableName = sourceTableName;
-		return this;
-	}
-
-	public ServoyEmbeddingStoreBuilder clientId(String clientId) {
-		this.clientId = clientId;
-		return this;
-	}
-
-	public ServoyEmbeddingStoreBuilder tableName(String tableName) {
-		this.tableName = tableName;
-		return this;
-	}
-
-	public ServoyEmbeddingStoreBuilder dropTableFirst(boolean dropTableFirst) {
-		this.dropTableFirst = dropTableFirst;
-		return this;
-	}
-
-	public ServoyEmbeddingStoreBuilder createTable(boolean createTable) {
-		this.createTable = createTable;
-		return this;
-	}
-
-	public ServoyEmbeddingStoreBuilder dimension(int dimension) {
-		this.dimension = dimension;
-		return this;
-	}
-
+	/**
+	 * Sets the addText option (store original text).
+	 *
+	 * @param addText addText option.
+	 * @return This builder instance.
+	 */
+	@JSFunction
 	public ServoyEmbeddingStoreBuilder addText(boolean addText) {
 		this.addText = addText;
 		return this;
 	}
 
-	public ServoyEmbeddingStore build() throws Exception {
-		return ServoyEmbeddingStoreFactory.createStore(serverAccess, clientId, serverName, sourceTableName, tableName,
-				dropTableFirst, createTable, dimension, addText);
+	/**
+	 * Sets the dataSource to read data from.
+	 *
+	 * @param dataSource dataSource.
+	 * @return This builder instance.
+	 */
+	@JSFunction
+	public ServoyEmbeddingStoreBuilder dataSource(String dataSource) {
+		this.dataSource = dataSource;
+		return this;
+	}
+
+	/**
+	 * Sets the tableName to store the embeddings in.
+	 *
+	 * @param tableName tableName.
+	 * @return This builder instance.
+	 */
+	@JSFunction
+	public ServoyEmbeddingStoreBuilder tableName(String tableName) {
+		this.tableName = tableName;
+		return this;
+	}
+
+	/**
+	 * Creates a Servoy embedding store for the specified source table, the
+	 * emmbeddings will be saved in the specified table in the same server.
+	 *
+	 * @return An EmbeddingStore backed by a servoy store, or null if creation
+	 *         fails.
+	 */
+	@JSFunction
+	public EmbeddingStore build() {
+		try {
+			String serverName = getDataSourceServerName(dataSource);
+			String sourceTableName = getDataSourceTableName(dataSource);
+			String remoteServerName = provider.getDatabaseManager().getSwitchedToServerName(serverName);
+
+			ServoyEmbeddingStore embeddingStore = provider.getAiPluginService().embeddingStoreFactory().create(
+					provider.getClientID(), remoteServerName, sourceTableName, tableName, recreate, true,
+					model.dimension(), addText);
+			return new EmbeddingStore(provider, embeddingStore, model);
+		} catch (Exception e) {
+			Debug.error(e);
+		}
+		return null;
 	}
 }
