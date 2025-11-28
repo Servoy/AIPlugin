@@ -30,7 +30,7 @@ import dev.langchain4j.model.chat.request.json.JsonObjectSchema;
  * @author jcompagner
  * @since 2025.12
  */
-@ServoyDocumented(publicName = "ToolBuilder", scriptingName = "ToolBuilder")
+@ServoyDocumented
 public class ToolBuilder<T extends BaseChatBuilder<T>> {
 
     /**

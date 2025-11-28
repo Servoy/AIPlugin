@@ -37,7 +37,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * This is the ChatClient class that wraps around a LLM to chat with it.
  * It has support for adding files (images, videos, audio, pdf, text) to the chat.
  */
-@ServoyDocumented(scriptingName = "ChatClient")
+@ServoyDocumented
 public class ChatClient implements IScriptable, IJavaScriptType {
 
 	private final Assistant assistant;

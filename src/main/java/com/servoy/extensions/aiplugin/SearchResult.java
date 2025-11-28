@@ -10,7 +10,7 @@ import dev.langchain4j.data.document.Metadata;
  * SearchResult represents a single result from an embedding similarity search.
  * Contains the similarity score, matched text, and associated metadata.
  */
-@ServoyDocumented(scriptingName = "SearchResult")
+@ServoyDocumented
 public class SearchResult {
 
 	/**

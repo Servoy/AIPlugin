@@ -7,7 +7,7 @@ import com.servoy.j2db.documentation.ServoyDocumented;
 import dev.langchain4j.model.output.FinishReason;
 import dev.langchain4j.model.output.TokenUsage;
 
-@ServoyDocumented(scriptingName = "ChatClient")
+@ServoyDocumented
 public class ChatResponse {
 
 	// Wrapper around the langchain4j ChatResponse and a pre-formatted full response string.

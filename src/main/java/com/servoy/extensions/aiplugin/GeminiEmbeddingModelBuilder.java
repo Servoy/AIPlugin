@@ -12,7 +12,7 @@ import dev.langchain4j.model.googleai.GoogleAiEmbeddingModel.GoogleAiEmbeddingMo
  * embedding models. Allows setting API key and model name for the Gemini
  * embedding model.
  */
-@ServoyDocumented(scriptingName = "GeminiEmbeddingModelBuilder")
+@ServoyDocumented
 public class GeminiEmbeddingModelBuilder {
 
 	/**

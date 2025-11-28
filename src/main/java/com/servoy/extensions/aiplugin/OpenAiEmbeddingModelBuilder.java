@@ -11,7 +11,7 @@ import dev.langchain4j.model.openai.OpenAiEmbeddingModel;
  * embedding models. Allows setting API key and model name for the OpenAI
  * embedding model.
  */
-@ServoyDocumented(scriptingName = "OpenAiEmbeddingModelBuilder")
+@ServoyDocumented
 public class OpenAiEmbeddingModelBuilder {
 
 	/**

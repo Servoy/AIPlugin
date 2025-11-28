@@ -15,7 +15,7 @@ import dev.langchain4j.service.AiServices;
  * OpenAiChatBuilder is a builder for configuring and creating OpenAI chat clients.
  * Allows setting API key, model name, temperature, and memory token limits for the OpenAI model.
  */
-@ServoyDocumented(publicName = "OpenAiChatBuilder", scriptingName = "OpenAiChatBuilder")
+@ServoyDocumented
 public class OpenAiChatBuilder extends BaseChatBuilder<OpenAiChatBuilder>  {
 	/**
 	 * The builder for the OpenAI streaming chat model.

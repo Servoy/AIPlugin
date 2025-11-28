@@ -14,7 +14,7 @@ import dev.langchain4j.service.AiServices;
  * GeminiChatBuilder is a builder for configuring and creating Gemini chat clients.
  * Allows setting API key, model name, temperature, and memory token limits for the Gemini model.
  */
-@ServoyDocumented(publicName = "GeminiChatBuilder", scriptingName = "GeminiChatBuilder")
+@ServoyDocumented
 public class GeminiChatBuilder extends BaseChatBuilder<GeminiChatBuilder> {
 	/**
 	 * The Gemini API key.

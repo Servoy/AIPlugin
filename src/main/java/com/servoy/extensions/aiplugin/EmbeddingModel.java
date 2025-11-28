@@ -21,7 +21,7 @@ import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
  * embedding stores. It supports in-memory and Servoy (pgvector) embedding
  * stores.
  */
-@ServoyDocumented(scriptingName = "EmbeddingModel")
+@ServoyDocumented
 public class EmbeddingModel {
 
 	/**

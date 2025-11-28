@@ -34,7 +34,7 @@ import dev.langchain4j.store.embedding.EmbeddingSearchRequest;
  * search using embeddings. It supports asynchronous embedding and blocking
  * search, and can be backed by various embedding store implementations.
  */
-@ServoyDocumented(scriptingName = "EmbeddingStore")
+@ServoyDocumented
 public class EmbeddingStore implements IScriptable, IJavaScriptType {
 
 	/**
