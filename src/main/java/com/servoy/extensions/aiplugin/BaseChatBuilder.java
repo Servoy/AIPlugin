@@ -56,6 +56,11 @@ public class BaseChatBuilder<T extends BaseChatBuilder<T>> {
     private final Map<ToolSpecification, ToolExecutor> tools = new HashMap<>();
 
     /**
+     * An optional system message to be added to the chat context.
+     */
+	private String systemMessage;
+
+    /**
      * Constructs a new BaseChatBuilder with the given Servoy client plugin access.
      *
      * @param access the Servoy client plugin access instance
@@ -75,6 +80,9 @@ public class BaseChatBuilder<T extends BaseChatBuilder<T>> {
             builder.tools(new ServoyBuiltInTools(access));
         }
         builder.tools(tools);
+        if (systemMessage != null)
+	        builder.systemMessageProvider(obect -> 
+	        	systemMessage);
         return builder;
     }
 
@@ -99,10 +107,27 @@ public class BaseChatBuilder<T extends BaseChatBuilder<T>> {
      * @param description  the description of the tool
      * @return a ToolBuilder instance for further configuration
      */
-    @JSFunction
+    @SuppressWarnings("unchecked")
+	@JSFunction
     public ToolBuilder<T> createTool(Function toolFunction, String name, String description) {
         return new ToolBuilder<T>((T) this, toolFunction, name, description);
     }
+    
+	/**
+	 * Adds a system message to the chat context.
+	 * This can be a message how the model must behave for this chat session.
+	 * 
+	 * @param message The system message to add.
+	 * 
+	 * @return This builder instance for chaining.
+	 */
+    @SuppressWarnings("unchecked")
+	@JSFunction
+    public T addSystemMessage(String message) {
+		this.systemMessage = message;
+		return (T) this;
+	}
+
 
     /**
      * Registers a tool specification and its executor for the AI agent.
