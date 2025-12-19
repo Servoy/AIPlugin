@@ -106,10 +106,10 @@ public class ChatClient implements IScriptable, IJavaScriptType {
 
 	/**
 	 * Send a userMessage to the ai. This will return a promise that will be resolved with the response.
-	 * This respose is the ChatResponse object or it will be rejected with an error.
+	 * This response is a Promise that will get a ChatResponse object in the then or the promise will be rejected with an error.
 	 * 
 	 * @param userMessage The user message
-	 * @return A promise that will be resolved with the assistant response.
+	 * @return {Promise<plugins.ai.ChatResponse>} A promise that will be resolved with the assistant response.
 	 */
 	@JSFunction
 	public NativePromise chat(String userMessage) {
@@ -128,9 +128,9 @@ public class ChatClient implements IScriptable, IJavaScriptType {
 	 * So this can be used for streaming responses.
 	 * 
 	 * @param userMessage The user message send to the ai.
-	 * @param partialResponse A function that will be called with each partial string response from the ai.
-	 * @param onComplete A function that will be called when the response is complete, it will be called with the ChatResponse object.
-	 * @param onError A function that will be called when an error occurs.
+	 * @param partialResponse {(partialResponse:String)=>void} A function that will be called with each partial string response from the ai.
+	 * @param onComplete {(response:plugins.ai.ChatResponse)=>void} A function that will be called when the response is complete, it will be called with the ChatResponse object.
+	 * @param onError {(error:Exception)=>void} A function that will be called when an error occurs.
 	 */
 	@JSFunction
 	public void chat(String userMessage, Function partialResponse, Function onComplete, Function onError) {
