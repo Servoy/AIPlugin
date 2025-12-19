@@ -3,12 +3,13 @@ package com.servoy.extensions.aiplugin;
 import org.mozilla.javascript.annotations.JSFunction;
 
 import com.servoy.j2db.documentation.ServoyDocumented;
+import com.servoy.j2db.scripting.IJavaScriptType;
 
 import dev.langchain4j.model.output.FinishReason;
 import dev.langchain4j.model.output.TokenUsage;
 
 @ServoyDocumented
-public class ChatResponse {
+public class ChatResponse implements IJavaScriptType{
 
 	// Wrapper around the langchain4j ChatResponse and a pre-formatted full response string.
 	private final dev.langchain4j.model.chat.response.ChatResponse chatResponse;

@@ -1,15 +1,20 @@
 package com.servoy.extensions.aiplugin;
 
+import java.util.Map;
+
 import org.mozilla.javascript.annotations.JSFunction;
 
 import com.servoy.j2db.documentation.ServoyDocumented;
 import com.servoy.j2db.plugins.IClientPluginAccess;
 
+import dev.langchain4j.agent.tool.ToolExecutionRequest;
+import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.memory.chat.TokenWindowChatMemory;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel.OpenAiStreamingChatModelBuilder;
 import dev.langchain4j.model.openai.OpenAiTokenCountEstimator;
 import dev.langchain4j.service.AiServices;
+import dev.langchain4j.service.tool.ToolExecutor;
 
 /**
  * OpenAiChatBuilder is a builder for configuring and creating OpenAI chat clients.
@@ -91,8 +96,23 @@ public class OpenAiChatBuilder extends BaseChatBuilder<OpenAiChatBuilder>  {
 	 */
 	@JSFunction
 	public ChatClient build() {
+		
+		ToolSpecification webSearchTool = ToolSpecification.builder()
+                .name("web_search_preview") 
+                .description("Search the web for current information")
+                // Voeg parameters toe als de specifieke tool dat vereist
+                .build();
+		
 		AiServices<Assistant> assistant = createAssistantBuilder();
 		assistant.streamingChatModel(builder.build());
+		assistant.tools(Map.of(webSearchTool, new ToolExecutor() {
+			
+			@Override
+			public String execute(ToolExecutionRequest request, Object memoryId) {
+				System.err.println("Web search tool executed with input: " + request);
+				return null;
+			}
+		}));
 		if (tokens != null) {
 			OpenAiTokenCountEstimator tokenCountEstimator = new OpenAiTokenCountEstimator(modelName);
 			TokenWindowChatMemory tokenWindowChatMemory = TokenWindowChatMemory.builder().maxTokens(tokens, tokenCountEstimator).build();

@@ -30,10 +30,12 @@ jobs:
 
       - name: Build with Maven
         run: ./mvnw -U -B package
+        working-directory: ./com.servoy.extensions.runtime.aiplugin
 
       - name: Get project version
         id: get_version
         run: echo "PACKAGE_VERSION=$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_ENV
+        working-directory: ./com.servoy.extensions.runtime.aiplugin
         shell: bash
           
       - name: Get branch name
@@ -71,6 +73,6 @@ jobs:
       - name: Upload assets
         if: env.release_exists == 'true'
         run: |
-         gh release upload "_${{ env.BRANCH_NAME }}" target/*.zip
+         gh release upload "_${{ env.BRANCH_NAME }}" ./com.servoy.extensions.runtime.aiplugin/target/*.zip
         env:
          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
