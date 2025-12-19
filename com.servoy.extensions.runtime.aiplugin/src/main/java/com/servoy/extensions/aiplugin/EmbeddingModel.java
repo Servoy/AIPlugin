@@ -9,6 +9,7 @@ import org.mozilla.javascript.NativePromise;
 import org.mozilla.javascript.annotations.JSFunction;
 
 import com.servoy.j2db.documentation.ServoyDocumented;
+import com.servoy.j2db.scripting.IJavaScriptType;
 
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
@@ -22,7 +23,7 @@ import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
  * stores.
  */
 @ServoyDocumented
-public class EmbeddingModel {
+public class EmbeddingModel implements IJavaScriptType {
 
 	/**
 	 * The embedding model used for generating embeddings.

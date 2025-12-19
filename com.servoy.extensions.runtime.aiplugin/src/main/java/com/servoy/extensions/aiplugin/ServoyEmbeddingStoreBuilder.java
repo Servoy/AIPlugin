@@ -6,11 +6,12 @@ import static com.servoy.j2db.util.DataSourceUtils.getDataSourceTableName;
 import org.mozilla.javascript.annotations.JSFunction;
 
 import com.servoy.extensions.aiplugin.server.ServoyEmbeddingStore;
+import com.servoy.j2db.scripting.IJavaScriptType;
 import com.servoy.j2db.util.Debug;
 
 import dev.langchain4j.model.embedding.DimensionAwareEmbeddingModel;
 
-public class ServoyEmbeddingStoreBuilder {
+public class ServoyEmbeddingStoreBuilder implements IJavaScriptType{
 	/**
 	 * The ai provider plugin.
 	 */

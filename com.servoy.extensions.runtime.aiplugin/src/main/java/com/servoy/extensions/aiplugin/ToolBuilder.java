@@ -7,6 +7,7 @@ import org.mozilla.javascript.Function;
 import org.mozilla.javascript.annotations.JSFunction;
 
 import com.servoy.j2db.documentation.ServoyDocumented;
+import com.servoy.j2db.scripting.IJavaScriptType;
 
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.agent.tool.ToolSpecification.Builder;
@@ -31,7 +32,7 @@ import dev.langchain4j.model.chat.request.json.JsonObjectSchema;
  * @since 2025.12
  */
 @ServoyDocumented
-public class ToolBuilder<T extends BaseChatBuilder<T>> {
+public class ToolBuilder<T extends BaseChatBuilder<T>> implements IJavaScriptType{
 
     /**
      * The chat builder instance to which this tool builder is attached.

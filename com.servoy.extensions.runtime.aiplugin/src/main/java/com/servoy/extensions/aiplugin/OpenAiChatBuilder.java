@@ -6,6 +6,7 @@ import org.mozilla.javascript.annotations.JSFunction;
 
 import com.servoy.j2db.documentation.ServoyDocumented;
 import com.servoy.j2db.plugins.IClientPluginAccess;
+import com.servoy.j2db.scripting.IJavaScriptType;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
@@ -21,7 +22,7 @@ import dev.langchain4j.service.tool.ToolExecutor;
  * Allows setting API key, model name, temperature, and memory token limits for the OpenAI model.
  */
 @ServoyDocumented
-public class OpenAiChatBuilder extends BaseChatBuilder<OpenAiChatBuilder>  {
+public class OpenAiChatBuilder extends BaseChatBuilder<OpenAiChatBuilder> implements IJavaScriptType {
 	/**
 	 * The builder for the OpenAI streaming chat model.
 	 */

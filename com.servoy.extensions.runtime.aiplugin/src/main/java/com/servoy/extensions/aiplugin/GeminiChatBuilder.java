@@ -4,6 +4,7 @@ import org.mozilla.javascript.annotations.JSFunction;
 
 import com.servoy.j2db.documentation.ServoyDocumented;
 import com.servoy.j2db.plugins.IClientPluginAccess;
+import com.servoy.j2db.scripting.IJavaScriptType;
 
 import dev.langchain4j.memory.chat.TokenWindowChatMemory;
 import dev.langchain4j.model.googleai.GoogleAiGeminiStreamingChatModel;
@@ -15,7 +16,7 @@ import dev.langchain4j.service.AiServices;
  * Allows setting API key, model name, temperature, and memory token limits for the Gemini model.
  */
 @ServoyDocumented
-public class GeminiChatBuilder extends BaseChatBuilder<GeminiChatBuilder> {
+public class GeminiChatBuilder extends BaseChatBuilder<GeminiChatBuilder> implements IJavaScriptType {
 	/**
 	 * The Gemini API key.
 	 */

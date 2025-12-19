@@ -3,6 +3,7 @@ package com.servoy.extensions.aiplugin;
 import org.mozilla.javascript.annotations.JSFunction;
 
 import com.servoy.j2db.documentation.ServoyDocumented;
+import com.servoy.j2db.scripting.IJavaScriptType;
 
 import dev.langchain4j.model.googleai.GoogleAiEmbeddingModel;
 import dev.langchain4j.model.googleai.GoogleAiEmbeddingModel.GoogleAiEmbeddingModelBuilder;
@@ -13,7 +14,7 @@ import dev.langchain4j.model.googleai.GoogleAiEmbeddingModel.GoogleAiEmbeddingMo
  * embedding model.
  */
 @ServoyDocumented
-public class GeminiEmbeddingModelBuilder {
+public class GeminiEmbeddingModelBuilder implements IJavaScriptType{
 
 	/**
 	 * The ai provider plugin.

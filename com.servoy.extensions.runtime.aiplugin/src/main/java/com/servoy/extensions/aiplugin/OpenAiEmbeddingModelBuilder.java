@@ -3,6 +3,7 @@ package com.servoy.extensions.aiplugin;
 import org.mozilla.javascript.annotations.JSFunction;
 
 import com.servoy.j2db.documentation.ServoyDocumented;
+import com.servoy.j2db.scripting.IJavaScriptType;
 
 import dev.langchain4j.model.openai.OpenAiEmbeddingModel;
 
@@ -12,7 +13,7 @@ import dev.langchain4j.model.openai.OpenAiEmbeddingModel;
  * embedding model.
  */
 @ServoyDocumented
-public class OpenAiEmbeddingModelBuilder {
+public class OpenAiEmbeddingModelBuilder implements IJavaScriptType{
 
 	/**
 	 * The ai provider plugin.
