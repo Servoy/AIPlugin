@@ -3,6 +3,7 @@ package com.servoy.extensions.aiplugin;
 import java.util.Map;
 
 import com.servoy.j2db.documentation.ServoyDocumented;
+import com.servoy.j2db.scripting.IJavaScriptType;
 
 import dev.langchain4j.data.document.Metadata;
 
@@ -11,7 +12,7 @@ import dev.langchain4j.data.document.Metadata;
  * Contains the similarity score, matched text, and associated metadata.
  */
 @ServoyDocumented
-public class SearchResult {
+public class SearchResult implements IJavaScriptType{
 
 	/**
 	 * The similarity score for this result.

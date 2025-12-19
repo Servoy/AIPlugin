@@ -227,4 +227,21 @@ public class EmbeddingStore implements IScriptable, IJavaScriptType {
 				.map(match -> new SearchResult(match.score(), match.embedded().text(), match.embedded().metadata()))
 				.toArray(SearchResult[]::new);
 	}
+	
+	/**
+	 * Performs a blocking similarity search for the given text, returning the best
+	 * matches from the store. This returns the default 3 results
+	 *
+	 * @param text       The query text to search for.
+	 * @return An array of SearchResult objects representing the best matches.
+	 */
+	@JSFunction
+	public SearchResult[] search(String text) {
+		Embedding queryEmbedding = model.embed(text).content();
+		EmbeddingSearchRequest embeddingSearchRequest = EmbeddingSearchRequest.builder().queryEmbedding(queryEmbedding).build();
+		List<EmbeddingMatch<TextSegment>> matches = embeddingStore.search(embeddingSearchRequest).matches();
+		return matches.stream()
+				.map(match -> new SearchResult(match.score(), match.embedded().text(), match.embedded().metadata()))
+				.toArray(SearchResult[]::new);
+	}
 }

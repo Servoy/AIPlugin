@@ -128,7 +128,7 @@ public class ChatClient implements IScriptable, IJavaScriptType {
 	 * So this can be used for streaming responses.
 	 * 
 	 * @param userMessage The user message send to the ai.
-	 * @param partialResponse A function that will be called with each partial response from the ai.
+	 * @param partialResponse A function that will be called with each partial string response from the ai.
 	 * @param onComplete A function that will be called when the response is complete, it will be called with the ChatResponse object.
 	 * @param onError A function that will be called when an error occurs.
 	 */
