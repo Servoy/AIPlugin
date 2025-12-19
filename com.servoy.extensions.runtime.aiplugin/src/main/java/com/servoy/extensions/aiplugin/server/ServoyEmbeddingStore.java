@@ -1,5 +1,6 @@
 package com.servoy.extensions.aiplugin.server;
 
+import static com.servoy.j2db.dataprocessing.BufferedDataSetInternal.createBufferedDataSet;
 import static dev.langchain4j.internal.Utils.randomUUID;
 import static dev.langchain4j.internal.ValidationUtils.ensureNotNull;
 import static dev.langchain4j.internal.ValidationUtils.ensureTrue;
@@ -9,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import com.servoy.j2db.dataprocessing.BufferedDataSetInternal;
 import com.servoy.j2db.persistence.Column;
 import com.servoy.j2db.persistence.IColumnTypes;
 import com.servoy.j2db.plugins.IServerAccess;
@@ -139,10 +139,9 @@ public class ServoyEmbeddingStore implements EmbeddingStore<TextSegment>, Suppor
 				oldSourceIds.add(oldSourceId.toArray());
 			}
 
-			var oldSourceIdsDataset = BufferedDataSetInternal.createBufferedDataSet(
-					sourceColumnNames.toArray(String[]::new), sourceColumnTypes.toArray(ColumnType[]::new),
-					oldSourceIds, false);
-			var dataSet = BufferedDataSetInternal.createBufferedDataSet(columnNames.toArray(String[]::new),
+			var oldSourceIdsDataset = createBufferedDataSet(sourceColumnNames.toArray(String[]::new),
+					sourceColumnTypes.toArray(ColumnType[]::new), oldSourceIds, false);
+			var dataSet = createBufferedDataSet(columnNames.toArray(String[]::new),
 					columnTypes.toArray(ColumnType[]::new), rows, false);
 			if (!tableModel.wasCreated) {
 				serverAccess.deleteFromDataSet(clientId, tableModel.serverName(), tableModel.tableName(), transactionId,

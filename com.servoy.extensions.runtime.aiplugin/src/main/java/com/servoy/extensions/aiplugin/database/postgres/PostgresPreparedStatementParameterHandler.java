@@ -1,25 +1,15 @@
-package com.servoy.extensions.aiplugin.services;
+package com.servoy.extensions.aiplugin.database.postgres;
 
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Types;
 
 import com.pgvector.PGvector;
 import com.servoy.base.query.TypeInfo;
-import com.servoy.j2db.server.extensions.PostgresqlConnectionInitializer;
-import com.servoy.j2db.server.extensions.PreparedStatementParameterHandler;
 
-public class PostgresqlHandler implements PostgresqlConnectionInitializer, PreparedStatementParameterHandler {
-
-	@Override
-	public void initialize(Connection connection) throws SQLException {
-		PGvector.registerTypes(connection);
-	}
-
-	@Override
-	public boolean setParameter(PreparedStatement ps, int paramIndex, TypeInfo typeInfo, Object qd)
+public class PostgresPreparedStatementParameterHandler {
+	static public boolean setParameter(PreparedStatement ps, int paramIndex, TypeInfo typeInfo, Object qd)
 			throws SQLException {
+
 		if ("vector".equalsIgnoreCase(typeInfo.getNativeTypename())) {
 			// nulls are handled inside servoy itself
 			float[] floats = null;

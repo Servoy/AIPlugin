@@ -5,6 +5,7 @@ import static com.servoy.base.persistence.IBaseColumn.PK_COLUMN;
 import static com.servoy.base.persistence.IBaseColumn.USER_ROWID_COLUMN;
 import static com.servoy.base.persistence.IBaseColumn.UUID_COLUMN;
 import static com.servoy.base.persistence.IBaseColumn.VECTOR_COLUMN;
+import static com.servoy.extensions.aiplugin.database.DatabaseHandler.DATABASE_HANDLER;
 import static com.servoy.extensions.aiplugin.server.ServoyEmbeddingStore.EMBEDDING_COLUMN;
 import static com.servoy.extensions.aiplugin.server.ServoyEmbeddingStore.EMBEDDING_ID_COLUMN;
 import static com.servoy.extensions.aiplugin.server.ServoyEmbeddingStore.TEXT_COLUMN;
@@ -13,6 +14,7 @@ import static com.servoy.j2db.persistence.IColumnTypes.TEXT;
 import static dev.langchain4j.internal.ValidationUtils.ensureGreaterThanZero;
 import static dev.langchain4j.internal.ValidationUtils.ensureNotNull;
 import static dev.langchain4j.internal.ValidationUtils.ensureTrue;
+import static java.lang.Integer.parseInt;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -27,6 +29,7 @@ import com.servoy.j2db.persistence.ITable;
 import com.servoy.j2db.persistence.RepositoryException;
 import com.servoy.j2db.plugins.IServerAccess;
 import com.servoy.j2db.query.ColumnType;
+import com.servoy.j2db.util.Debug;
 
 public class ServoyEmbeddingStoreFactory {
 
@@ -66,15 +69,15 @@ public class ServoyEmbeddingStoreFactory {
 
 		boolean wasCreated = false;
 		if (table == null) {
-			table = createTable(tableName, server, sourcePkColumns, dimension, addText);
+			table = createTable(tableName, serverAccess, server, sourcePkColumns, dimension, addText);
 			wasCreated = true;
 		}
 
 		return verifyTable(table, sourcePkColumns, addText, wasCreated);
 	}
 
-	private static ITable createTable(String tableName, IServerInternal server, List<Column> sourcePkColumns,
-			int dimension, boolean addText) throws RepositoryException, SQLException {
+	private static ITable createTable(String tableName, IServerAccess serverAccess, IServerInternal server,
+			List<Column> sourcePkColumns, int dimension, boolean addText) throws RepositoryException, SQLException {
 		var table = server.createNewTable(DummyValidator.INSTANCE, tableName);
 
 		// Embedding PK
@@ -111,6 +114,19 @@ public class ServoyEmbeddingStoreFactory {
 
 		// Index on source ref
 		server.createIndex(table, "_sv_embedding_meta_" + tableName, sourceRefColumns.toArray(Column[]::new), false);
+
+		// Index on embedding columns
+		try {
+			int embeddingListSize = parseInt(
+					serverAccess.getSettings().getProperty("servoy.aiplugin.embedding_list_size", "500"));
+			if (!DATABASE_HANDLER.createEmbeddingIndex(server.getConnection(), table, "_sv_embedding_" + tableName,
+					embeddingColumn, embeddingListSize)) {
+				// no native support, try Servoy index
+				server.createIndex(table, "_sv_embedding_" + tableName, new Column[] { embeddingColumn }, false);
+			}
+		} catch (Exception e) {
+			Debug.log("Failed to create index on embedding -- continuing without index", e);
+		}
 
 		return table;
 	}

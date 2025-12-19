@@ -1,1 +1,1 @@
-com.servoy.extensions.aiplugin.services.PostgresqlHandler
+com.servoy.extensions.aiplugin.database.DatabaseHandler
