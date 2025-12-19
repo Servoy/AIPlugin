@@ -1,9 +1,8 @@
 package com.servoy.extensions.aiplugin;
 
-import java.util.Map;
-
 import com.servoy.j2db.documentation.ServoyDocumented;
 import com.servoy.j2db.scripting.IJavaScriptType;
+import com.servoy.j2db.scripting.JSMap;
 
 import dev.langchain4j.data.document.Metadata;
 
@@ -56,11 +55,13 @@ public class SearchResult implements IJavaScriptType{
 	}
 	
 	/**
-	 * Returns the metadata associated with this result as a map.
-	 * @return The metadata map.
+	 * Returns the metadata associated with this result as a JS Object.
+	 * @return The metadata object.
 	 */
-	public Map<String,Object> getMetadata() {
-		return metadata.toMap();
+	public JSMap<String,Object> getMetadata() {
+		JSMap<String,Object> map = new JSMap<>();
+		map.putAll(metadata.toMap());
+		return map;
 	}
 
 }
