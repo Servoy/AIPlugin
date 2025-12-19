@@ -76,13 +76,16 @@ public class ServoyEmbeddingStore implements EmbeddingStore<TextSegment>, Suppor
 	public void addAll(List<String> ids, List<Embedding> embeddings, List<TextSegment> embedded) {
 		ensureTrue(ids.size() == embeddings.size(), "ids and embeddings differ in size");
 		ensureTrue(embedded == null || ids.size() == embedded.size(), "ids and embedded differ in size");
-		if (ids.isEmpty())
+		if (ids.isEmpty()) {
 			return;
+		}
 
 		try {
 			boolean hasText = tableModel.columnTypes.containsKey(TEXT_COLUMN);
 			var columnNames = new ArrayList<String>();
+			var sourceColumnNames = new ArrayList<String>();
 			var columnTypes = new ArrayList<ColumnType>();
+			var sourceColumnTypes = new ArrayList<ColumnType>();
 
 			// Columns
 			columnNames.add(EMBEDDING_ID_COLUMN);
@@ -92,7 +95,9 @@ public class ServoyEmbeddingStore implements EmbeddingStore<TextSegment>, Suppor
 
 			tableModel.sourceColumns.forEach(sourceColumn -> {
 				columnNames.add(sourceColumn);
+				sourceColumnNames.add(sourceColumn);
 				columnTypes.add(tableModel.columnTypes.get(sourceColumn));
+				sourceColumnTypes.add(tableModel.columnTypes.get(sourceColumn));
 			});
 
 			if (hasText) {
@@ -102,6 +107,7 @@ public class ServoyEmbeddingStore implements EmbeddingStore<TextSegment>, Suppor
 
 			// Rows
 			var rows = new ArrayList<Object[]>();
+			var oldSourceIds = new ArrayList<Object[]>();
 			for (int i = 0; i < ids.size(); i++) {
 				var id = ids.get(i);
 				var embedding = embeddings.get(i);
@@ -116,19 +122,32 @@ public class ServoyEmbeddingStore implements EmbeddingStore<TextSegment>, Suppor
 				}
 
 				var row = new ArrayList<>();
+				var oldSourceId = new ArrayList<>();
 				row.add(id);
 				row.add(embedding.vector());
-				tableModel.sourceColumns.forEach(sourceColumn -> row.add(getMetadataValue(metadata, sourceColumn)));
+				tableModel.sourceColumns.forEach(sourceColumn -> {
+					Object metadataValue = getMetadataValue(metadata, sourceColumn);
+					oldSourceId.add(metadataValue);
+					row.add(metadataValue);
+				});
 
 				if (hasText) {
 					row.add(textSegment == null ? null : textSegment.text());
 				}
 
 				rows.add(row.toArray());
+				oldSourceIds.add(oldSourceId.toArray());
 			}
 
+			var oldSourceIdsDataset = BufferedDataSetInternal.createBufferedDataSet(
+					sourceColumnNames.toArray(String[]::new), sourceColumnTypes.toArray(ColumnType[]::new),
+					oldSourceIds, false);
 			var dataSet = BufferedDataSetInternal.createBufferedDataSet(columnNames.toArray(String[]::new),
 					columnTypes.toArray(ColumnType[]::new), rows, false);
+			if (!tableModel.wasCreated) {
+				serverAccess.deleteFromDataSet(clientId, tableModel.serverName(), tableModel.tableName(), transactionId,
+						oldSourceIdsDataset);
+			}
 			serverAccess.insertDataSet(clientId, tableModel.serverName(), tableModel.tableName(), transactionId,
 					dataSet);
 		} catch (ServoyException e) {
@@ -157,6 +176,6 @@ public class ServoyEmbeddingStore implements EmbeddingStore<TextSegment>, Suppor
 	}
 
 	record TableModel(String serverName, String tableName, Map<String, ColumnType> columnTypes,
-			List<String> sourceColumns) {
+			List<String> sourceColumns, boolean wasCreated) {
 	}
 }

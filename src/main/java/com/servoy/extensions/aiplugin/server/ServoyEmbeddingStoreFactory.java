@@ -64,11 +64,13 @@ public class ServoyEmbeddingStoreFactory {
 			table = null;
 		}
 
+		boolean wasCreated = false;
 		if (table == null) {
 			table = createTable(tableName, server, sourcePkColumns, dimension, addText);
+			wasCreated = true;
 		}
 
-		return verifyTable(table, sourcePkColumns, addText);
+		return verifyTable(table, sourcePkColumns, addText, wasCreated);
 	}
 
 	private static ITable createTable(String tableName, IServerInternal server, List<Column> sourcePkColumns,
@@ -113,7 +115,8 @@ public class ServoyEmbeddingStoreFactory {
 		return table;
 	}
 
-	private static TableModel verifyTable(ITable table, List<Column> sourcePkColumns, boolean addText) {
+	private static TableModel verifyTable(ITable table, List<Column> sourcePkColumns, boolean addText,
+			boolean wasCreated) {
 		var columnTypes = new HashMap<String, ColumnType>();
 
 		var pkColumn = ensureNotNull(table.getColumn(EMBEDDING_ID_COLUMN),
@@ -146,6 +149,6 @@ public class ServoyEmbeddingStoreFactory {
 			columnTypes.put(TEXT_COLUMN, textColumn.getColumnType());
 		}
 
-		return new TableModel(table.getServerName(), table.getName(), columnTypes, sourceColumns);
+		return new TableModel(table.getServerName(), table.getName(), columnTypes, sourceColumns, wasCreated);
 	}
 }

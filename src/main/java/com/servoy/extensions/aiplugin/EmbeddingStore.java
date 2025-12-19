@@ -113,10 +113,10 @@ public class EmbeddingStore implements IScriptable, IJavaScriptType {
 								segments.add(TextSegment.textSegment(row[i].toString(), Metadata.from(metaData)));
 							}
 						}
-
-						Response<List<Embedding>> embeddings = model.embedAll(segments);
-						segmentStore.addAll(embeddings.content(), segments);
 					});
+
+					Response<List<Embedding>> embeddings = model.embedAll(segments);
+					segmentStore.addAll(embeddings.content(), segments);
 
 					return true; // process all dataset chunks
 				});
