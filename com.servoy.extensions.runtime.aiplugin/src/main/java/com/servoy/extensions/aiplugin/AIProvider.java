@@ -58,6 +58,15 @@ public class AIProvider implements IReturnedTypesProvider, IScriptable {
 	}
 
 	/**
+	 * Default Constructor for AIProvide, this is for documentation purposes. Don't call this normally
+	 *
+	 * @param access The client plugin access instance.
+	 */
+	public AIProvider() {
+		this.access = null;
+	}
+	
+	/**
 	 * Constructor for AIProvider.
 	 *
 	 * @param access The client plugin access instance.
