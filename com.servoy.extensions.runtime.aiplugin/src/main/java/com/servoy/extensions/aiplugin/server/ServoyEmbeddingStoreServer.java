@@ -1,8 +1,6 @@
 package com.servoy.extensions.aiplugin.server;
 
 import static com.servoy.base.persistence.IBaseColumn.NATIVE_COLUMN;
-import static com.servoy.base.persistence.IBaseColumn.PK_COLUMN;
-import static com.servoy.base.persistence.IBaseColumn.USER_ROWID_COLUMN;
 import static com.servoy.base.persistence.IBaseColumn.UUID_COLUMN;
 import static com.servoy.base.persistence.IBaseColumn.VECTOR_COLUMN;
 import static com.servoy.extensions.aiplugin.database.DatabaseHandler.DATABASE_HANDLER;
@@ -21,7 +19,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import com.servoy.extensions.aiplugin.server.ServoyEmbeddingStore.TableModel;
 import com.servoy.j2db.persistence.Column;
 import com.servoy.j2db.persistence.DummyValidator;
 import com.servoy.j2db.persistence.IServerInternal;
@@ -31,36 +28,34 @@ import com.servoy.j2db.plugins.IServerAccess;
 import com.servoy.j2db.query.ColumnType;
 import com.servoy.j2db.util.Debug;
 
-public class ServoyEmbeddingStoreFactory {
+import dev.langchain4j.data.segment.TextSegment;
 
-	public static ServoyEmbeddingStore createStore(IServerAccess serverAccess, String clientId, String serverName,
-			String sourceTableName, String tableName, boolean dropTableFirst, boolean createTable, int dimension,
-			boolean addText) throws Exception {
+public class ServoyEmbeddingStoreServer {
+
+	public static dev.langchain4j.store.embedding.EmbeddingStore<TextSegment> createStore(IServerAccess serverAccess,
+			String clientId, String serverName, List<MetaDataKey> metaDataKeys, String tableName,
+			boolean dropTableFirst, boolean createTable, int dimension, boolean addText) throws Exception {
 		ensureNotNull(clientId, "clientId");
 		ensureNotNull(serverName, "serverName");
-		ensureNotNull(sourceTableName, "sourceTableName");
+		ensureNotNull(metaDataKeys, "metaDataKeys");
 		ensureNotNull(tableName, "tableName");
 		if (createTable)
 			ensureGreaterThanZero(dimension, "dimension");
 
-		var tableModel = initializeStore(serverAccess, serverName, sourceTableName, tableName, dropTableFirst,
-				createTable, dimension, addText);
+		var tableModel = initializeStore(serverAccess, serverName, metaDataKeys, tableName, dropTableFirst, createTable,
+				dimension, addText);
 		return new ServoyEmbeddingStore(serverAccess, clientId, null, tableModel);
 	}
 
-	private static TableModel initializeStore(IServerAccess serverAccess, String serverName, String sourceTableName,
-			String tableName, boolean dropTableFirst, boolean createTable, int dimension, boolean addText)
-			throws Exception {
+	private static TableModel initializeStore(IServerAccess serverAccess, String serverName,
+			List<MetaDataKey> metaDataKeys, String tableName, boolean dropTableFirst, boolean createTable,
+			int dimension, boolean addText) throws Exception {
 		var server = (IServerInternal) ensureNotNull(serverAccess.getDBServer(serverName, true, true),
 				"Cannot find server %s", serverName);
 
-		var sourceTable = ensureNotNull(server.getTable(sourceTableName), "Cannot find source table %s",
-				sourceTableName);
-		var sourcePkColumns = sourceTable.getRowIdentColumns();
-		ensureTrue(!sourcePkColumns.isEmpty(), "Cannot work without PK column on source table " + sourceTableName);
-
 		var table = server.getTable(tableName);
-		ensureTrue(table != null || createTable, "Cannot find source table " + tableName + " in server " + serverName);
+		ensureTrue(table != null || createTable,
+				"Cannot find embeddings table " + tableName + " in server " + serverName);
 
 		if (table != null && dropTableFirst) {
 			server.removeTable(table);
@@ -69,15 +64,15 @@ public class ServoyEmbeddingStoreFactory {
 
 		boolean wasCreated = false;
 		if (table == null) {
-			table = createTable(tableName, serverAccess, server, sourcePkColumns, dimension, addText);
+			table = createTable(tableName, serverAccess, server, metaDataKeys, dimension, addText);
 			wasCreated = true;
 		}
 
-		return verifyTable(table, sourcePkColumns, addText, wasCreated);
+		return verifyTable(table, metaDataKeys, addText, wasCreated);
 	}
 
 	private static ITable createTable(String tableName, IServerAccess serverAccess, IServerInternal server,
-			List<Column> sourcePkColumns, int dimension, boolean addText) throws RepositoryException, SQLException {
+			List<MetaDataKey> metaDataKeys, int dimension, boolean addText) throws RepositoryException, SQLException {
 		var table = server.createNewTable(DummyValidator.INSTANCE, tableName);
 
 		// Embedding PK
@@ -86,16 +81,12 @@ public class ServoyEmbeddingStoreFactory {
 		pkColumn.setFlag(NATIVE_COLUMN, true);
 		pkColumn.setFlag(UUID_COLUMN, true);
 
-		// Source pks
-		var sourceRefColumns = new ArrayList<Column>();
-		for (var sourcePkColumn : sourcePkColumns) {
-			var sourceRefColumn = table.createNewColumn(DummyValidator.INSTANCE, sourcePkColumn.getSQLName(),
-					sourcePkColumn.getColumnType(), false, false);
-			sourceRefColumn.setFlag(sourcePkColumn.getFlags(), true);
-			sourceRefColumn.setFlag(PK_COLUMN, false);
-			sourceRefColumn.setFlag(USER_ROWID_COLUMN, false);
-
-			sourceRefColumns.add(sourcePkColumn);
+		var metaDataColumns = new ArrayList<Column>();
+		for (var metaDataKey : metaDataKeys) {
+			var metaDataColumn = table.createNewColumn(DummyValidator.INSTANCE, metaDataKey.name(),
+					metaDataKey.columnType(), metaDataKey.allowNull(), false);
+			metaDataColumn.setFlags(metaDataKey.flags());
+			metaDataColumns.add(metaDataColumn);
 		}
 
 		// Embedding
@@ -112,8 +103,8 @@ public class ServoyEmbeddingStoreFactory {
 		// Actually create the table
 		server.syncTableObjWithDB(table, false, false);
 
-		// Index on source ref
-		server.createIndex(table, "_sv_embedding_meta_" + tableName, sourceRefColumns.toArray(Column[]::new), false);
+		// Index on metadata columns
+		server.createIndex(table, "_sv_embedding_meta_" + tableName, metaDataColumns.toArray(Column[]::new), false);
 
 		// Index on embedding columns
 		try {
@@ -131,7 +122,7 @@ public class ServoyEmbeddingStoreFactory {
 		return table;
 	}
 
-	private static TableModel verifyTable(ITable table, List<Column> sourcePkColumns, boolean addText,
+	private static TableModel verifyTable(ITable table, List<MetaDataKey> metaDataKeys, boolean addText,
 			boolean wasCreated) {
 		var columnTypes = new HashMap<String, ColumnType>();
 
@@ -143,11 +134,9 @@ public class ServoyEmbeddingStoreFactory {
 				"Table not usable as for embedding store: Column is not UUID: " + EMBEDDING_ID_COLUMN);
 		columnTypes.put(EMBEDDING_ID_COLUMN, pkColumn.getColumnType());
 
-		var sourceColumns = new ArrayList<String>();
-		for (var sourcePkColumn : sourcePkColumns) {
-			var column = ensureNotNull(table.getColumn(sourcePkColumn.getName()),
-					"Table not usable as for embedding store: Missing reference column %s", sourcePkColumn.getName());
-			sourceColumns.add(column.getName());
+		for (var metaDataKey : metaDataKeys) {
+			var column = ensureNotNull(table.getColumn(metaDataKey.name()),
+					"Table not usable as for embedding store: Missing reference column %s", metaDataKey.name());
 			columnTypes.put(column.getName(), column.getColumnType());
 		}
 
@@ -165,6 +154,6 @@ public class ServoyEmbeddingStoreFactory {
 			columnTypes.put(TEXT_COLUMN, textColumn.getColumnType());
 		}
 
-		return new TableModel(table.getServerName(), table.getName(), columnTypes, sourceColumns, wasCreated);
+		return new TableModel(table.getServerName(), table.getName(), columnTypes, metaDataKeys, wasCreated);
 	}
 }

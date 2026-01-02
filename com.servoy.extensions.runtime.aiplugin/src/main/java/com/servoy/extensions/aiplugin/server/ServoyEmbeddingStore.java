@@ -7,7 +7,6 @@ import static dev.langchain4j.internal.ValidationUtils.ensureTrue;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 import com.servoy.j2db.persistence.Column;
@@ -81,28 +80,26 @@ public class ServoyEmbeddingStore implements EmbeddingStore<TextSegment>, Suppor
 		}
 
 		try {
-			boolean hasText = tableModel.columnTypes.containsKey(TEXT_COLUMN);
+			boolean hasText = tableModel.columnTypes().containsKey(TEXT_COLUMN);
 			var columnNames = new ArrayList<String>();
-			var sourceColumnNames = new ArrayList<String>();
+			var metaDataColumnNames = new ArrayList<String>();
 			var columnTypes = new ArrayList<ColumnType>();
-			var sourceColumnTypes = new ArrayList<ColumnType>();
+			var metaDataColumnTypes = new ArrayList<ColumnType>();
 
-			// Columns
-			columnNames.add(EMBEDDING_ID_COLUMN);
-			columnTypes.add(tableModel.columnTypes.get(EMBEDDING_ID_COLUMN));
-			columnNames.add(EMBEDDING_COLUMN);
-			columnTypes.add(tableModel.columnTypes.get(EMBEDDING_COLUMN));
+			// Embedding columns
+			addColumn(EMBEDDING_ID_COLUMN, columnNames, columnTypes);
+			addColumn(EMBEDDING_COLUMN, columnNames, columnTypes);
 
-			tableModel.sourceColumns.forEach(sourceColumn -> {
-				columnNames.add(sourceColumn);
-				sourceColumnNames.add(sourceColumn);
-				columnTypes.add(tableModel.columnTypes.get(sourceColumn));
-				sourceColumnTypes.add(tableModel.columnTypes.get(sourceColumn));
+			// Meta Data columns
+			tableModel.metaDataKeys().forEach(metaDataKey -> {
+				addColumn(metaDataKey.name(), columnNames, columnTypes);
+				addColumn(metaDataKey.name(), metaDataColumnNames, metaDataColumnTypes);
+
 			});
 
+			// Text column
 			if (hasText) {
-				columnNames.add(TEXT_COLUMN);
-				columnTypes.add(tableModel.columnTypes.get(TEXT_COLUMN));
+				addColumn(TEXT_COLUMN, columnNames, columnTypes);
 			}
 
 			// Rows
@@ -122,12 +119,12 @@ public class ServoyEmbeddingStore implements EmbeddingStore<TextSegment>, Suppor
 				}
 
 				var row = new ArrayList<>();
-				var oldSourceId = new ArrayList<>();
+				var metaDataValues = new ArrayList<>();
 				row.add(id);
 				row.add(embedding.vector());
-				tableModel.sourceColumns.forEach(sourceColumn -> {
-					Object metadataValue = getMetadataValue(metadata, sourceColumn);
-					oldSourceId.add(metadataValue);
+				tableModel.metaDataKeys().forEach(metaDataKey -> {
+					Object metadataValue = getMetadataValue(metadata, metaDataKey.name());
+					metaDataValues.add(metadataValue);
 					row.add(metadataValue);
 				});
 
@@ -136,14 +133,14 @@ public class ServoyEmbeddingStore implements EmbeddingStore<TextSegment>, Suppor
 				}
 
 				rows.add(row.toArray());
-				oldSourceIds.add(oldSourceId.toArray());
+				oldSourceIds.add(metaDataValues.toArray());
 			}
 
-			var oldSourceIdsDataset = createBufferedDataSet(sourceColumnNames.toArray(String[]::new),
-					sourceColumnTypes.toArray(ColumnType[]::new), oldSourceIds, false);
 			var dataSet = createBufferedDataSet(columnNames.toArray(String[]::new),
 					columnTypes.toArray(ColumnType[]::new), rows, false);
-			if (!tableModel.wasCreated) {
+			if (!tableModel.wasCreated()) {
+				var oldSourceIdsDataset = createBufferedDataSet(metaDataColumnNames.toArray(String[]::new),
+						metaDataColumnTypes.toArray(ColumnType[]::new), oldSourceIds, false);
 				serverAccess.deleteFromDataSet(clientId, tableModel.serverName(), tableModel.tableName(), transactionId,
 						oldSourceIdsDataset);
 			}
@@ -154,11 +151,16 @@ public class ServoyEmbeddingStore implements EmbeddingStore<TextSegment>, Suppor
 		}
 	}
 
+	private void addColumn(String columnName, ArrayList<String> columnNames, ArrayList<ColumnType> columnTypes) {
+		columnNames.add(columnName);
+		columnTypes.add(tableModel.columnTypes().get(columnName));
+	}
+
 	private Object getMetadataValue(Metadata metadata, String columnName) {
 		if (metadata == null || !metadata.containsKey(columnName)) {
 			return null;
 		}
-		var columnType = ensureNotNull(tableModel.columnTypes.get(columnName), "Missing column %s", columnName);
+		var columnType = ensureNotNull(tableModel.columnTypes().get(columnName), "Missing column %s", columnName);
 		return switch (Column.mapToDefaultType(columnType)) {
 		case IColumnTypes.TEXT, IColumnTypes.DATETIME -> metadata.getString(columnName);
 		case IColumnTypes.NUMBER -> metadata.getDouble(columnName);
@@ -174,7 +176,4 @@ public class ServoyEmbeddingStore implements EmbeddingStore<TextSegment>, Suppor
 		return null;
 	}
 
-	record TableModel(String serverName, String tableName, Map<String, ColumnType> columnTypes,
-			List<String> sourceColumns, boolean wasCreated) {
-	}
 }

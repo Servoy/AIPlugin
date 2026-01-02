@@ -12,6 +12,7 @@ import com.servoy.j2db.plugins.PluginException;
 import com.servoy.j2db.scripting.IScriptable;
 
 public class AIPlugin implements IClientPlugin {
+	static final String PLUGIN_NAME = "ai";
 
 	private IClientPluginAccess access;
 	private AIProvider impl;
@@ -20,7 +21,8 @@ public class AIPlugin implements IClientPlugin {
 	public Properties getProperties() {
 		Properties props = new Properties();
 		props.put(DISPLAY_NAME, "AI Plugin"); //$NON-NLS-1$
-		return props;	}
+		return props;
+	}
 
 	@Override
 	public void load() throws PluginException {
@@ -36,8 +38,7 @@ public class AIPlugin implements IClientPlugin {
 
 	@Override
 	public IScriptable getScriptObject() {
-		if (impl == null)
-		{
+		if (impl == null) {
 			impl = new AIProvider(access);
 		}
 		return impl;
@@ -46,19 +47,16 @@ public class AIPlugin implements IClientPlugin {
 	@Override
 	public Icon getImage() {
 		java.net.URL iconUrl = this.getClass().getResource("ai2x.png"); //$NON-NLS-1$
-		if (iconUrl != null)
-		{
+		if (iconUrl != null) {
 			return new ImageIcon(iconUrl);
-		}
-		else
-		{
+		} else {
 			return null;
 		}
 	}
 
 	@Override
 	public String getName() {
-		return "ai";
+		return PLUGIN_NAME;
 	}
 
 	@Override

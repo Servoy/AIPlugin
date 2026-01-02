@@ -1,4 +1,4 @@
-package com.servoy.extensions.aiplugin;
+package com.servoy.extensions.aiplugin.chat;
 
 import org.mozilla.javascript.annotations.JSFunction;
 
@@ -12,8 +12,9 @@ import dev.langchain4j.model.googleai.GoogleAiGeminiTokenCountEstimator;
 import dev.langchain4j.service.AiServices;
 
 /**
- * GeminiChatBuilder is a builder for configuring and creating Gemini chat clients.
- * Allows setting API key, model name, temperature, and memory token limits for the Gemini model.
+ * GeminiChatBuilder is a builder for configuring and creating Gemini chat
+ * clients. Allows setting API key, model name, temperature, and memory token
+ * limits for the Gemini model.
  */
 @ServoyDocumented
 public class GeminiChatBuilder extends BaseChatBuilder<GeminiChatBuilder> implements IJavaScriptType {
@@ -36,14 +37,16 @@ public class GeminiChatBuilder extends BaseChatBuilder<GeminiChatBuilder> implem
 
 	/**
 	 * Constructs a GeminiChatBuilder with the given plugin access.
+	 * 
 	 * @param access The client plugin access instance.
 	 */
-	GeminiChatBuilder(IClientPluginAccess access) {
+	public GeminiChatBuilder(IClientPluginAccess access) {
 		super(access);
 	}
-	
+
 	/**
 	 * Sets the Gemini API key.
+	 * 
 	 * @param key The API key.
 	 * @return This builder instance.
 	 */
@@ -52,9 +55,10 @@ public class GeminiChatBuilder extends BaseChatBuilder<GeminiChatBuilder> implem
 		this.apiKey = key;
 		return this;
 	}
-	
+
 	/**
 	 * Sets the Gemini model name.
+	 * 
 	 * @param modelName The model name.
 	 * @return This builder instance.
 	 */
@@ -63,9 +67,10 @@ public class GeminiChatBuilder extends BaseChatBuilder<GeminiChatBuilder> implem
 		this.modelName = modelName;
 		return this;
 	}
-	
+
 	/**
 	 * Sets the temperature for the Gemini model.
+	 * 
 	 * @param temperature The temperature value.
 	 * @return This builder instance.
 	 */
@@ -77,6 +82,7 @@ public class GeminiChatBuilder extends BaseChatBuilder<GeminiChatBuilder> implem
 
 	/**
 	 * Sets the maximum number of memory tokens for chat history.
+	 * 
 	 * @param tokens The maximum number of tokens.
 	 * @return This builder instance.
 	 */
@@ -87,19 +93,23 @@ public class GeminiChatBuilder extends BaseChatBuilder<GeminiChatBuilder> implem
 	}
 
 	/**
-	 * Builds and returns a ChatClient configured with the specified Gemini model settings.
+	 * Builds and returns a ChatClient configured with the specified Gemini model
+	 * settings.
+	 * 
 	 * @return A configured ChatClient instance.
 	 */
 	@JSFunction
 	public ChatClient build() {
 		AiServices<Assistant> builder = createAssistantBuilder();
-		GoogleAiGeminiStreamingChatModel model = GoogleAiGeminiStreamingChatModel.builder().temperature(temperature).apiKey(apiKey)
-				.modelName(modelName).build();
-		
+		GoogleAiGeminiStreamingChatModel model = GoogleAiGeminiStreamingChatModel.builder().temperature(temperature)
+				.apiKey(apiKey).modelName(modelName).build();
+
 		builder.streamingChatModel(model);
 		if (tokens != null) {
-			GoogleAiGeminiTokenCountEstimator tokenCountEstimator = GoogleAiGeminiTokenCountEstimator.builder().apiKey(apiKey).modelName(modelName).build();
-			TokenWindowChatMemory tokenWindowChatMemory = TokenWindowChatMemory.builder().maxTokens(tokens, tokenCountEstimator).build();
+			GoogleAiGeminiTokenCountEstimator tokenCountEstimator = GoogleAiGeminiTokenCountEstimator.builder()
+					.apiKey(apiKey).modelName(modelName).build();
+			TokenWindowChatMemory tokenWindowChatMemory = TokenWindowChatMemory.builder()
+					.maxTokens(tokens, tokenCountEstimator).build();
 			builder.chatMemory(tokenWindowChatMemory);
 		}
 		Assistant assistant = builder.build();

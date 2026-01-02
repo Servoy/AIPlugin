@@ -1,14 +1,22 @@
 package com.servoy.extensions.aiplugin;
 
+import static com.servoy.extensions.aiplugin.AIPlugin.PLUGIN_NAME;
 import static com.servoy.extensions.aiplugin.AiPluginService.AIPLUGIN_SERVICE;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import com.servoy.extensions.aiplugin.embedding.*;
 import org.mozilla.javascript.NativePromise;
 import org.mozilla.javascript.annotations.JSFunction;
 
+import com.servoy.extensions.aiplugin.chat.Assistant;
+import com.servoy.extensions.aiplugin.chat.ChatClient;
+import com.servoy.extensions.aiplugin.chat.ChatResponse;
+import com.servoy.extensions.aiplugin.chat.GeminiChatBuilder;
+import com.servoy.extensions.aiplugin.chat.OpenAiChatBuilder;
+import com.servoy.extensions.aiplugin.chat.ToolBuilder;
 import com.servoy.j2db.IApplication;
 import com.servoy.j2db.dataprocessing.IDatabaseManager;
 import com.servoy.j2db.documentation.ServoyDocumented;
@@ -27,7 +35,7 @@ import dev.langchain4j.service.AiServices;
  * AIProvider class that provides access to create AI chat and embedding
  * clients/builders.
  */
-@ServoyDocumented(publicName = "ai", scriptingName = "plugins.ai")
+@ServoyDocumented(publicName = PLUGIN_NAME, scriptingName = "plugins." + PLUGIN_NAME)
 public class AIProvider implements IReturnedTypesProvider, IScriptable {
 	private final IClientPluginAccess access;
 	private AiPluginService aiPluginService;
@@ -38,7 +46,7 @@ public class AIProvider implements IReturnedTypesProvider, IScriptable {
 	 */
 	private static ExecutorService virtualThreadExecutor = Executors.newVirtualThreadPerTaskExecutor();
 
-	AiPluginService getAiPluginService() throws Exception {
+	public AiPluginService getAiPluginService() throws Exception {
 		if (aiPluginService == null) {
 			aiPluginService = (AiPluginService) access.getRemoteService(AIPLUGIN_SERVICE);
 		}
@@ -49,8 +57,8 @@ public class AIProvider implements IReturnedTypesProvider, IScriptable {
 		return (((ClientPluginAccessProvider) access).getApplication());
 	}
 
-	IDatabaseManager getDatabaseManager() {
-		return (access.getDatabaseManager());
+	public IDatabaseManager getDatabaseManager() {
+		return access.getDatabaseManager();
 	}
 
 	public String getClientID() {
@@ -58,14 +66,15 @@ public class AIProvider implements IReturnedTypesProvider, IScriptable {
 	}
 
 	/**
-	 * Default Constructor for AIProvide, this is for documentation purposes. Don't call this normally
+	 * Default Constructor for AIProvider, this is for documentation purposes. Don't
+	 * call this normally
 	 *
 	 * @param access The client plugin access instance.
 	 */
 	public AIProvider() {
 		this.access = null;
 	}
-	
+
 	/**
 	 * Constructor for AIProvider.
 	 *
@@ -84,7 +93,7 @@ public class AIProvider implements IReturnedTypesProvider, IScriptable {
 	public Class<?>[] getAllReturnedTypes() {
 		return new Class[] { ChatClient.class, GeminiChatBuilder.class, OpenAiChatBuilder.class,
 				GeminiEmbeddingModelBuilder.class, OpenAiEmbeddingModelBuilder.class, ServoyEmbeddingStoreBuilder.class,
-				EmbeddingStore.class, EmbeddingModel.class, ChatResponse.class ,SearchResult.class, ToolBuilder.class};
+				EmbeddingStore.class, EmbeddingModel.class, ChatResponse.class, SearchResult.class, ToolBuilder.class };
 	}
 
 	/**

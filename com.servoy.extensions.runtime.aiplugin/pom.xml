@@ -148,7 +148,8 @@
                         com.google.guava,
                         org.apache.aries.spifly,
                         org.postgresql,
-                        commons-logging
+                        commons-logging,
+                        org.jspecify
                       </excludeGroupIds>
                     </configuration>
                   </execution>

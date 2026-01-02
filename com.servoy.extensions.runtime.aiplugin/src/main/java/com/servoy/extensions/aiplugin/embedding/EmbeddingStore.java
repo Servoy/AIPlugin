@@ -1,4 +1,4 @@
-package com.servoy.extensions.aiplugin;
+package com.servoy.extensions.aiplugin.embedding;
 
 import static com.servoy.j2db.util.DataSourceUtils.getDataSourceServerName;
 
@@ -10,7 +10,8 @@ import java.util.Map;
 import org.mozilla.javascript.NativePromise;
 import org.mozilla.javascript.annotations.JSFunction;
 
-import com.servoy.extensions.aiplugin.pdf.ApachePdfBoxDocumentParser;
+import com.servoy.extensions.aiplugin.AIProvider;
+import com.servoy.extensions.aiplugin.embedding.pdf.ApachePdfBoxDocumentParser;
 import com.servoy.extensions.aiplugin.server.SupportsTransaction;
 import com.servoy.j2db.dataprocessing.IFoundSet;
 import com.servoy.j2db.documentation.ServoyDocumented;
@@ -164,7 +165,7 @@ public class EmbeddingStore implements IScriptable, IJavaScriptType {
 	 * metadata from the pdf and if possible also the name of the PDF is set if that
 	 * is known.
 	 *
-	 * @param pdfSource             This can be JSFile or String represeting a file
+	 * @param pdfSource             This can be JSFile or String representing a file
 	 *                              path, or byte[] representing the PDF content.
 	 * @param maxSegmentSizeInChars How many characters per segment we can have.
 	 * @param maxOverlapSizeInChars How many characters of overlap between segments.
@@ -182,7 +183,7 @@ public class EmbeddingStore implements IScriptable, IJavaScriptType {
 	 * is set if that is known. Also additional metadata can be provided that will
 	 * be attached to each segment.
 	 *
-	 * @param pdfSource             This can be JSFile or String represeting a file
+	 * @param pdfSource             This can be JSFile or String representing a file
 	 *                              path, or byte[] representing the PDF content.
 	 * @param maxSegmentSizeInChars How many characters per segment we can have.
 	 * @param maxOverlapSizeInChars How many characters of overlap between segments.
@@ -203,8 +204,7 @@ public class EmbeddingStore implements IScriptable, IJavaScriptType {
 					maxOverlapSizeInChars);
 			List<TextSegment> segments = splitter.split(document);
 			Response<List<Embedding>> embeddings = model.embedAll(segments);
-			List<Embedding> content = embeddings.content();
-			embeddingStore.addAll(content, segments);
+			embeddingStore.addAll(embeddings.content(), segments);
 			return this;
 		});
 	}
@@ -227,18 +227,19 @@ public class EmbeddingStore implements IScriptable, IJavaScriptType {
 				.map(match -> new SearchResult(match.score(), match.embedded().text(), match.embedded().metadata()))
 				.toArray(SearchResult[]::new);
 	}
-	
+
 	/**
 	 * Performs a blocking similarity search for the given text, returning the best
 	 * matches from the store. This returns the default 3 results
 	 *
-	 * @param text       The query text to search for.
+	 * @param text The query text to search for.
 	 * @return An array of SearchResult objects representing the best matches.
 	 */
 	@JSFunction
 	public SearchResult[] search(String text) {
 		Embedding queryEmbedding = model.embed(text).content();
-		EmbeddingSearchRequest embeddingSearchRequest = EmbeddingSearchRequest.builder().queryEmbedding(queryEmbedding).build();
+		EmbeddingSearchRequest embeddingSearchRequest = EmbeddingSearchRequest.builder().queryEmbedding(queryEmbedding)
+				.build();
 		List<EmbeddingMatch<TextSegment>> matches = embeddingStore.search(embeddingSearchRequest).matches();
 		return matches.stream()
 				.map(match -> new SearchResult(match.score(), match.embedded().text(), match.embedded().metadata()))

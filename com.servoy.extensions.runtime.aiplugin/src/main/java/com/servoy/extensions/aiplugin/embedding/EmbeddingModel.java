@@ -1,4 +1,4 @@
-package com.servoy.extensions.aiplugin;
+package com.servoy.extensions.aiplugin.embedding;
 
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toList;
@@ -8,6 +8,7 @@ import java.util.List;
 import org.mozilla.javascript.NativePromise;
 import org.mozilla.javascript.annotations.JSFunction;
 
+import com.servoy.extensions.aiplugin.AIProvider;
 import com.servoy.j2db.documentation.ServoyDocumented;
 import com.servoy.j2db.scripting.IJavaScriptType;
 
