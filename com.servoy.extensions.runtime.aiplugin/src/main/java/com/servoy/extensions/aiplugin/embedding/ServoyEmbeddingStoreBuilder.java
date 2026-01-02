@@ -2,10 +2,14 @@ package com.servoy.extensions.aiplugin.embedding;
 
 import static com.servoy.base.persistence.IBaseColumn.PK_COLUMN;
 import static com.servoy.base.persistence.IBaseColumn.USER_ROWID_COLUMN;
+import static com.servoy.extensions.aiplugin.server.ServoyEmbeddingStore.EMBEDDING_COLUMN;
+import static com.servoy.extensions.aiplugin.server.ServoyEmbeddingStore.EMBEDDING_ID_COLUMN;
+import static com.servoy.extensions.aiplugin.server.ServoyEmbeddingStore.TEXT_COLUMN;
 import static com.servoy.j2db.util.DataSourceUtils.getDataSourceServerName;
 import static dev.langchain4j.internal.ValidationUtils.ensureNotBlank;
 import static dev.langchain4j.internal.ValidationUtils.ensureNotNull;
 import static dev.langchain4j.internal.ValidationUtils.ensureTrue;
+import static java.lang.Boolean.TRUE;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,8 +19,11 @@ import org.mozilla.javascript.annotations.JSFunction;
 import com.servoy.extensions.aiplugin.AIProvider;
 import com.servoy.extensions.aiplugin.server.MetaDataKey;
 import com.servoy.j2db.documentation.ServoyDocumented;
+import com.servoy.j2db.persistence.Column;
+import com.servoy.j2db.persistence.ITable;
 import com.servoy.j2db.persistence.RepositoryException;
 import com.servoy.j2db.scripting.IJavaScriptType;
+import com.servoy.j2db.util.DataSourceUtils;
 import com.servoy.j2db.util.Debug;
 
 import dev.langchain4j.data.segment.TextSegment;
@@ -31,11 +38,11 @@ public class ServoyEmbeddingStoreBuilder implements IJavaScriptType {
 	private final DimensionAwareEmbeddingModel model;
 
 	private boolean recreate = false;
-	private boolean addText = false;
+	private Boolean addText = null;
 	private String dataSource;
 	private String serverName;
 	private String tableName;
-	private final List<MetaDataKey> metaDataKeys = new ArrayList<>();
+	private List<MetaDataKey> metaDataKeys = null;
 
 	/**
 	 * Constructs a GeminiEmbeddingModelBuilder with the given plugin access.
@@ -147,25 +154,77 @@ public class ServoyEmbeddingStoreBuilder implements IJavaScriptType {
 	@JSFunction
 	public EmbeddingStore build() {
 		try {
+			deriveOptionsFromExistingTable();
+
 			if (dataSource == null) {
 				ensureNotBlank(serverName,
 						"either a dataSource or serverName (with metaDataColumns) must be specified");
-				ensureTrue(!metaDataKeys.isEmpty(),
+				ensureTrue(metaDataKeys != null,
 						"either a dataSource or serverName (with metaDataColumns) must be specified");
-			} else if (metaDataKeys.isEmpty()) {
-				metaDataKeys.addAll(getSourceTableMetaDataKeys(dataSource));
+			} else if (metaDataKeys == null) {
+				metaDataKeys = getSourceTableMetaDataKeys(dataSource);
 			}
 
 			String remoteServerName = provider.getDatabaseManager()
 					.getSwitchedToServerName(serverName == null ? getDataSourceServerName(dataSource) : serverName);
 			dev.langchain4j.store.embedding.EmbeddingStore<TextSegment> embeddingStore = provider.getAiPluginService()
 					.servoyEmbeddingStoreFactory().create(provider.getClientID(), remoteServerName, metaDataKeys,
-							tableName, recreate, true, model.dimension(), addText);
+							tableName, recreate, true, model.dimension(), TRUE.equals(addText));
 			return new EmbeddingStore(provider, embeddingStore, model);
 		} catch (Exception e) {
 			Debug.error(e);
 		}
 		return null;
+	}
+
+	/**
+	 * Check if the embeddings table already exists, then apply all options that
+	 * have not been set yet in this builder.
+	 *
+	 * @throws RepositoryException
+	 */
+	private void deriveOptionsFromExistingTable() throws RepositoryException {
+		if (metaDataKeys != null && addText != null) {
+			// all options we can derive have already been set
+			return;
+		}
+
+		if (serverName == null) {
+			serverName = getDataSourceServerName(dataSource);
+		}
+		if (serverName != null) {
+			ITable existingTable = provider.getDatabaseManager()
+					.getTable(DataSourceUtils.createDBTableDataSource(serverName, tableName));
+			if (existingTable != null) {
+				List<Column> metaDataColumns = new ArrayList<>();
+				boolean hasText = false;
+				// Derive options from existing table
+				for (Column column : existingTable.getColumns()) {
+					switch (column.getName()) {
+					case EMBEDDING_ID_COLUMN:
+					case EMBEDDING_COLUMN:
+						break;
+
+					case TEXT_COLUMN:
+						hasText = true;
+						break;
+
+					default: // not a fixed column, must be a meta data column
+						metaDataColumns.add(column);
+					}
+				}
+				if (metaDataKeys == null) {
+					// metaDataKeys were not set yet, we use the columns we found in the existing
+					// table
+					metaDataKeys = metaDataColumns.stream().map(column -> new MetaDataKey(column.getSQLName(),
+							column.getColumnType(), column.getFlags(), column.getAllowNull())).toList();
+				}
+				if (addText == null) {
+					// addText option was not set yet
+					addText = hasText;
+				}
+			}
+		}
 	}
 
 	private List<MetaDataKey> getSourceTableMetaDataKeys(String dataSource) throws RepositoryException {
@@ -180,6 +239,9 @@ public class ServoyEmbeddingStoreBuilder implements IJavaScriptType {
 	}
 
 	ServoyEmbeddingStoreBuilder addMetaDataKey(MetaDataKey metaDataKey) {
+		if (metaDataKeys == null) {
+			metaDataKeys = new ArrayList<>();
+		}
 		metaDataKeys.add(metaDataKey);
 		return this;
 	}

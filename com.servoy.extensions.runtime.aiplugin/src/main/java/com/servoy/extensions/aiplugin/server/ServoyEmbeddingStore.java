@@ -23,9 +23,9 @@ import dev.langchain4j.store.embedding.EmbeddingSearchResult;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 
 public class ServoyEmbeddingStore implements EmbeddingStore<TextSegment>, SupportsTransaction<ServoyEmbeddingStore> {
-	static final String EMBEDDING_ID_COLUMN = "embedding_id";
-	static final String EMBEDDING_COLUMN = "embedding";
-	static final String TEXT_COLUMN = "text";
+	public static final String EMBEDDING_ID_COLUMN = "embedding_id";
+	public static final String EMBEDDING_COLUMN = "embedding";
+	public static final String TEXT_COLUMN = "text";
 
 	private final IServerAccess serverAccess;
 	private final String clientId;
