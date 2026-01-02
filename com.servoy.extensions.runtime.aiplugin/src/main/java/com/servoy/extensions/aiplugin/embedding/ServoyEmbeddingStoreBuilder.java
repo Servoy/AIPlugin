@@ -86,26 +86,26 @@ public class ServoyEmbeddingStoreBuilder implements IJavaScriptType {
 	}
 
 	/**
-	 * Create a metaKey adder for adding a meta data key to this builder instance.
-	 * Use the `add` method to add the key to this builder instance.
+	 * Create a meta data column adder for adding a meta data column to this builder
+	 * instance. Use the `add` method to add the column to this builder instance.
 	 *
-	 * @return A meta data key adder instance.
+	 * @return A meta data column adder instance.
 	 */
 	@JSFunction
-	public EmbeddingMetaDataKeyAdder metaKey() {
-		return new EmbeddingMetaDataKeyAdder(this);
+	public EmbeddingMetaDataColumnAdder metaDataColumn() {
+		return new EmbeddingMetaDataColumnAdder(this);
 	}
 
 	/**
-	 * Convenience method to add a TEXT meta data key to this builder. This is
-	 * equivalent to metaKey().name(name).add()
+	 * Convenience method to add a TEXT meta data column to this builder. This is
+	 * equivalent to metaDataColumn().name(name).add()
 	 *
-	 * @param name meta data key name.
+	 * @param name meta data column name.
 	 * @return This builder instance.
 	 */
 	@JSFunction
-	public ServoyEmbeddingStoreBuilder metaKey(String name) {
-		new EmbeddingMetaDataKeyAdder(this).name(name).add();
+	public ServoyEmbeddingStoreBuilder metaDataColumn(String name) {
+		new EmbeddingMetaDataColumnAdder(this).name(name).add();
 		return this;
 	}
 
@@ -137,7 +137,7 @@ public class ServoyEmbeddingStoreBuilder implements IJavaScriptType {
 	/**
 	 * Creates a Servoy embedding store for the specified table name.
 	 * <p>
-	 * The meta data columns are based on the specified meta data keys.
+	 * The meta data columns are based on the specified meta data columns.
 	 * Alternatively, when a dataSource is specified, the key columns of that table
 	 * are used as meta data columns.
 	 *
@@ -148,9 +148,10 @@ public class ServoyEmbeddingStoreBuilder implements IJavaScriptType {
 	public EmbeddingStore build() {
 		try {
 			if (dataSource == null) {
-				ensureNotBlank(serverName, "either a dataSource or serverName (with metaDataKeys) must be specified");
+				ensureNotBlank(serverName,
+						"either a dataSource or serverName (with metaDataColumns) must be specified");
 				ensureTrue(!metaDataKeys.isEmpty(),
-						"either a dataSource or serverName (with metaDataKeys) must be specified");
+						"either a dataSource or serverName (with metaDataColumns) must be specified");
 			} else if (metaDataKeys.isEmpty()) {
 				metaDataKeys.addAll(getSourceTableMetaDataKeys(dataSource));
 			}

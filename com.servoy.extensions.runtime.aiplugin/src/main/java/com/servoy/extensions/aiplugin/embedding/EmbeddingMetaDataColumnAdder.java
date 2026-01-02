@@ -11,10 +11,10 @@ import com.servoy.j2db.documentation.ServoyDocumented;
 import com.servoy.j2db.query.ColumnType;
 
 /**
- * Builder like class to add a MetaDataKey to a ServoyEmbeddingStoreBuilder.
+ * Builder like class to add a meta data column to a ServoyEmbeddingStoreBuilder.
  */
 @ServoyDocumented
-public class EmbeddingMetaDataKeyAdder {
+public class EmbeddingMetaDataColumnAdder {
 	private final ServoyEmbeddingStoreBuilder servoyEmbeddingStoreBuilder;
 
 	private String name;
@@ -22,61 +22,61 @@ public class EmbeddingMetaDataKeyAdder {
 	private boolean allowNull = false;
 	private int flags = NORMAL_COLUMN;
 
-	public EmbeddingMetaDataKeyAdder(ServoyEmbeddingStoreBuilder servoyEmbeddingStoreBuilder) {
+	public EmbeddingMetaDataColumnAdder(ServoyEmbeddingStoreBuilder servoyEmbeddingStoreBuilder) {
 		this.servoyEmbeddingStoreBuilder = servoyEmbeddingStoreBuilder;
 	}
 
 	/**
-	 * Sets the name of the meta data key to add.
+	 * Sets the name of the meta data column to add.
 	 *
-	 * @param name meta data key name.
+	 * @param name meta data column name.
 	 * @return This adder instance.
 	 */
 	@JSFunction
-	public EmbeddingMetaDataKeyAdder name(String name) {
+	public EmbeddingMetaDataColumnAdder name(String name) {
 		this.name = name;
 		return this;
 	}
 
 	/**
-	 * Sets the column type of the meta data key to add.
+	 * Sets the column type of the meta data column to add.
 	 *
-	 * @param columnType meta data key column type (default JSColumn.TEXT).
+	 * @param columnType meta data column type (default JSColumn.TEXT).
 	 * @return This adder instance.
 	 */
 	@JSFunction
-	public EmbeddingMetaDataKeyAdder columnType(int columnType) {
+	public EmbeddingMetaDataColumnAdder columnType(int columnType) {
 		this.columnType = ColumnType.getColumnType(columnType);
 		return this;
 	}
 
 	/**
-	 * Sets the allow null option of the meta data key to add.
+	 * Sets the allow null option of the meta data column to add.
 	 *
-	 * @param allowNull meta data key column allow null option (default false).
+	 * @param allowNull meta data column allow null option (default false).
 	 * @return This adder instance.
 	 */
 	@JSFunction
-	public EmbeddingMetaDataKeyAdder allowNull(boolean allowNull) {
+	public EmbeddingMetaDataColumnAdder allowNull(boolean allowNull) {
 		this.allowNull = allowNull;
 		return this;
 	}
 
 	/**
-	 * Sets a flag for the meta data key to add, for example JSColumn.TENANT_COLUMN
-	 * or JSColumn.UUID_COLUMN.
+	 * Sets a flag for the meta data column to add, for example
+	 * JSColumn.TENANT_COLUMN or JSColumn.UUID_COLUMN.
 	 *
-	 * @param flag flag to set for the meta data key column.
+	 * @param flag flag to set for the meta data column.
 	 * @return This adder instance.
 	 */
 	@JSFunction
-	public EmbeddingMetaDataKeyAdder flag(int flag) {
+	public EmbeddingMetaDataColumnAdder flag(int flag) {
 		this.flags |= flag;
 		return this;
 	}
 
 	/**
-	 * Adds the meta data key to the ServoyEmbeddingStoreBuilder and returns it.
+	 * Adds the meta data column to the ServoyEmbeddingStoreBuilder and returns it.
 	 *
 	 * @return The ServoyEmbeddingStoreBuilder instance.
 	 */
