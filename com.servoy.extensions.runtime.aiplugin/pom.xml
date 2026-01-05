@@ -6,7 +6,7 @@
 
     <groupId>com.servoy</groupId>
     <artifactId>servoy-aiplugin</artifactId>
-    <version>1.0.0</version>
+    <version>1.1.0</version>
     <packaging>jar</packaging>
 
     <name>Servoy AI Plugin</name>
