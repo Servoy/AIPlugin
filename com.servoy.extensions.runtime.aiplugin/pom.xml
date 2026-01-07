@@ -168,6 +168,7 @@
                       <descriptors>
                         <descriptor>src/main/assembly/zip.xml</descriptor> 
                       </descriptors>
+                      <finalName>${project.artifactId}</finalName>
                       <appendAssemblyId>false</appendAssemblyId>
                     </configuration>
                   </execution>
