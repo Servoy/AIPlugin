@@ -48,6 +48,11 @@ public class BaseChatBuilder<T extends BaseChatBuilder<T>> {
 	 * Indicates whether built-in Servoy tools should be injected into the AI agent.
 	 */
 	protected boolean useBuiltInTools;
+	
+	/**
+	 * The maximum number of memory tokens for chat history.
+	 */
+	protected Integer tokens;
 
 	/**
 	 * The client plugin access instance for Servoy scripting context.
@@ -100,6 +105,22 @@ public class BaseChatBuilder<T extends BaseChatBuilder<T>> {
 	@JSFunction
 	public T useBuiltInTools(boolean useBuiltInTools) {
 		this.useBuiltInTools = useBuiltInTools;
+		return (T) this;
+	}
+	
+
+	/**
+	 * Sets the maximum number of memory tokens for chat history.
+	 * Default this is not set and no memory will be used. 
+	 * So it will only send/use the current prompt and not previous messages.
+	 * 
+	 * @param tokens The maximum number of tokens.
+	 * @return This builder instance.
+	 */
+	@SuppressWarnings("unchecked")
+	@JSFunction
+	public T maxMemoryTokens(Integer tokens) {
+		this.tokens = tokens;
 		return (T) this;
 	}
 

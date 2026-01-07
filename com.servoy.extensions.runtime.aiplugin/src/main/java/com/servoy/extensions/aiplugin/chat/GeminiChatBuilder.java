@@ -30,10 +30,6 @@ public class GeminiChatBuilder extends BaseChatBuilder<GeminiChatBuilder> implem
 	 * The temperature for the Gemini model (controls randomness).
 	 */
 	private Double temperature;
-	/**
-	 * The maximum number of memory tokens for chat history.
-	 */
-	private Integer tokens;
 
 	/**
 	 * Constructs a GeminiChatBuilder with the given plugin access.
@@ -77,18 +73,6 @@ public class GeminiChatBuilder extends BaseChatBuilder<GeminiChatBuilder> implem
 	@JSFunction
 	public GeminiChatBuilder temperature(Double temperature) {
 		this.temperature = temperature;
-		return this;
-	}
-
-	/**
-	 * Sets the maximum number of memory tokens for chat history.
-	 * 
-	 * @param tokens The maximum number of tokens.
-	 * @return This builder instance.
-	 */
-	@JSFunction
-	public GeminiChatBuilder maxMemoryTokens(Integer tokens) {
-		this.tokens = tokens;
 		return this;
 	}
 

@@ -33,10 +33,6 @@ public class OpenAiChatBuilder extends BaseChatBuilder<OpenAiChatBuilder> implem
 	 * The OpenAI model name (default: "gpt-5").
 	 */
 	private String modelName = "gpt-5";
-	/**
-	 * The maximum number of memory tokens for chat history.
-	 */
-	private Integer tokens;
 
 	/**
 	 * Constructs an OpenAiChatBuilder with the given plugin access.
@@ -82,18 +78,6 @@ public class OpenAiChatBuilder extends BaseChatBuilder<OpenAiChatBuilder> implem
 	@JSFunction
 	public OpenAiChatBuilder temperature(Double temperature) {
 		builder.temperature(temperature);
-		return this;
-	}
-
-	/**
-	 * Sets the maximum number of memory tokens for chat history.
-	 * 
-	 * @param tokens The maximum number of tokens.
-	 * @return This builder instance.
-	 */
-	@JSFunction
-	public OpenAiChatBuilder maxMemoryTokens(Integer tokens) {
-		this.tokens = tokens;
 		return this;
 	}
 
