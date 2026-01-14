@@ -1,0 +1,16 @@
+{
+    "customProperties":{
+        "lazyLoading":false
+    },
+    "dataProviderID1":"companyname",
+    "dataProviderID2":"customerid",
+    "dataSource":"db:/example_data/customers",
+    "displayValueType":12,
+    "name":"customers",
+    "realValueType":12,
+    "returnDataProviders":2,
+    "showDataProviders":1,
+    "typeid":34,
+    "uuid":"ECB830B9-D9ED-4971-80BB-8690FCCDB62F",
+    "valueListType":1
+}

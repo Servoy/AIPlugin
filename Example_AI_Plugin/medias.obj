@@ -1,0 +1,37 @@
+[
+{
+    "encapsulation":0,
+    "mimeType":"text/css",
+    "name":"Example_AI_Plugin.less",
+    "typeid":37,
+    "uuid":"3493E9FB-CCBC-4E63-9CA8-7DEB41B42179"
+},
+{
+    "encapsulation":0,
+    "mimeType":"text/css",
+    "name":"manifest.json",
+    "typeid":37,
+    "uuid":"42D53F6C-1EEC-4D01-A738-B7BCB8F4EE41"
+},
+{
+    "encapsulation":0,
+    "mimeType":"text/css",
+    "name":"solution_properties.less",
+    "typeid":37,
+    "uuid":"564743D2-ED80-4ABC-80D1-A811B2C4FF96"
+},
+{
+    "encapsulation":0,
+    "mimeType":"text/css",
+    "name":"variants.json",
+    "typeid":37,
+    "uuid":"C0ECFCEB-2F89-4D30-993C-12EAD712681A"
+},
+{
+    "encapsulation":0,
+    "mimeType":"text/css",
+    "name":"webapp144.png",
+    "typeid":37,
+    "uuid":"812B61BA-6BE5-46AF-86D4-C24A44DA443B"
+}
+]

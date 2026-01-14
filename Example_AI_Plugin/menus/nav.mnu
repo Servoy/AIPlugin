@@ -1,0 +1,124 @@
+{
+    "items":[
+        {
+            "customProperties":{
+                "extraProperties":{
+                    "Sidenav":{
+                        "formName":"6824AB6D-CF30-4717-8FEC-B0BF9C0314E2"
+                    }
+                }
+            },
+            "name":"basicChatExample",
+            "text":"Basic Chat",
+            "typeid":53,
+            "uuid":"3641C9D6-1744-495D-97D0-2D0D4EB56984"
+        },
+        {
+            "customProperties":{
+                "extraProperties":{
+                    "Sidenav":{
+                        "formName":"9D0EC149-BAFE-44B3-B70B-3EA72F359C6E"
+                    }
+                }
+            },
+            "name":"basicChatWithMemory",
+            "text":"Chat With Memory",
+            "typeid":53,
+            "uuid":"5D5B6D4D-3709-42EF-83F1-51052DB2DC16"
+        },
+        {
+            "customProperties":{
+                "extraProperties":{
+                    "Sidenav":{
+                        "formName":"9BA1219F-7976-4821-86E1-F8FCDEFBCDAD"
+                    }
+                }
+            },
+            "name":"streamingChatExample",
+            "text":"Streaming Chat",
+            "typeid":53,
+            "uuid":"4D35F619-D195-426A-8C83-016BF305C950"
+        },
+        {
+            "customProperties":{
+                "extraProperties":{
+                    "Sidenav":{
+                        "formName":"3366DD62-E7B1-451E-9D7E-B8BBF76419C2"
+                    }
+                }
+            },
+            "name":"basicEmbeddingExample",
+            "text":"Basic Embedding",
+            "typeid":53,
+            "uuid":"E3BB7B40-7053-4872-BF54-68A07D2FB42C"
+        },
+        {
+            "customProperties":{
+                "extraProperties":{
+                    "Sidenav":{
+                        "formName":"218EE1FD-87C7-4BCB-841B-E29F86A9E885"
+                    }
+                }
+            },
+            "name":"basicEmbeddingExample2",
+            "text":"Basic Embedding 2",
+            "typeid":53,
+            "uuid":"4A4C4630-ABA1-4B7F-BC7D-5579D3626875"
+        },
+        {
+            "customProperties":{
+                "extraProperties":{
+                    "Sidenav":{
+                        "formName":"1C067E3C-1AB9-4CBE-A502-9F0DDB10661D"
+                    }
+                }
+            },
+            "name":"embeddedExampleRelationalData",
+            "text":"Embed Relational Data",
+            "typeid":53,
+            "uuid":"2868D789-C07C-47E4-A289-F59A0E881706"
+        },
+        {
+            "customProperties":{
+                "extraProperties":{
+                    "Sidenav":{
+                        "formName":"AF25CA25-92F7-4F53-8942-511415529F49"
+                    }
+                }
+            },
+            "name":"embeddingExamplePDF",
+            "text":"Embed PDF",
+            "typeid":53,
+            "uuid":"02315AAF-C233-4290-A504-02A8C1C6E593"
+        },
+        {
+            "customProperties":{
+                "extraProperties":{
+                    "Sidenav":{
+                        "formName":"FE08F852-E6C0-4A1F-B995-4AE172FCF070"
+                    }
+                }
+            },
+            "name":"exampleToolCalling",
+            "text":"Tool Calling",
+            "typeid":53,
+            "uuid":"29E62B92-162C-42C8-B9C2-99D98B91277A"
+        },
+        {
+            "customProperties":{
+                "extraProperties":{
+                    "Sidenav":{
+                        "formName":"C5A0408A-80F9-4A09-80AD-1E9BE8A1373D"
+                    }
+                }
+            },
+            "name":"chatWithYourData",
+            "text":"Chat With Your Data",
+            "typeid":53,
+            "uuid":"BFC854A6-DEF3-4156-876B-FFDD83909625"
+        }
+    ],
+    "name":"nav",
+    "typeid":52,
+    "uuid":"550B469C-B474-4E77-854E-3D21B15A90C1"
+}

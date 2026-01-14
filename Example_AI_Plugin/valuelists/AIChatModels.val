@@ -1,0 +1,14 @@
+{
+    "addEmptyValue":1,
+    "customValues":"gpt-3.5-turbo\r\
+gpt-4\r\
+gpt-4o\r\
+gpt-4o-mini\r\
+gemini-3-pro\r\
+gemini-2.5-flash-lite",
+    "displayValueType":12,
+    "name":"AIChatModels",
+    "realValueType":12,
+    "typeid":34,
+    "uuid":"6EECC2C2-CD03-4C8C-83BA-61355775A2A7"
+}
