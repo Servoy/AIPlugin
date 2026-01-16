@@ -1,4 +1,4 @@
-package com.servoy.extensions.aiplugin.server;
+package com.servoy.extensions.aiplugin.embedding;
 
 import com.servoy.j2db.query.ColumnType;
 

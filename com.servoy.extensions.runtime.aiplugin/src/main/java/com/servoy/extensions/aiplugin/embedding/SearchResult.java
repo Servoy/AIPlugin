@@ -1,10 +1,9 @@
 package com.servoy.extensions.aiplugin.embedding;
 
-import org.mozilla.javascript.annotations.JSFunction;
-
 import com.servoy.j2db.documentation.ServoyDocumented;
 import com.servoy.j2db.scripting.IJavaScriptType;
 import com.servoy.j2db.scripting.JSMap;
+import com.servoy.j2db.scripting.annotations.JSReadonlyProperty;
 
 import dev.langchain4j.data.document.Metadata;
 
@@ -46,7 +45,7 @@ public class SearchResult implements IJavaScriptType {
 	 * 
 	 * @return The similarity score.
 	 */
-	@JSFunction
+	@JSReadonlyProperty
 	public Double getScore() {
 		return score;
 	}
@@ -56,7 +55,7 @@ public class SearchResult implements IJavaScriptType {
 	 * 
 	 * @return The matched text.
 	 */
-	@JSFunction
+	@JSReadonlyProperty
 	public String getText() {
 		return text;
 	}
@@ -66,7 +65,7 @@ public class SearchResult implements IJavaScriptType {
 	 * 
 	 * @return The metadata object.
 	 */
-	@JSFunction
+	@JSReadonlyProperty
 	public JSMap<String, Object> getMetadata() {
 		JSMap<String, Object> map = new JSMap<>();
 		map.putAll(metadata.toMap());

@@ -2,9 +2,10 @@ package com.servoy.extensions.aiplugin.embedding;
 
 import static com.servoy.base.persistence.IBaseColumn.PK_COLUMN;
 import static com.servoy.base.persistence.IBaseColumn.USER_ROWID_COLUMN;
-import static com.servoy.extensions.aiplugin.server.ServoyEmbeddingStore.EMBEDDING_COLUMN;
-import static com.servoy.extensions.aiplugin.server.ServoyEmbeddingStore.EMBEDDING_ID_COLUMN;
-import static com.servoy.extensions.aiplugin.server.ServoyEmbeddingStore.TEXT_COLUMN;
+import static com.servoy.extensions.aiplugin.embedding.ServoyEmbeddingStoreServer.EMBEDDING_COLUMN;
+import static com.servoy.extensions.aiplugin.embedding.ServoyEmbeddingStoreServer.EMBEDDING_ID_COLUMN;
+import static com.servoy.extensions.aiplugin.embedding.ServoyEmbeddingStoreServer.TEXT_COLUMN;
+import static com.servoy.j2db.util.DataSourceUtils.createDBTableDataSource;
 import static com.servoy.j2db.util.DataSourceUtils.getDataSourceServerName;
 import static dev.langchain4j.internal.ValidationUtils.ensureNotBlank;
 import static dev.langchain4j.internal.ValidationUtils.ensureNotNull;
@@ -17,16 +18,13 @@ import java.util.List;
 import org.mozilla.javascript.annotations.JSFunction;
 
 import com.servoy.extensions.aiplugin.AIProvider;
-import com.servoy.extensions.aiplugin.server.MetaDataKey;
 import com.servoy.j2db.documentation.ServoyDocumented;
 import com.servoy.j2db.persistence.Column;
 import com.servoy.j2db.persistence.ITable;
 import com.servoy.j2db.persistence.RepositoryException;
 import com.servoy.j2db.scripting.IJavaScriptType;
-import com.servoy.j2db.util.DataSourceUtils;
 import com.servoy.j2db.util.Debug;
 
-import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.DimensionAwareEmbeddingModel;
 
 @ServoyDocumented
@@ -156,21 +154,22 @@ public class ServoyEmbeddingStoreBuilder implements IJavaScriptType {
 		try {
 			deriveOptionsFromExistingTable();
 
+			String localServerName = ensureNotBlank(
+					serverName == null ? getDataSourceServerName(dataSource) : serverName,
+					"either a dataSource or serverName (with metaDataColumns) must be specified");
 			if (dataSource == null) {
-				ensureNotBlank(serverName,
-						"either a dataSource or serverName (with metaDataColumns) must be specified");
 				ensureTrue(metaDataKeys != null,
 						"either a dataSource or serverName (with metaDataColumns) must be specified");
 			} else if (metaDataKeys == null) {
 				metaDataKeys = getSourceTableMetaDataKeys(dataSource);
 			}
 
-			String remoteServerName = provider.getDatabaseManager()
-					.getSwitchedToServerName(serverName == null ? getDataSourceServerName(dataSource) : serverName);
-			dev.langchain4j.store.embedding.EmbeddingStore<TextSegment> embeddingStore = provider.getAiPluginService()
-					.servoyEmbeddingStoreFactory().create(provider.getClientID(), remoteServerName, metaDataKeys,
-							tableName, recreate, true, model.dimension(), TRUE.equals(addText));
-			return new EmbeddingStore(provider, embeddingStore, model);
+			String remoteServerName = provider.getDatabaseManager().getSwitchedToServerName(localServerName);
+			ServoyEmbeddingStoreServer servoyEmbeddingStoreServer = provider.getAiPluginService()
+					.servoyEmbeddingStoreFactory().create(remoteServerName, metaDataKeys, tableName, recreate, true,
+							model.dimension(), TRUE.equals(addText));
+			return new EmbeddingStore(provider, new ServoyEmbeddingStore(provider,
+					createDBTableDataSource(localServerName, tableName), servoyEmbeddingStoreServer), model);
 		} catch (Exception e) {
 			Debug.error(e);
 		}
@@ -194,7 +193,7 @@ public class ServoyEmbeddingStoreBuilder implements IJavaScriptType {
 		}
 		if (serverName != null) {
 			ITable existingTable = provider.getDatabaseManager()
-					.getTable(DataSourceUtils.createDBTableDataSource(serverName, tableName));
+					.getTable(createDBTableDataSource(serverName, tableName));
 			if (existingTable != null) {
 				List<Column> metaDataColumns = new ArrayList<>();
 				boolean hasText = false;

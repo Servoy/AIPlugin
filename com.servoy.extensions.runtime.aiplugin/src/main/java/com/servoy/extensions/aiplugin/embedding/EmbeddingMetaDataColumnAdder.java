@@ -6,12 +6,12 @@ import static dev.langchain4j.internal.ValidationUtils.ensureNotNull;
 
 import org.mozilla.javascript.annotations.JSFunction;
 
-import com.servoy.extensions.aiplugin.server.MetaDataKey;
 import com.servoy.j2db.documentation.ServoyDocumented;
 import com.servoy.j2db.query.ColumnType;
 
 /**
- * Builder like class to add a meta data column to a ServoyEmbeddingStoreBuilder.
+ * Builder like class to add a meta data column to a
+ * ServoyEmbeddingStoreBuilder.
  */
 @ServoyDocumented
 public class EmbeddingMetaDataColumnAdder {

@@ -1,7 +1,5 @@
 package com.servoy.extensions.aiplugin.embedding;
 
-import static com.servoy.j2db.util.DataSourceUtils.getDataSourceServerName;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -12,7 +10,6 @@ import org.mozilla.javascript.annotations.JSFunction;
 
 import com.servoy.extensions.aiplugin.AIProvider;
 import com.servoy.extensions.aiplugin.embedding.pdf.ApachePdfBoxDocumentParser;
-import com.servoy.extensions.aiplugin.server.SupportsTransaction;
 import com.servoy.j2db.dataprocessing.IFoundSet;
 import com.servoy.j2db.documentation.ServoyDocumented;
 import com.servoy.j2db.querybuilder.IQueryBuilder;
@@ -68,11 +65,6 @@ public class EmbeddingStore implements IScriptable, IJavaScriptType {
 		this.model = model;
 	}
 
-	dev.langchain4j.store.embedding.EmbeddingStore<TextSegment> getEmbeddingStore(String transactionID) {
-		return (embeddingStore instanceof SupportsTransaction<?> txStore) ? txStore.withTransactionId(transactionID)
-				: embeddingStore;
-	}
-
 	/**
 	 * Generates embeddings for all records in the specified foundSet for the given
 	 * textColumns and stores them in the specified vector column.
@@ -95,10 +87,6 @@ public class EmbeddingStore implements IScriptable, IJavaScriptType {
 				}
 				query.result().addPk();
 
-				String transactionID = provider.getDatabaseManager()
-						.getTransactionID(getDataSourceServerName(foundSet.getDataSource()));
-				var segmentStore = getEmbeddingStore(transactionID);
-
 				provider.getDatabaseManager().loadDataSetsByQuery(query, 0, 100, (dataSet) -> {
 					var segments = new ArrayList<TextSegment>(dataSet.getRowCount() * textColumns.length);
 					dataSet.getRows().forEach((row) -> {
@@ -117,7 +105,7 @@ public class EmbeddingStore implements IScriptable, IJavaScriptType {
 					});
 
 					Response<List<Embedding>> embeddings = model.embedAll(segments);
-					segmentStore.addAll(embeddings.content(), segments);
+					embeddingStore.addAll(embeddings.content(), segments);
 
 					return true; // process all dataset chunks
 				});
@@ -219,13 +207,7 @@ public class EmbeddingStore implements IScriptable, IJavaScriptType {
 	 */
 	@JSFunction
 	public SearchResult[] search(String text, int maxResults) {
-		Embedding queryEmbedding = model.embed(text).content();
-		EmbeddingSearchRequest embeddingSearchRequest = EmbeddingSearchRequest.builder().queryEmbedding(queryEmbedding)
-				.maxResults(maxResults).build();
-		List<EmbeddingMatch<TextSegment>> matches = embeddingStore.search(embeddingSearchRequest).matches();
-		return matches.stream()
-				.map(match -> new SearchResult(match.score(), match.embedded().text(), match.embedded().metadata()))
-				.toArray(SearchResult[]::new);
+		return doSearch(text, maxResults);
 	}
 
 	/**
@@ -237,9 +219,13 @@ public class EmbeddingStore implements IScriptable, IJavaScriptType {
 	 */
 	@JSFunction
 	public SearchResult[] search(String text) {
+		return doSearch(text, null);
+	}
+
+	private SearchResult[] doSearch(String text, Integer maxResults) {
 		Embedding queryEmbedding = model.embed(text).content();
 		EmbeddingSearchRequest embeddingSearchRequest = EmbeddingSearchRequest.builder().queryEmbedding(queryEmbedding)
-				.build();
+				.maxResults(maxResults).build();
 		List<EmbeddingMatch<TextSegment>> matches = embeddingStore.search(embeddingSearchRequest).matches();
 		return matches.stream()
 				.map(match -> new SearchResult(match.score(), match.embedded().text(), match.embedded().metadata()))
