@@ -1,0 +1,12 @@
+{
+    "name":"Example_AI_Plugin",
+    "displayName":"Example AI Plugin",
+    "packageType": "Solution-Main",
+    "icon": "https://raw.githubusercontent.com/Servoy/servoy-extra-components/master/servoy.png",
+    "description": "Shows examples using the AI Plugin",
+    "wikiUrl": "https://docs.servoy.com/guides/develop/programming-guide/building-ai-features",
+    "sourceUrl" : "https://github.com/Servoy/AIPlugin/tree/master/Example_AI_Plugin",
+    "releases" : [
+        {"version":"1.0.0","url":"https://github.com/Servoy/AIPlugin/releases/download/example-solution-1.0.0/Example_AI_Plugin.servoy", "servoy-version":"2025.12.0"}
+    ]
+}
