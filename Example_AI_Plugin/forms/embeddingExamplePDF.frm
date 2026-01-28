@@ -206,6 +206,7 @@
     ],
     "name":"embeddingExamplePDF",
     "navigatorID":"-1",
+    "onShowMethodID":"F8135E99-D131-4ECE-8056-BD47F6660685",
     "showInMenu":true,
     "typeid":3,
     "uuid":"AF25CA25-92F7-4F53-8942-511415529F49"

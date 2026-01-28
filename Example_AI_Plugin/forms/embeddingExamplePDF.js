@@ -10,7 +10,7 @@ var filePath = '';
  *
  * @properties={typeid:35,uuid:"C3F176AA-E282-4E0A-ACC2-7CEA4AC87FE9"}
  */
-var question = '';
+var question = 'How do I turn the power off?';
 
 /**
  * @type {plugins.ai.EmbeddingStore}
@@ -91,10 +91,46 @@ function askQuestion(){
     The context is:\n\n"' + results[0].getText();
     
     // Ask the question
-    plugins.svyBlockUI.show("Asking the Auntie, please wait...");
+    plugins.svyBlockUI.show("Asking the guru, please wait...");
     chatClient.chat(prompt).then(function(response){
     	answer = response.getResponse();
     }).finally(function(){
     	plugins.svyBlockUI.stop();
     });
+}
+
+/**
+ * Loads a PDF file from the media and embeds it
+ * @properties={typeid:24,uuid:"026F878B-B310-4F98-B20E-3313BE9702A5"}
+ */
+function loadFileFromMedia(){
+	filePath = 'earbuds_500.pdf';
+	let bytes = solutionModel.getMedia('earbuds_500.pdf').bytes;
+	// Create the in-memory embedding store
+	store = plugins.ai.createOpenAiEmbeddingModelBuilder()
+        .apiKey(scopes.exampleAIPlugin.getOpenAIApiKey())
+        .modelName('text-embedding-3-small').build()
+        .createInMemoryStore();
+	
+	// Embed the file with a chunk size of 500 and an overlap of 50
+	plugins.svyBlockUI.show("Embedding file, please wait...");
+    store.embed(bytes,500,50).finally(function(){
+    	plugins.svyBlockUI.stop();
+    });
+}
+
+/**
+ * Embed the default earbuds PDF on first form show
+ *
+ * @param {Boolean} firstShow form is shown first time after load
+ * @param {JSEvent} event the event that triggered the action
+ *
+ * @private
+ *
+ * @properties={typeid:24,uuid:"F8135E99-D131-4ECE-8056-BD47F6660685"}
+ */
+function onShow(firstShow, event) {
+	if(firstShow){
+		loadFileFromMedia();
+	}
 }

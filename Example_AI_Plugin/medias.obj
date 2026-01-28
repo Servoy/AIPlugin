@@ -1,6 +1,13 @@
 [
 {
     "encapsulation":0,
+    "mimeType":"application/pdf",
+    "name":"earbuds_500.pdf",
+    "typeid":37,
+    "uuid":"66336010-D6EC-4785-BE43-508504E72F6D"
+},
+{
+    "encapsulation":0,
     "mimeType":"text/css",
     "name":"Example_AI_Plugin.less",
     "typeid":37,
