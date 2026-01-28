@@ -115,7 +115,7 @@
                     "width":"470"
                 },
                 "styleClassExpression":null,
-                "text":"Texttoembed",
+                "text":"Texts to Embed (1 per line)",
                 "toolTipText":"Texttoembed"
             },
             "name":"label_783",
@@ -155,7 +155,7 @@
                     "width":"470"
                 },
                 "styleClassExpression":null,
-                "text":"Searchtext",
+                "text":"Search Text",
                 "toolTipText":"Searchtext"
             },
             "name":"label_296",
@@ -166,6 +166,7 @@
     ],
     "name":"basicEmbeddingExample2",
     "navigatorID":"-1",
+    "onShowMethodID":"10838665-5DC7-4DC7-B010-E812194D5E34",
     "showInMenu":true,
     "size":"800,640",
     "typeid":3,

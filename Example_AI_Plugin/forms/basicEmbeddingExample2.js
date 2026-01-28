@@ -55,3 +55,19 @@ function search(){
 		return 'Text: ' +res.getText().substr(0,30)+ '..., Score: ' + res.getScore().toFixed(4);
 	}).join('\n');
 }
+
+/**
+ * Callback method for when form is shown.
+ *
+ * @param {Boolean} firstShow form is shown first time after load
+ * @param {JSEvent} event the event that triggered the action
+ *
+ * @private
+ *
+ * @properties={typeid:24,uuid:"10838665-5DC7-4DC7-B010-E812194D5E34"}
+ */
+function onShow(firstShow, event) {
+	if (firstShow){
+		embed();
+	}
+}

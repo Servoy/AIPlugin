@@ -67,7 +67,7 @@ function productLookUp(productName){
 	// try vector search
 	application.output('No match. Fallback vector search for product: ' + productName);
 	let results = productStore.search(productName, 5);
-	let id = results[0].getMetadata().get('id');
+	let id = results[0].getMetadata()['id'];
 	let score = results[0].getScore();
 	application.output('Vector search found product ID ' + id + ' with score ' + score);
 	if(score > 0.7){
@@ -130,7 +130,7 @@ function addItemToOrder(productId, quantity){
 	application.output('Added product ID ' + productId + ' with quantity ' + quantity + ' to order.');
 }
 /**
- * Callback method for when form is shown.
+ * Embed prodsuct names on form show.
  *
  * @param {Boolean} firstShow form is shown first time after load
  * @param {JSEvent} event the event that triggered the action
@@ -142,7 +142,7 @@ function addItemToOrder(productId, quantity){
 function onShow(firstShow, event) {
 	foundset.clear();
 	if(firstShow){
-		vectorizeProducts();
+		embedProductNames();
 	}
 }
 
@@ -150,7 +150,7 @@ function onShow(firstShow, event) {
  * @private 
  * @properties={typeid:24,uuid:"0245D8A2-914A-4515-949F-9E1E7C5EC5AD"}
  */
-function vectorizeProducts(){
+function embedProductNames(){
 	productStore = plugins.ai.createOpenAiEmbeddingModelBuilder()
 		.apiKey(scopes.exampleAIPlugin.getOpenAIApiKey())
 		.modelName('text-embedding-3-small')

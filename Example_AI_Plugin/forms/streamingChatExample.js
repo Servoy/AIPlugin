@@ -17,7 +17,7 @@ var systemMessage = 'You are a helpful assistant.';
  * @type {String}
  * @properties={typeid:35,uuid:"9D1F1963-B97B-4669-BAF2-5DC5AE0A135E"}
  */
-var userMessage = "What is the latest version of Servoy?";
+var userMessage = "Describe in detail the morning of the battle of Gettysburg";
 
 /**
  * The response message from the model
@@ -44,7 +44,7 @@ var tokens = '';
  * Performs a basic chat completion using the specified model, system message, and user message.
  * @properties={typeid:24,uuid:"0D4713BB-099A-4CC3-ACB2-073642D0D228"}
  */
-function basicChat() {
+function streamingChat() {
 	
 	// clear the results
 	tokens = '';

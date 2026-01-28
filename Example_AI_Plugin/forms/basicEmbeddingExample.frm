@@ -17,9 +17,11 @@
                     "width":"80"
                 },
                 "onActionMethodID":"A6B6F85E-0E38-48ED-9DE4-8512117400C7",
+                "styleClass":"btn btn-primary",
                 "text":"Search"
             },
             "name":"button_3",
+            "styleClass":"btn btn-primary",
             "typeName":"bootstrapcomponents-button",
             "typeid":47,
             "uuid":"30565F34-18AA-469B-B4B6-2407A16863E8"
@@ -92,7 +94,7 @@
                     "width":"300"
                 },
                 "styleClassExpression":null,
-                "text":"Texttoembed",
+                "text":"Text to Embed",
                 "toolTipText":"Texttoembed"
             },
             "name":"label_783",
@@ -155,7 +157,7 @@
                     "width":"300"
                 },
                 "styleClassExpression":null,
-                "text":"Searchtext",
+                "text":"Search Text",
                 "toolTipText":"Searchtext"
             },
             "name":"label_296",
@@ -166,6 +168,7 @@
     ],
     "name":"basicEmbeddingExample",
     "navigatorID":"-1",
+    "onShowMethodID":"CD1B9CD7-5145-4A2D-BAB9-4679AF2C271B",
     "showInMenu":true,
     "typeid":3,
     "uuid":"3366DD62-E7B1-451E-9D7E-B8BBF76419C2"

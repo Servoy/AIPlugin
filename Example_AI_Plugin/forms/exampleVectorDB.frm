@@ -1,0 +1,20 @@
+{
+    "customProperties":{
+        "formComponent":false,
+        "useCssPosition":true
+    },
+    "encapsulation":108,
+    "items":[
+        {
+            "height":480,
+            "partType":5,
+            "typeid":19,
+            "uuid":"FEF3D45F-29FF-4AB4-889F-ABF303989BE7"
+        }
+    ],
+    "name":"exampleVectorDB",
+    "navigatorID":"-1",
+    "showInMenu":true,
+    "typeid":3,
+    "uuid":"3F2E6899-C3F4-4B0F-AF30-F599B42E0B46"
+}

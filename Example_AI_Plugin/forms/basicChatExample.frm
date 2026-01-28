@@ -17,7 +17,7 @@
                     "width":"300"
                 },
                 "styleClassExpression":null,
-                "text":"Systemmessage",
+                "text":"System Message",
                 "toolTipText":"Systemmessage"
             },
             "name":"label_716",
@@ -37,7 +37,7 @@
                     "width":"300"
                 },
                 "styleClassExpression":null,
-                "text":"Responsemessage",
+                "text":"Response",
                 "toolTipText":"Responsemessage"
             },
             "name":"label_336",
@@ -57,7 +57,7 @@
                     "width":"300"
                 },
                 "styleClassExpression":null,
-                "text":"Modelname",
+                "text":"Model Name",
                 "toolTipText":"Modelname"
             },
             "name":"label_572",
@@ -201,7 +201,7 @@
                     "width":"300"
                 },
                 "styleClassExpression":null,
-                "text":"Usermessage",
+                "text":"User Message",
                 "toolTipText":"Usermessage"
             },
             "name":"label_603",

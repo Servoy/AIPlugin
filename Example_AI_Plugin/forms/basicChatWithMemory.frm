@@ -95,7 +95,7 @@
                     "width":"300"
                 },
                 "styleClassExpression":null,
-                "text":"Responsemessage",
+                "text":"Response",
                 "toolTipText":"Responsemessage"
             },
             "name":"label_336",
@@ -115,7 +115,7 @@
                     "width":"300"
                 },
                 "styleClassExpression":null,
-                "text":"Usermessage",
+                "text":"User Message",
                 "toolTipText":"Usermessage"
             },
             "name":"label_603",

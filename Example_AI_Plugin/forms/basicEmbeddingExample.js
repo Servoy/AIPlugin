@@ -47,3 +47,19 @@ function search(){
 	var results = inMemoryVectorStore.search(searchText,1);
 	score = results[0].getScore();
 }
+
+/**
+ * Callback method for when form is shown.
+ *
+ * @param {Boolean} firstShow form is shown first time after load
+ * @param {JSEvent} event the event that triggered the action
+ *
+ * @private
+ *
+ * @properties={typeid:24,uuid:"CD1B9CD7-5145-4A2D-BAB9-4679AF2C271B"}
+ */
+function onShow(firstShow, event) {
+	if(firstShow){
+		embed();
+	}
+}

@@ -17,7 +17,7 @@ var systemMessage = 'You are a helpful assistant.';
  * @type {String}
  * @properties={typeid:35,uuid:"8AC5840B-86D7-47AC-9D0D-AE901423DB5B"}
  */
-var userMessage = "What is the latest version of Servoy?";
+var userMessage = "What are the benefits of using Servoy?";
 
 /**
  * The response message from the model
@@ -57,6 +57,9 @@ function basicChat() {
 	// start timing.
 	const startTime = new Date().getTime();
 	
+	// show the waiting message
+	plugins.svyBlockUI.show('Waiting for response...');
+	
 	// send the user message and handle the response
 	client.chat(userMessage).then(
 		
@@ -73,7 +76,11 @@ function basicChat() {
 			function(error) {
 				responseMessage = 'Error: ' + error.message;
 			}
-		);
+			
+		// clear the waiting message
+		).finally(function(){
+			plugins.svyBlockUI.stop();
+		});
 }
 
 /**

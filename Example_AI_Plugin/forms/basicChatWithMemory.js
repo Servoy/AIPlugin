@@ -51,7 +51,7 @@ var maxTokenMemory = 5000;
  * Performs a basic chat completion using the specified model, system message, and user message.
  * @properties={typeid:24,uuid:"28BB09E1-D889-41CE-8219-8B488990483D"}
  */
-function basicChat() {
+function chatWithMemory() {
 
 	responseMessage += 'ME: '+userMessage+'\n\n';
 	

@@ -59,11 +59,6 @@
                         "visible":true
                     },
                     {
-                        "dataprovider":"product_desc",
-                        "id":"product_desc",
-                        "svyUUID":"8711C245-EBE5-4ACE-BD1D-FBE84CFBC741"
-                    },
-                    {
                         "dataprovider":"vectors",
                         "id":"vectors",
                         "styleClassDataprovider":null,
@@ -86,6 +81,12 @@
             "uuid":"1EF689AB-1F2B-4414-9AF7-0B7826FF7B3D"
         },
         {
+            "height":480,
+            "partType":5,
+            "typeid":19,
+            "uuid":"62CC4C03-3537-424D-9B99-23A331D68FEB"
+        },
+        {
             "cssPosition":"50,10,-1,-1,100,30",
             "json":{
                 "cssPosition":{
@@ -96,32 +97,8 @@
                     "top":"50",
                     "width":"100"
                 },
-                "text":"Gen Desc"
-            },
-            "name":"button_3",
-            "typeName":"bootstrapcomponents-button",
-            "typeid":47,
-            "uuid":"57CBDC1A-2D24-4B01-BF20-68042CCD03FF"
-        },
-        {
-            "height":480,
-            "partType":5,
-            "typeid":19,
-            "uuid":"62CC4C03-3537-424D-9B99-23A331D68FEB"
-        },
-        {
-            "cssPosition":"50,120,-1,-1,80,30",
-            "json":{
-                "cssPosition":{
-                    "bottom":"-1",
-                    "height":"30",
-                    "left":"-1",
-                    "right":"120",
-                    "top":"50",
-                    "width":"80"
-                },
                 "onActionMethodID":"9277DFBD-FD03-487A-852F-8B741B3787C0",
-                "text":"Vect"
+                "text":"Re-Embed"
             },
             "name":"button_2",
             "typeName":"bootstrapcomponents-button",
@@ -140,7 +117,8 @@
                     "width":"-1"
                 },
                 "dataProviderID":"searchText",
-                "onActionMethodID":"95409DC9-2262-469E-8B84-61FF819AF1D3"
+                "onActionMethodID":"95409DC9-2262-469E-8B84-61FF819AF1D3",
+                "placeholderText":"Search Text"
             },
             "name":"textbox_3",
             "typeName":"bootstrapcomponents-textbox",
@@ -150,6 +128,7 @@
     ],
     "name":"embeddedExampleRelationalData",
     "navigatorID":"-1",
+    "onShowMethodID":"BDD162CE-B636-4B20-97CC-CD916F355E19",
     "showInMenu":true,
     "typeid":3,
     "uuid":"1C067E3C-1AB9-4CBE-A502-9F0DDB10661D"
