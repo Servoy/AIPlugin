@@ -71,5 +71,10 @@ public class SearchResult implements IJavaScriptType {
 		map.putAll(metadata.toMap());
 		return map;
 	}
+	
+	@Override
+	public String toString() {
+		return "SearchResult [score=" + score + ", text=" + text + ", metadata=" + metadata + "]";
+	}
 
 }
