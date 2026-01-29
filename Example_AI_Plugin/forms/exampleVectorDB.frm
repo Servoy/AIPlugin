@@ -6,6 +6,25 @@
     "encapsulation":108,
     "items":[
         {
+            "cssPosition":"171,-1,-1,43,140,30",
+            "json":{
+                "cssPosition":{
+                    "bottom":"-1",
+                    "height":"30",
+                    "left":"43",
+                    "right":"-1",
+                    "top":"171",
+                    "width":"140"
+                },
+                "onActionMethodID":"20154909-5B27-43BE-869B-A31912D8CF56",
+                "text":"Add File"
+            },
+            "name":"button_6",
+            "typeName":"bootstrapcomponents-button",
+            "typeid":47,
+            "uuid":"2D434175-1F08-4992-8B39-A642E9FE9E29"
+        },
+        {
             "height":480,
             "partType":5,
             "typeid":19,
@@ -14,6 +33,7 @@
     ],
     "name":"exampleVectorDB",
     "navigatorID":"-1",
+    "onShowMethodID":"CC666E71-182F-412E-B22A-3B3A8219C7E2",
     "showInMenu":true,
     "typeid":3,
     "uuid":"3F2E6899-C3F4-4B0F-AF30-F599B42E0B46"

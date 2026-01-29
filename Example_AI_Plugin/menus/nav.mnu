@@ -116,6 +116,19 @@
             "text":"Chat With Your Data",
             "typeid":53,
             "uuid":"BFC854A6-DEF3-4156-876B-FFDD83909625"
+        },
+        {
+            "customProperties":{
+                "extraProperties":{
+                    "Sidenav":{
+                        "formName":"3F2E6899-C3F4-4B0F-AF30-F599B42E0B46"
+                    }
+                }
+            },
+            "name":"exampleVectorDB",
+            "text":"PG Vector",
+            "typeid":53,
+            "uuid":"31421A9F-06E8-408D-91D4-FB46BA67E319"
         }
     ],
     "name":"nav",
