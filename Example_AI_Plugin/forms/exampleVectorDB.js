@@ -65,6 +65,6 @@ function addFile(){
  */
 function onShow(firstShow, event) {
 	if(firstShow){
-		createStore();
+		createStore(); 
 	}
 }
