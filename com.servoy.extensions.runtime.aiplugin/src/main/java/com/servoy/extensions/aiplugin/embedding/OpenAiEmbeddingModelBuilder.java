@@ -34,6 +34,18 @@ public class OpenAiEmbeddingModelBuilder implements IJavaScriptType {
 	public OpenAiEmbeddingModelBuilder(AIProvider provider) {
 		this.provider = provider;
 	}
+	
+	/**
+	 * Sets base url for an api like IONOS that is compatible with OpenAI API.
+	 * 
+	 * @param url The base URL.
+	 * @return This builder instance.
+	 */
+	@JSFunction
+	public OpenAiEmbeddingModelBuilder baseUrl(String url) {
+		builder.baseUrl(url);
+		return this;
+	}
 
 	/**
 	 * Sets the OpenAI API key for the embedding model.
