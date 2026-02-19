@@ -40,6 +40,18 @@ public class OpenAiChatBuilder extends BaseChatBuilder<OpenAiChatBuilder> implem
 	}
 
 	/**
+	 * Sets base url for an api like IONOS that is compatible with OpenAI API.
+	 * 
+	 * @param url The base URL.
+	 * @return This builder instance.
+	 */
+	@JSFunction
+	public OpenAiChatBuilder baseUrl(String url) {
+		builder.baseUrl(url);
+		return this;
+	}
+	
+	/**
 	 * Sets the OpenAI API key.
 	 * 
 	 * @param key The API key.
