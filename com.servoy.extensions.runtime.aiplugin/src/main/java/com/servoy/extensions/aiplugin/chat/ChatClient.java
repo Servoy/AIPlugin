@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 import org.mozilla.javascript.Function;
@@ -20,6 +22,7 @@ import com.servoy.j2db.scripting.Deferred;
 import com.servoy.j2db.scripting.FunctionDefinition;
 import com.servoy.j2db.scripting.IJavaScriptType;
 import com.servoy.j2db.scripting.IScriptable;
+import com.servoy.j2db.util.Debug;
 import com.servoy.j2db.util.MimeTypes;
 import com.servoy.j2db.util.Pair;
 import com.servoy.j2db.util.Utils;
@@ -129,6 +132,33 @@ public class ChatClient implements IScriptable, IJavaScriptType {
 		return deferred.getPromise();
 	}
 
+	/**
+	 * Send a userMessage to the ai, this call is a synchronous call and will return a ChatResponse object directly. 
+	 * This can throw an exception of something goes wrong.
+	 * 
+	 * Its recommended to use the Async (Promise) version. Only use this if you directly need a respond that you need to return from a function.
+	 * 
+	 * @param userMessage The user message
+	 * @return {plugins.ai.ChatResponse} The assistant response.
+	 * @throws ExecutionException 
+	 * @throws InterruptedException 
+	 */
+	@JSFunction
+	public ChatResponse chatSync(String userMessage) throws RuntimeException {
+		StringBuilder response = new StringBuilder();
+		UserMessage msg = getUserMessage(userMessage);
+		CompletableFuture<ChatResponse> future = new CompletableFuture<>();	
+		assistant.chat(msg).onPartialResponse(partialResponse -> response.append(partialResponse))
+				.onCompleteResponse(completeResponse -> future.complete(new ChatResponse(userMessage, completeResponse, response.toString())))
+				.onError(error ->  {
+					future.completeExceptionally(error);
+				}).start();
+		try {
+			return future.get();
+		} catch (InterruptedException | ExecutionException e) {
+			throw new RuntimeException("Error while getting chat response", e);
+		}
+	}
 	/**
 	 * Send a userMessage to the ai. This will call the provided functions on
 	 * partial response, complete response and error. So this can be used for
