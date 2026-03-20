@@ -17,8 +17,8 @@
         <maven.compiler.target>21</maven.compiler.target>
         
         <servoy.version>2025.12.0.4122</servoy.version>
-        <langchain4j.version>1.10.0</langchain4j.version>
-        <pdfbox.version>3.0.6</pdfbox.version>
+        <langchain4j.version>1.12.2</langchain4j.version>
+        <pdfbox.version>3.0.7</pdfbox.version>
     </properties>
 
      <repositories>
@@ -82,7 +82,7 @@
         <dependency>
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j-web-search-engine-google-custom</artifactId>
-            <version>1.10.0-beta18</version>
+            <version>1.12.2-beta22</version>
         </dependency>      
     </dependencies>
 
