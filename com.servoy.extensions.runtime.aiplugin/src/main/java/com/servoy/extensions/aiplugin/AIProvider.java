@@ -31,6 +31,8 @@ import dev.langchain4j.model.googleai.GoogleAiGeminiStreamingChatModel;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
 import dev.langchain4j.service.AiServices;
 
+import dev.toonformat.jtoon.JToon;
+
 /**
  * AIProvider class that provides access to create AI chat and embedding
  * clients/builders.
@@ -184,5 +186,47 @@ public class AIProvider implements IReturnedTypesProvider, IScriptable {
 			});
 		}
 		return deferred.getPromise();
+	}
+	
+	/**
+	 * Encode a JSON string to TOON format.
+	 *
+	 * @sample
+	 * var json = '{"user":{"id":123,"name":"Ada","tags":["reading","gaming"]}}';
+	 * var toon = plugins.ai.encodeToonFromJson(json);
+	 *
+	 * @param json JSON string to encode
+	 * @return TOON formatted string, or null on error
+	 */
+	@JSFunction
+	public String encodeToonFromJson(String json) {
+	    if (json == null || json.trim().isEmpty()) return null;
+	    try {
+	        return JToon.encodeJson(json);
+	    } catch (Exception e) {
+	        Debug.error("Failed to encode JSON to TOON format: " + e.getMessage());
+	        return null;
+	    }
+	}
+
+	/**
+	 * Decode a TOON formatted string to JSON.
+	 *
+	 * @sample
+	 * var toon = 'user:\n  id: 123\n  name: Ada\n  tags[2]: reading,gaming';
+	 * var json = plugins.ai.decodeToonToJson(toon);
+	 *
+	 * @param toon TOON formatted string
+	 * @return JSON string, or null on error
+	 */
+	@JSFunction
+	public String decodeToonToJson(String toon) {
+	    if (toon == null || toon.trim().isEmpty()) return null;
+	    try {
+	        return JToon.decodeToJson(toon);
+	    } catch (Exception e) {
+	        Debug.error("Failed to decode TOON to JSON format: " + e.getMessage());
+	        return null;
+	    }
 	}
 }
