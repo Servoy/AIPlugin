@@ -7,7 +7,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import com.servoy.extensions.aiplugin.embedding.*;
 import org.mozilla.javascript.NativePromise;
 import org.mozilla.javascript.annotations.JSFunction;
 
@@ -15,8 +14,15 @@ import com.servoy.extensions.aiplugin.chat.Assistant;
 import com.servoy.extensions.aiplugin.chat.ChatClient;
 import com.servoy.extensions.aiplugin.chat.ChatResponse;
 import com.servoy.extensions.aiplugin.chat.GeminiChatBuilder;
+import com.servoy.extensions.aiplugin.chat.MCPClientBuilder;
 import com.servoy.extensions.aiplugin.chat.OpenAiChatBuilder;
 import com.servoy.extensions.aiplugin.chat.ToolBuilder;
+import com.servoy.extensions.aiplugin.embedding.EmbeddingModel;
+import com.servoy.extensions.aiplugin.embedding.EmbeddingStore;
+import com.servoy.extensions.aiplugin.embedding.GeminiEmbeddingModelBuilder;
+import com.servoy.extensions.aiplugin.embedding.OpenAiEmbeddingModelBuilder;
+import com.servoy.extensions.aiplugin.embedding.SearchResult;
+import com.servoy.extensions.aiplugin.embedding.ServoyEmbeddingStoreBuilder;
 import com.servoy.j2db.IApplication;
 import com.servoy.j2db.dataprocessing.IDatabaseManager;
 import com.servoy.j2db.documentation.ServoyDocumented;
@@ -30,7 +36,6 @@ import com.servoy.j2db.util.Debug;
 import dev.langchain4j.model.googleai.GoogleAiGeminiStreamingChatModel;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
 import dev.langchain4j.service.AiServices;
-
 import dev.toonformat.jtoon.JToon;
 
 /**
@@ -38,7 +43,8 @@ import dev.toonformat.jtoon.JToon;
  * clients/builders.
  */
 @ServoyDocumented(publicName = PLUGIN_NAME, scriptingName = "plugins." + PLUGIN_NAME)
-public class AIProvider implements IReturnedTypesProvider, IScriptable {
+public class AIProvider implements IReturnedTypesProvider, IScriptable
+{
 	private final IClientPluginAccess access;
 	private AiPluginService aiPluginService;
 
@@ -48,22 +54,27 @@ public class AIProvider implements IReturnedTypesProvider, IScriptable {
 	 */
 	private static ExecutorService virtualThreadExecutor = Executors.newVirtualThreadPerTaskExecutor();
 
-	public AiPluginService getAiPluginService() throws Exception {
-		if (aiPluginService == null) {
-			aiPluginService = (AiPluginService) access.getRemoteService(AIPLUGIN_SERVICE);
+	public AiPluginService getAiPluginService() throws Exception
+	{
+		if (aiPluginService == null)
+		{
+			aiPluginService = (AiPluginService)access.getRemoteService(AIPLUGIN_SERVICE);
 		}
 		return aiPluginService;
 	}
 
-	IApplication getApplication() {
-		return (((ClientPluginAccessProvider) access).getApplication());
+	IApplication getApplication()
+	{
+		return (((ClientPluginAccessProvider)access).getApplication());
 	}
 
-	public IDatabaseManager getDatabaseManager() {
+	public IDatabaseManager getDatabaseManager()
+	{
 		return access.getDatabaseManager();
 	}
 
-	public String getClientID() {
+	public String getClientID()
+	{
 		return access.getClientID();
 	}
 
@@ -73,7 +84,8 @@ public class AIProvider implements IReturnedTypesProvider, IScriptable {
 	 *
 	 * @param access The client plugin access instance.
 	 */
-	public AIProvider() {
+	public AIProvider()
+	{
 		this.access = null;
 	}
 
@@ -82,7 +94,8 @@ public class AIProvider implements IReturnedTypesProvider, IScriptable {
 	 *
 	 * @param access The client plugin access instance.
 	 */
-	public AIProvider(IClientPluginAccess access) {
+	public AIProvider(IClientPluginAccess access)
+	{
 		this.access = access;
 	}
 
@@ -92,10 +105,9 @@ public class AIProvider implements IReturnedTypesProvider, IScriptable {
 	 * @return An array of classes representing all returned types.
 	 */
 	@Override
-	public Class<?>[] getAllReturnedTypes() {
-		return new Class[] { ChatClient.class, GeminiChatBuilder.class, OpenAiChatBuilder.class,
-				GeminiEmbeddingModelBuilder.class, OpenAiEmbeddingModelBuilder.class, ServoyEmbeddingStoreBuilder.class,
-				EmbeddingStore.class, EmbeddingModel.class, ChatResponse.class, SearchResult.class, ToolBuilder.class };
+	public Class< ? >[] getAllReturnedTypes()
+	{
+		return new Class[] { ChatClient.class, GeminiChatBuilder.class, OpenAiChatBuilder.class, GeminiEmbeddingModelBuilder.class, OpenAiEmbeddingModelBuilder.class, ServoyEmbeddingStoreBuilder.class, EmbeddingStore.class, EmbeddingModel.class, ChatResponse.class, SearchResult.class, ToolBuilder.class, MCPClientBuilder.class };
 	}
 
 	/**
@@ -104,7 +116,8 @@ public class AIProvider implements IReturnedTypesProvider, IScriptable {
 	 * @return GeminiEmbeddingModelBuilder instance.
 	 */
 	@JSFunction
-	public GeminiEmbeddingModelBuilder createGeminiEmbeddingModelBuilder() {
+	public GeminiEmbeddingModelBuilder createGeminiEmbeddingModelBuilder()
+	{
 		return new GeminiEmbeddingModelBuilder(this);
 	}
 
@@ -114,7 +127,8 @@ public class AIProvider implements IReturnedTypesProvider, IScriptable {
 	 * @return OpenAiEmbeddingModelBuilder instance.
 	 */
 	@JSFunction
-	public OpenAiEmbeddingModelBuilder createOpenAiEmbeddingModelBuilder() {
+	public OpenAiEmbeddingModelBuilder createOpenAiEmbeddingModelBuilder()
+	{
 		return new OpenAiEmbeddingModelBuilder(this);
 	}
 
@@ -124,7 +138,8 @@ public class AIProvider implements IReturnedTypesProvider, IScriptable {
 	 * @return GeminiChatBuilder instance.
 	 */
 	@JSFunction
-	public GeminiChatBuilder createGeminiChatBuilder() {
+	public GeminiChatBuilder createGeminiChatBuilder()
+	{
 		return new GeminiChatBuilder(access);
 	}
 
@@ -134,7 +149,8 @@ public class AIProvider implements IReturnedTypesProvider, IScriptable {
 	 * @return OpenAiChatBuilder instance.
 	 */
 	@JSFunction
-	public OpenAiChatBuilder createOpenAiChatBuilder() {
+	public OpenAiChatBuilder createOpenAiChatBuilder()
+	{
 		return new OpenAiChatBuilder(access);
 	}
 
@@ -147,12 +163,13 @@ public class AIProvider implements IReturnedTypesProvider, IScriptable {
 	 * @return ChatClient instance for Gemini.
 	 */
 	@JSFunction
-	public ChatClient createGeminiClient(String apiKey, String modelName) {
+	public ChatClient createGeminiClient(String apiKey, String modelName)
+	{
 		GoogleAiGeminiStreamingChatModel model = GoogleAiGeminiStreamingChatModel.builder().temperature(null)
-				.apiKey(apiKey).modelName(modelName).build();
+			.apiKey(apiKey).modelName(modelName).build();
 		AiServices<Assistant> builder = AiServices.builder(Assistant.class);
 		builder.streamingChatModel(model);
-		return new ChatClient(builder.build(), access);
+		return new ChatClient(builder.build(), access, null);
 	}
 
 	/**
@@ -164,22 +181,30 @@ public class AIProvider implements IReturnedTypesProvider, IScriptable {
 	 * @return ChatClient instance for OpenAI.
 	 */
 	@JSFunction
-	public ChatClient createOpenAIClient(String apiKey, String modelName) {
+	public ChatClient createOpenAIClient(String apiKey, String modelName)
+	{
 		OpenAiStreamingChatModel model = OpenAiStreamingChatModel.builder().apiKey(apiKey).modelName(modelName).build();
 		AiServices<Assistant> builder = AiServices.builder(Assistant.class);
 		builder.streamingChatModel(model);
-		return new ChatClient(builder.build(), access);
+		return new ChatClient(builder.build(), access, null);
 	}
 
-	public NativePromise async(Callable<?> callable) {
+	public NativePromise async(Callable< ? > callable)
+	{
 		Deferred deferred = new Deferred(getApplication());
-		if (callable == null) {
+		if (callable == null)
+		{
 			deferred.resolve(null);
-		} else {
+		}
+		else
+		{
 			virtualThreadExecutor.submit(() -> {
-				try {
+				try
+				{
 					deferred.resolve(callable.call());
-				} catch (Exception ex) {
+				}
+				catch (Exception ex)
+				{
 					Debug.error(ex);
 					deferred.reject(ex);
 				}
@@ -187,7 +212,7 @@ public class AIProvider implements IReturnedTypesProvider, IScriptable {
 		}
 		return deferred.getPromise();
 	}
-	
+
 	/**
 	 * Encode a JSON string to TOON format.
 	 *
@@ -199,14 +224,18 @@ public class AIProvider implements IReturnedTypesProvider, IScriptable {
 	 * @return TOON formatted string, or null on error
 	 */
 	@JSFunction
-	public String encodeToonFromJson(String json) {
-	    if (json == null || json.trim().isEmpty()) return null;
-	    try {
-	        return JToon.encodeJson(json);
-	    } catch (Exception e) {
-	        Debug.error("Failed to encode JSON to TOON format: " + e.getMessage());
-	        return null;
-	    }
+	public String encodeToonFromJson(String json)
+	{
+		if (json == null || json.trim().isEmpty()) return null;
+		try
+		{
+			return JToon.encodeJson(json);
+		}
+		catch (Exception e)
+		{
+			Debug.error("Failed to encode JSON to TOON format: " + e.getMessage());
+			return null;
+		}
 	}
 
 	/**
@@ -220,13 +249,17 @@ public class AIProvider implements IReturnedTypesProvider, IScriptable {
 	 * @return JSON string, or null on error
 	 */
 	@JSFunction
-	public String decodeToonToJson(String toon) {
-	    if (toon == null || toon.trim().isEmpty()) return null;
-	    try {
-	        return JToon.decodeToJson(toon);
-	    } catch (Exception e) {
-	        Debug.error("Failed to decode TOON to JSON format: " + e.getMessage());
-	        return null;
-	    }
+	public String decodeToonToJson(String toon)
+	{
+		if (toon == null || toon.trim().isEmpty()) return null;
+		try
+		{
+			return JToon.decodeToJson(toon);
+		}
+		catch (Exception e)
+		{
+			Debug.error("Failed to decode TOON to JSON format: " + e.getMessage());
+			return null;
+		}
 	}
 }

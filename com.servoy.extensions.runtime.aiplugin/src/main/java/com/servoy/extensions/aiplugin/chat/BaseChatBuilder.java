@@ -14,21 +14,29 @@ import com.servoy.extensions.aiplugin.tools.builtin.ServoyBuiltInTools;
 import com.servoy.j2db.plugins.IClientPluginAccess;
 import com.servoy.j2db.scripting.FunctionDefinition;
 import com.servoy.j2db.util.Debug;
+import com.servoy.j2db.util.Pair;
 import com.servoy.j2db.util.serialize.JSONSerializerWrapper;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
+import dev.langchain4j.mcp.McpToolProvider;
+import dev.langchain4j.mcp.McpToolProvider.Builder;
+import dev.langchain4j.mcp.client.DefaultMcpClient;
+import dev.langchain4j.mcp.client.McpClient;
 import dev.langchain4j.service.AiServices;
 import dev.langchain4j.service.tool.ToolExecutor;
 
 /**
+ * <p>
  * BaseChatBuilder is an abstract builder class for constructing AI chat agents
  * in Servoy.
- * <p>
+ * </p><p>
  * It manages tool specifications, tool executors, and integration with Servoy's
  * scripting context. Subclasses can extend this builder to add custom tools and
  * behaviors for AI assistants.
- * <p>
+ * </p><p>
+ * Connections to MCP Servers are also supported.
+ * </p><p>
  * Key features:
  * <ul>
  * <li>Supports built-in Servoy tools via {@link #useBuiltInTools(boolean)}</li>
@@ -36,19 +44,25 @@ import dev.langchain4j.service.tool.ToolExecutor;
  * {@link #createTool(Function, String, String)}</li>
  * <li>Handles tool execution requests and argument mapping for AI agent
  * workflows</li>
+ * <li>Allows connections to MCP Servers.</li>
  * </ul>
+ * <p>
+ * IMPORTANT: When you no longer use the ChatClient returned by .build(), do call .close() on it in order to release
+ * resources like MCP server connections or processes.
+ * </p>
  *
  * @param <T> the type of the builder subclass
  * @author jcompagner
  * @since 2025.12
  */
-public class BaseChatBuilder<T extends BaseChatBuilder<T>> {
+public abstract class BaseChatBuilder<T extends BaseChatBuilder<T>>
+{
 
 	/**
 	 * Indicates whether built-in Servoy tools should be injected into the AI agent.
 	 */
 	protected boolean useBuiltInTools;
-	
+
 	/**
 	 * The maximum number of memory tokens for chat history.
 	 */
@@ -65,6 +79,12 @@ public class BaseChatBuilder<T extends BaseChatBuilder<T>> {
 	private final Map<ToolSpecification, ToolExecutor> tools = new HashMap<>();
 
 	/**
+	 * List of configured MCP client connections to integrate with this chat agent + a tool filter for each client.
+	 */
+	private final List<McpClient> mcpClients = new ArrayList<>();
+	private final Map<McpClient, List<String>> mcpClientsToolFilters = new HashMap<>();
+
+	/**
 	 * An optional system message to be added to the chat context.
 	 */
 	private String systemMessage;
@@ -74,7 +94,8 @@ public class BaseChatBuilder<T extends BaseChatBuilder<T>> {
 	 *
 	 * @param access the Servoy client plugin access instance
 	 */
-	protected BaseChatBuilder(IClientPluginAccess access) {
+	protected BaseChatBuilder(IClientPluginAccess access)
+	{
 		this.access = access;
 	}
 
@@ -84,15 +105,33 @@ public class BaseChatBuilder<T extends BaseChatBuilder<T>> {
 	 *
 	 * @return a configured AiServices builder for Assistant
 	 */
-	protected AiServices<Assistant> createAssistantBuilder() {
+	protected Pair<AiServices<Assistant>, List< ? extends AutoCloseable>> createAssistantBuilder()
+	{
 		AiServices<Assistant> builder = AiServices.builder(Assistant.class);
-		if (useBuiltInTools) {
+		if (useBuiltInTools)
+		{
 			builder.tools(new ServoyBuiltInTools(access));
 		}
 		builder.tools(tools);
+
+		if (!mcpClients.isEmpty())
+		{
+			Builder mcpToolProviderBuilder = McpToolProvider.builder();
+			mcpToolProviderBuilder.mcpClients(mcpClients);
+			if (mcpClientsToolFilters != null && mcpClientsToolFilters.size() > 0)
+			{
+				mcpToolProviderBuilder.filter(((mcpClient, toolSpecification) -> {
+					List<String> toolFiltersForClient = mcpClientsToolFilters.get(mcpClient);
+					return (toolFiltersForClient == null || toolFiltersForClient.contains(toolSpecification.name()));
+				}));
+			}
+
+			builder.toolProvider(mcpToolProviderBuilder.build());
+		}
+
 		if (systemMessage != null)
-			builder.systemMessageProvider(obect -> systemMessage);
-		return builder;
+			builder.systemMessageProvider(object -> systemMessage);
+		return new Pair<>(builder, mcpClients.size() > 0 ? mcpClients : null);
 	}
 
 	/**
@@ -103,25 +142,26 @@ public class BaseChatBuilder<T extends BaseChatBuilder<T>> {
 	 */
 	@SuppressWarnings("unchecked")
 	@JSFunction
-	public T useBuiltInTools(boolean useBuiltInTools) {
+	public T useBuiltInTools(@SuppressWarnings("hiding") boolean useBuiltInTools)
+	{
 		this.useBuiltInTools = useBuiltInTools;
-		return (T) this;
+		return (T)this;
 	}
-	
 
 	/**
 	 * Sets the maximum number of memory tokens for chat history.
-	 * Default this is not set and no memory will be used. 
+	 * Default this is not set and no memory will be used.
 	 * So it will only send/use the current prompt and not previous messages.
-	 * 
+	 *
 	 * @param tokens The maximum number of tokens.
 	 * @return This builder instance.
 	 */
 	@SuppressWarnings("unchecked")
 	@JSFunction
-	public T maxMemoryTokens(Integer tokens) {
+	public T maxMemoryTokens(@SuppressWarnings("hiding") Integer tokens)
+	{
 		this.tokens = tokens;
-		return (T) this;
+		return (T)this;
 	}
 
 	/**
@@ -130,27 +170,55 @@ public class BaseChatBuilder<T extends BaseChatBuilder<T>> {
 	 * @param toolFunction the function representing the tool's logic
 	 * @param name         the name of the tool
 	 * @param description  the description of the tool
-	 * @return a ToolBuilder instance for further configuration
+	 * @return a ToolBuilder instance for further configuration; call .build on it when you are done configuring the tool in order to register it to the AI Agent.
 	 */
 	@SuppressWarnings("unchecked")
 	@JSFunction
-	public ToolBuilder<T> createTool(Function toolFunction, String name, String description) {
-		return new ToolBuilder<T>((T) this, toolFunction, name, description);
+	public ToolBuilder<T> createTool(Function toolFunction, String name, String description)
+	{
+		return new ToolBuilder<T>((T)this, toolFunction, name, description);
+	}
+
+	/**
+	 * Create a MCPClientBuilder that can be used to connect to an MCP (Model Context Protocol) Server.
+	 * Tools exposed by the MCP server to the MCP client (they may be filtered via MCPClientBuilder) will be available to the AI agent.
+	 *
+	 * IMPORTANT: you have to call ChatClient.close(...) when you will no longer use the chat client - in
+	 * order to clean up the client's resources (including MCP client connections or child processes (in case
+	 * of STDIO transport/connection))
+	 *
+	 * @return a MCPClientBuilder for further configuration; do not forget to call it's .build() method in order to register it with the AI Agent.
+	 */
+	@SuppressWarnings("unchecked")
+	@JSFunction
+	public MCPClientBuilder<T> createMCPClient()
+	{
+		return new MCPClientBuilder<T>((T)this);
 	}
 
 	/**
 	 * Adds a system message to the chat context. This can be a message how the
 	 * model must behave for this chat session.
-	 * 
+	 *
 	 * @param message The system message to add.
-	 * 
+	 *
 	 * @return This builder instance for chaining.
 	 */
 	@SuppressWarnings("unchecked")
 	@JSFunction
-	public T addSystemMessage(String message) {
+	public T addSystemMessage(String message)
+	{
 		this.systemMessage = message;
-		return (T) this;
+		return (T)this;
+	}
+
+	/**
+	 * Registers a client connection to an MCP Server.
+	 */
+	void addMCPClient(DefaultMcpClient mcpClient, List<String> toolFilters)
+	{
+		this.mcpClients.add(mcpClient);
+		this.mcpClientsToolFilters.put(mcpClient, toolFilters);
 	}
 
 	/**
@@ -161,36 +229,57 @@ public class BaseChatBuilder<T extends BaseChatBuilder<T>> {
 	 * @param toolFunction      the function representing the tool's logic
 	 * @param parameters        the list of parameter names for the tool
 	 */
-	void addTool(ToolSpecification toolSpecification, Function toolFunction, List<String> parameters) {
-		tools.put(toolSpecification, new ToolExecutor() {
+	void addTool(ToolSpecification toolSpecification, Function toolFunction, List<String> parameters)
+	{
+		tools.put(toolSpecification, new ToolExecutor()
+		{
 
 			@Override
-			public String execute(ToolExecutionRequest request, Object memoryId) {
+			public String execute(ToolExecutionRequest request, Object memoryId)
+			{
 				FunctionDefinition fd = new FunctionDefinition(toolFunction);
 
 				List<Object> arguments = null;
-				if (!parameters.isEmpty() && request.arguments() != null && !request.arguments().isBlank()) {
+				if (!parameters.isEmpty() && request.arguments() != null && !request.arguments().isBlank())
+				{
 					arguments = new ArrayList<>();
 					JSONObject argsJson = new JSONObject(request.arguments());
-					for (String paramName : parameters) {
+					for (String paramName : parameters)
+					{
 						arguments.add(argsJson.opt(paramName));
 					}
 				}
 				Object retValue = fd.executeSync(access, arguments != null ? arguments.toArray() : null);
-				if (retValue == null) {
+				if (retValue == null)
+				{
 					return "Success"; // see DefaultToolExecutor
 				}
-				if (retValue instanceof String str) {
+				if (retValue instanceof String str)
+				{
 					return str;
 				}
-				try {
+				try
+				{
 					return new JSONSerializerWrapper(false).toJSON(retValue).toString();
-				} catch (MarshallException e) {
+				}
+				catch (MarshallException e)
+				{
 					Debug.error(e);
 				}
 				return "Failure";
 			}
 		});
 	}
+
+	/**
+	 * Builds and returns the ChatClient.
+	 * <p>
+	 * IMPORTANT: When you no longer use the ChatClient returned by .build(), do call .close() on it in order to release
+	 * resources like MCP server connections or processes.
+	 * </p>
+	 */
+	@JSFunction
+	public abstract ChatClient build();
+
 
 }

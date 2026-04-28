@@ -9,7 +9,8 @@ import dev.langchain4j.model.output.FinishReason;
 import dev.langchain4j.model.output.TokenUsage;
 
 @ServoyDocumented
-public class ChatResponse implements IJavaScriptType {
+public class ChatResponse implements IJavaScriptType
+{
 
 	// Wrapper around the langchain4j ChatResponse and a pre-formatted full response
 	// string.
@@ -19,8 +20,6 @@ public class ChatResponse implements IJavaScriptType {
 
 	/**
 	 * Creates a new ChatResponse wrapper.
-	 * 
-	 * @param userMessage
 	 *
 	 * @param chatResponse the original langchain4j ChatResponse instance returned
 	 *                     by the model; must not be null
@@ -29,7 +28,8 @@ public class ChatResponse implements IJavaScriptType {
 	 *                     aggregated/processed content); must not be null
 	 */
 	public ChatResponse(String userMessage, dev.langchain4j.model.chat.response.ChatResponse chatResponse,
-			String fullResponse) {
+		String fullResponse)
+	{
 		this.userMessage = userMessage;
 		this.chatResponse = chatResponse;
 		this.fullResponse = fullResponse;
@@ -44,7 +44,8 @@ public class ChatResponse implements IJavaScriptType {
 	 *         not provide one
 	 */
 	@JSFunction
-	public String getId() {
+	public String getId()
+	{
 		return chatResponse.id();
 	}
 
@@ -57,7 +58,8 @@ public class ChatResponse implements IJavaScriptType {
 	 * @return the thinking text, or null if none is available
 	 */
 	@JSFunction
-	public String getThinking() {
+	public String getThinking()
+	{
 		return chatResponse.aiMessage().thinking();
 	}
 
@@ -67,7 +69,8 @@ public class ChatResponse implements IJavaScriptType {
 	 * @return the user prompt
 	 */
 	@JSFunction
-	public String getPrompt() {
+	public String getPrompt()
+	{
 		return userMessage;
 	}
 
@@ -79,7 +82,8 @@ public class ChatResponse implements IJavaScriptType {
 	 * @return the full response text (never null if constructed correctly)
 	 */
 	@JSFunction
-	public String getResponse() {
+	public String getResponse()
+	{
 		return fullResponse;
 	}
 
@@ -93,7 +97,8 @@ public class ChatResponse implements IJavaScriptType {
 	 *         provided
 	 */
 	@JSFunction
-	public FinishReason getFinishReason() {
+	public FinishReason getFinishReason()
+	{
 		return chatResponse.finishReason();
 	}
 
@@ -106,7 +111,8 @@ public class ChatResponse implements IJavaScriptType {
 	 *         if not available
 	 */
 	@JSFunction
-	public TokenUsage getTokenUsage() {
+	public TokenUsage getTokenUsage()
+	{
 		return chatResponse.tokenUsage();
 	}
 

@@ -17,15 +17,15 @@ import dev.langchain4j.model.chat.request.json.JsonObjectSchema;
  * ToolBuilder is a builder class for constructing AI tool specifications with
  * parameter definitions.
  * <p>
- * This class allows dynamic creation of tool specifications for AI agents,
- * supporting string, number, and boolean parameters. It is designed to be used
- * in scripting environments and integrates with Servoy's documentation system.
+ * This class allows dynamic creation of tool specifications for AI agents, tools
+ * that are provided via Servoy functions supporting string, number, and boolean parameters.
  * <p>
  * Usage example:
  * 
  * <pre>
- * ToolBuilder builder = new ToolBuilder(chatBuilder, toolFunction, "toolName", "Tool description");
- * builder.addStringParameter("param1", "Description", true).addNumberParameter("param2", "Description", false).build();
+ * let toolBuilder = plugins.ai.createGeminiChatBuilder().createTool(toolFunction, toolName, toolDescription);
+ * toolBuilder.addStringParameter("param1", "Description", true).addNumberParameter("param2", "Description", false).build();
+ * // ...
  * </pre>
  *
  * @param <T> the type of BaseChatBuilder
