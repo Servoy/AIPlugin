@@ -1,0 +1,54 @@
+// import your solution_properties.less here if you want to use less properties of the solution.
+// This solution_properties.less can also include the 'servoy_theme_properties.less' file to have the servoy theme properties also available. but should not include the whole servoy theme
+// solution_properties.less is the replacement of the old 'custom_servoy_theme_properties.less' which would include the whole servoy theme and because of that it should not be used in this form.less file
+// don't import a less file (like the 'custom_servoy_theme_properties.less') that has a lot of css besides the properties, because this will be included for every form!
+// @import 'solution_properties.less';
+
+.code-block {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 11px;
+  line-height: 1.5;
+
+  color: #1f2937;
+  background-color: #f9fafb;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+
+  padding: 10px 12px;
+
+  resize: vertical;      /* allow vertical resize only */
+  white-space: pre;      /* preserve formatting */
+  overflow: auto;
+
+  box-sizing: border-box;
+}
+
+/* Rendered-markdown findings view (bound to answerHtml on a label). */
+.md-view {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #1f2937;
+  background-color: #ffffff;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+
+  padding: 10px 14px;
+  overflow: auto;          /* scroll long reports */
+  text-align: left;
+  box-sizing: border-box;
+
+  h3, h4, h5 { margin: 0.4em 0 0.3em; font-weight: 600; }
+  p  { margin: 0.4em 0; }
+  ul { margin: 0.3em 0; padding-left: 1.3em; }
+  li { margin: 0.15em 0; }
+  strong { font-weight: 600; }
+  code {
+    font-family: "SFMono-Regular", Consolas, Menlo, monospace;
+    font-size: 12px;
+    background-color: #f3f4f6;
+    padding: 1px 4px;
+    border-radius: 4px;
+  }
+}

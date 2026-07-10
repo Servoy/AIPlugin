@@ -14,6 +14,14 @@ var OPENAI_API_KEY = '';
  */
 var GEMINI_API_KEY = '';
 
+/**
+ * @private
+ * @type {String}
+ *
+ * @properties={typeid:35,uuid:"4BA6ACFF-C550-4466-B540-59947814D472"}
+ */
+var ROUTER_API_KEY = '';
+
 
 /**
  * Gets your OpenAI API Key from Servoy properties.
@@ -53,4 +61,24 @@ function getGeminiApiKey() {
 		}
 	}
 	return GEMINI_API_KEY;
+}
+
+/**
+ * Gets the API key for the Servoy AI model router from Servoy properties.
+ * To call this method, set the 'router_api_key' property in servoy.properties before starting Servoy.
+ * @public
+ * @return {String}
+ * @properties={typeid:24,uuid:"AE699E5A-CDE6-4A96-9D8E-060B7A18304B"}
+ */
+function getRouterApiKey() {
+	if(!ROUTER_API_KEY){
+		var value = application.getServoyProperty('router_api_key');
+		if(value){
+			ROUTER_API_KEY = value;
+			application.output('Router API Key retrieved from Servoy properties.', LOGGINGLEVEL.INFO);
+		} else{
+			application.output('Router API Key not found in Servoy properties.', LOGGINGLEVEL.WARNING);
+		}
+	}
+	return ROUTER_API_KEY;
 }

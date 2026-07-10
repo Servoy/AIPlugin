@@ -121,6 +121,19 @@
             "customProperties":{
                 "extraProperties":{
                     "Sidenav":{
+                        "formName":"7F0FC752-F8DA-4FEB-B137-C4F3F7C3E21B"
+                    }
+                }
+            },
+            "name":"sqlResearcher",
+            "text":"SQL Researcher",
+            "typeid":53,
+            "uuid":"2CF4DF97-2A54-4245-942F-424310ED34FB"
+        },
+        {
+            "customProperties":{
+                "extraProperties":{
+                    "Sidenav":{
                         "formName":"3F2E6899-C3F4-4B0F-AF30-F599B42E0B46"
                     }
                 }
