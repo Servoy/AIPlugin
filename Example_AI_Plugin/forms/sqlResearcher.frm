@@ -43,15 +43,15 @@
             "uuid":"B8C7BD50-8A93-46B1-BA43-EE0E5C400494"
         },
         {
-            "cssPosition":"138,calc(50% + 10px),-1,20,300,30",
+            "cssPosition":"138,-1,-1,20,150,30",
             "json":{
                 "cssPosition":{
                     "bottom":"-1",
                     "height":"30",
                     "left":"20",
-                    "right":"calc(50% + 10px)",
+                    "right":"-1",
                     "top":"138",
-                    "width":"300"
+                    "width":"150"
                 },
                 "onActionMethodID":"6D05BB88-EF72-42BF-BDF6-D41D9854C7EE",
                 "styleClass":"btn btn-primary",
@@ -62,6 +62,27 @@
             "typeName":"bootstrapcomponents-button",
             "typeid":47,
             "uuid":"08FFFEA4-DFCC-4A26-82B4-AD610383212D"
+        },
+        {
+            "cssPosition":"138,-1,-1,180,120,30",
+            "json":{
+                "cssPosition":{
+                    "bottom":"-1",
+                    "height":"30",
+                    "left":"180",
+                    "right":"-1",
+                    "top":"138",
+                    "width":"120"
+                },
+                "onActionMethodID":"3A7CF0EB-DF80-41EB-8462-C5191D2EB082",
+                "styleClass":"btn btn-outline-secondary",
+                "text":"Report"
+            },
+            "name":"button_report",
+            "styleClass":"btn btn-outline-secondary",
+            "typeName":"bootstrapcomponents-button",
+            "typeid":47,
+            "uuid":"B8CB8747-1FFC-4BEF-9C6B-1C5CFF27A00A"
         },
         {
             "cssPosition":"176,calc(50% + 10px),-1,20,300,20",

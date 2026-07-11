@@ -34,10 +34,10 @@ var systemMessage = 'You are an expert SQL Data Researcher. You are given the da
 \n- Carefully follow the Database Hints (e.g. schema prefixes and identifier quoting) for EVERY query.\
 \n- Write exactly ONE read-only SELECT statement per runSQL call. Never write INSERT, UPDATE, DELETE or DDL.\
 \n- Do not wrap the SQL in markdown fences or add any commentary; pass only the raw SQL string.\
-\n\nWhen you have gathered enough evidence, STOP calling tools and write your final answer as a concise report in markdown with exactly these two sections:\
+\n\nWhen you have gathered enough evidence, STOP calling tools and write your final answer. Output the marker ===REPORT=== on its own line, and AFTER that marker write a concise report in markdown with exactly these two sections:\
 \n**Key Findings** - the most important insights, each backed by specific numbers from the data you retrieved.\
 \n**Recommendations** - concrete, actionable recommendations that follow from the findings.\
-\nDo not describe your process or restate the queries; deliver only the insights and recommendations.';
+\nEverything you write BEFORE the ===REPORT=== marker is treated as private working notes (captured for traceability, hidden from the user). After the marker, do not describe your process or restate the queries; deliver only the insights and recommendations.';
 
 /**
  * System message for generating a ChartJS visualization to support the findings.
@@ -48,6 +48,7 @@ var systemMessageChart = 'You are a data visualization expert. You will be given
 You will respond in strict JSON format following the format for well-known ChartJS data-structures. \
 Pick the SINGLE most insightful chart that best supports the findings. \
 Only return raw JSON. Do NOT wrap it in markdown code fences (no ```json) and do not include any other text or explanations. \
+CRITICAL: the JSON must be plain data only. Do NOT include ANY client-side JavaScript functions or callbacks anywhere in the config - no tick callbacks, no tooltip callbacks, no label/formatter functions, and never a value that is (or wraps) a string beginning with "function". Such values break the chart renderer. Use only plain JSON-serializable values (numbers, strings, booleans, arrays, objects). \
 If the data does not lend itself to a meaningful chart, return an empty JSON object {}.';
 
 /**
@@ -95,6 +96,23 @@ var answerHtml = '';
 var showSQL = false;
 
 /**
+ * The agent's "thinking out loud" narration emitted while it worked (everything it
+ * produced before the final report marker). Captured for traceability/logging but
+ * hidden from the findings by default.
+ * @type {String}
+ * @properties={typeid:35,uuid:"41C2E8D1-71F4-44B4-820C-1102AECE47F8"}
+ */
+var reasoningTrace = '';
+
+/**
+ * When true, the captured reasoning narration is appended to the research trace panel.
+ * Off by default so end users see clean findings; developers can flip it on.
+ * @type {Boolean}
+ * @properties={typeid:35,uuid:"031C4158-F97E-4BC4-8876-1FED06A6F61E",variableType:-4}
+ */
+var showReasoning = false;
+
+/**
  * The running research trace: a numbered, natural-language description of each step
  * the agent took (and, when showSQL is true, the SQL under each).
  * @type {String}
@@ -121,7 +139,7 @@ var chartData = '';
  * @type {String}
  * @properties={typeid:35,uuid:"D1BEE57F-ADFA-46F2-AEE5-A83A98B044BB"}
  */
-var serverName = 'example';
+var serverName = 'picas';
 
 /**
  * The Servoy database server that holds the "skill_packs" table (curated guidance
@@ -149,6 +167,43 @@ var researchData = [];
 var queryCount = 0;
 
 /**
+ * Per-run log of every query attempt (success and failure), without the CSV payload.
+ * Serialized into the agent_run.queries column.
+ * @type {Array<{seq:Number, description:String, sql:String, rowCount:Number, error:String}>}
+ * @properties={typeid:35,uuid:"1B99D92A-C0D7-40B0-95FB-D3A68BD42B91",variableType:-4}
+ */
+var queryLog = [];
+
+/**
+ * Names of skill packs the agent loaded during this run.
+ * @type {Array<String>}
+ * @properties={typeid:35,uuid:"3B90D14A-5A17-4CA8-B5B0-C561BE44E369",variableType:-4}
+ */
+var skillsUsed = [];
+
+/**
+ * Names of learnings the agent created (new rows) during this run.
+ * @type {Array<String>}
+ * @properties={typeid:35,uuid:"AEC4D945-977C-4909-A1F1-264133C9BF30",variableType:-4}
+ */
+var skillsCreated = [];
+
+/**
+ * Names of learnings the agent refined (updated existing rows) during this run.
+ * @type {Array<String>}
+ * @properties={typeid:35,uuid:"EE382AA6-1839-40B7-BC25-C26A7E6E9FD9",variableType:-4}
+ */
+var skillsUpdated = [];
+
+/**
+ * Free-form error messages captured from tools during this run (skill tool failures
+ * and any run-level failure). Query errors are captured in queryLog and merged in when logged.
+ * @type {Array<String>}
+ * @properties={typeid:35,uuid:"603DFB63-005C-4FFE-8862-61D4D44F4220",variableType:-4}
+ */
+var runErrors = [];
+
+/**
  * Entry point (button action). Kicks off the SQL research agent.
  *
  * The agent is a single LangChain4j tool-calling assistant: we register the runSQL
@@ -162,11 +217,17 @@ function research() {
 	// reset state from any previous run
 	answer = '';
 	answerHtml = '';
+	reasoningTrace = '';
 	sqlPlan = '';
 	queryStatus = '';
 	chartData = '';
 	researchData = [];
 	queryCount = 0;
+	queryLog = [];
+	skillsUsed = [];
+	skillsCreated = [];
+	skillsUpdated = [];
+	runErrors = [];
 
 	var startTime = new Date().getTime();
 
@@ -186,9 +247,28 @@ function research() {
 		queryStatus = 'Queries: ' + queryCount
 			+ '  |  Time: ' + (new Date().getTime() - startTime) + ' ms'
 			+ '  |  Tokens: ' + response.getTokenUsage().totalTokenCount();
-		answer = response.getResponse();
+		// The model narrates as it works, then emits the marker before the final report.
+		// Split so the UI shows only the report; the narration is captured as the trace.
+		var full = response.getResponse();
+		var marker = '===REPORT===';
+		var idx = full.lastIndexOf(marker);
+		if (idx >= 0) {
+			reasoningTrace = utils.stringTrim(full.substring(0, idx));
+			answer = utils.stringTrim(full.substring(idx + marker.length));
+		} else {
+			reasoningTrace = '';
+			answer = full;
+		}
 		answerHtml = mdToHtml(answer);
+
+		// developer aid: optionally surface the reasoning narration in the trace panel
+		if (showReasoning && reasoningTrace) {
+			sqlPlan += '--- reasoning ---\n' + reasoningTrace + '\n';
+		}
 		plugins.svyBlockUI.stop();
+
+		// persist the full trace of this run for auditing / analytics / review
+		logAgentRun('success', startTime, response.getTokenUsage().totalTokenCount());
 
 		// build a chart from the data the agent actually gathered
 		generateChart();
@@ -197,6 +277,8 @@ function research() {
 		plugins.svyBlockUI.stop();
 		answer = 'Error: ' + e.message;
 		answerHtml = mdToHtml(answer);
+		runErrors.push('Run failed: ' + e.message);
+		logAgentRun('error', startTime, 0);
 	}).finally(function() {
 		// release resources (no MCP here, but good practice per the plugin docs)
 		client.close();
@@ -240,12 +322,14 @@ function runSQL(description, sql) {
 		var ds = databaseManager.getDataSetByQuery(serverName, sql, null, 1000);
 		var csv = ds.getAsText(',', '\n', '"', true);
 		researchData.push({ description: description, sql: sql, csv: csv });
+		queryLog.push({ seq: queryCount, description: description, sql: sql, rowCount: ds.getMaxRowIndex(), error: null });
 		application.output('[SQLResearcher] -> ' + ds.getMaxRowIndex() + ' row(s) returned', LOGGINGLEVEL.INFO);
 		return csv;
 	} catch (e) {
 		var msg = 'ERROR: ' + e['message'];
 		application.output('[SQLResearcher] ' + msg, LOGGINGLEVEL.WARNING);
 		sqlPlan += showSQL ? ('   ' + msg + '\n\n') : '   (query failed - adjusting approach)\n\n';
+		queryLog.push({ seq: queryCount, description: description, sql: sql, rowCount: 0, error: msg });
 		return msg;
 	}
 }
@@ -459,14 +543,17 @@ function loadSkill(name) {
 		fs.find();
 		fs.name = name;
 		if (fs.search() == 0) {
+			runErrors.push('loadSkill: no skill pack named "' + name + '"');
 			return 'ERROR: no skill pack named "' + name + '". Use a name from the skill pack index.';
 		}
 		var rec = fs.getRecord(1);
 		rec.usage_count = (rec.usage_count || 0) + 1;
 		databaseManager.saveData(rec);
+		skillsUsed.push(name);
 		return rec.content;
 	} catch (e) {
 		application.output('[SQLResearcher] loadSkill error: ' + e['message'], LOGGINGLEVEL.WARNING);
+		runErrors.push('loadSkill(' + name + '): ' + e['message']);
 		return 'ERROR: could not load skill pack: ' + e['message'];
 	}
 }
@@ -491,12 +578,15 @@ function saveLearning(name, description, content) {
 		fs.find();
 		fs.name = name;
 		var rec;
+		var isNew = false;
 		if (fs.search() > 0) {
 			rec = fs.getRecord(1);
 			if (rec.kind == 'pack') {
+				runErrors.push('saveLearning: "' + name + '" collides with a curated pack');
 				return 'ERROR: "' + name + '" is a curated skill pack and must not be overwritten. Choose a different learning name.';
 			}
 		} else {
+			isNew = true;
 			rec = fs.getRecord(fs.newRecord());
 			rec.name = name;
 			rec.kind = 'learning';
@@ -510,21 +600,27 @@ function saveLearning(name, description, content) {
 		rec.content = '' + content;
 		rec.modified_at = new Date();
 		databaseManager.saveData(rec);
+		if (isNew) {
+			skillsCreated.push(name);
+		} else {
+			skillsUpdated.push(name);
+		}
 		return 'Saved learning "' + name + '".';
 	} catch (e) {
 		application.output('[SQLResearcher] saveLearning error: ' + e['message'], LOGGINGLEVEL.WARNING);
+		runErrors.push('saveLearning(' + name + '): ' + e['message']);
 		return 'ERROR: could not save learning: ' + e['message'];
 	}
 }
 
 /**
  * Minimal, dependency-free markdown -> HTML converter for the findings display.
- * Handles the subset the agent emits: headings, bold, inline code, unordered lists
- * and paragraphs. The source is HTML-escaped FIRST, so any stray markup the model
- * produces is rendered as text and cannot inject into the label.
+ * Handles the subset the agent emits: headings, bold, inline code, unordered lists,
+ * GFM tables, horizontal rules and paragraphs. The source is HTML-escaped FIRST, so any
+ * stray markup the model produces is rendered as text and cannot inject markup.
  * @private
  * @param {String} md The markdown text.
- * @return {String} HTML safe to bind to a label.
+ * @return {String} HTML.
  * @properties={typeid:24,uuid:"29CB916E-4CCE-4C9D-8C72-87F367E96EB9"}
  */
 function mdToHtml(md) {
@@ -536,21 +632,53 @@ function mdToHtml(md) {
 	var lines = esc.split(/\r?\n/);
 	var html = [];
 	var inList = false;
+	// a GFM table separator row, e.g. | --- | :--: | ---: |
+	var sepRe = /^\s*\|?(\s*:?-{1,}:?\s*\|)+\s*:?-{1,}:?\s*\|?\s*$/;
 
-	for (var i = 0; i < lines.length; i++) {
-		// inline formatting: **bold** and `code`
-		var line = lines[i]
-			.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-			.replace(/`([^`]+)`/g, '<code>$1</code>');
+	var i = 0;
+	while (i < lines.length) {
+		var rawLine = lines[i];
+		var trimmedRaw = rawLine.replace(/^\s+/, '');
+
+		// --- GFM table: a row containing '|' immediately followed by a separator row ---
+		if (trimmedRaw.indexOf('|') !== -1 && i + 1 < lines.length && sepRe.test(lines[i + 1])) {
+			if (inList) { html.push('</ul>'); inList = false; }
+			var headerCells = splitRow(rawLine);
+			var thead = '<thead><tr>';
+			for (var h = 0; h < headerCells.length; h++) {
+				thead += '<th>' + inlineFmt(headerCells[h]) + '</th>';
+			}
+			thead += '</tr></thead>';
+			i += 2; // consume header + separator
+			var tbody = '<tbody>';
+			while (i < lines.length && lines[i].replace(/^\s+/, '').indexOf('|') !== -1 && !sepRe.test(lines[i])) {
+				var rowCells = splitRow(lines[i]);
+				tbody += '<tr>';
+				for (var c = 0; c < rowCells.length; c++) {
+					tbody += '<td>' + inlineFmt(rowCells[c]) + '</td>';
+				}
+				tbody += '</tr>';
+				i++;
+			}
+			tbody += '</tbody>';
+			html.push('<table>' + thead + tbody + '</table>');
+			continue;
+		}
+
+		var line = inlineFmt(rawLine);
 		var trimmed = line.replace(/^\s+/, '');
 
 		var heading = trimmed.match(/^(#{1,6})\s+(.*)$/);
 		var listItem = trimmed.match(/^[-*]\s+(.*)$/);
+		var isRule = /^(-{3,}|\*{3,}|_{3,})$/.test(trimmed);
 
 		if (heading) {
 			if (inList) { html.push('</ul>'); inList = false; }
 			var level = Math.min(heading[1].length + 2, 6); // # -> h3
 			html.push('<h' + level + '>' + heading[2] + '</h' + level + '>');
+		} else if (isRule) {
+			if (inList) { html.push('</ul>'); inList = false; }
+			html.push('<hr/>');
 		} else if (listItem) {
 			if (!inList) { html.push('<ul>'); inList = true; }
 			html.push('<li>' + listItem[1] + '</li>');
@@ -560,9 +688,240 @@ function mdToHtml(md) {
 			if (inList) { html.push('</ul>'); inList = false; }
 			html.push('<p>' + line + '</p>');
 		}
+		i++;
 	}
 	if (inList) {
 		html.push('</ul>');
 	}
 	return html.join('');
 }
+
+/**
+ * Applies inline markdown formatting (**bold** and `code`) to a fragment.
+ * @private
+ * @param {String} s
+ * @return {String}
+ * @properties={typeid:24,uuid:"0B7917FC-F0D5-4559-8E27-4EB71D956427"}
+ */
+function inlineFmt(s) {
+	return ('' + s)
+		.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+		.replace(/`([^`]+)`/g, '<code>$1</code>');
+}
+
+/**
+ * Splits a markdown table row into trimmed cell values, dropping the empty cells that
+ * the leading/trailing pipes produce.
+ * @private
+ * @param {String} s
+ * @return {Array<String>}
+ * @properties={typeid:24,uuid:"4D98EDE9-BE20-43F3-A821-1F30EEE217FD"}
+ */
+function splitRow(s) {
+	var raw = s.replace(/^\s+|\s+$/g, '');
+	if (raw.charAt(0) === '|') {
+		raw = raw.substring(1);
+	}
+	if (raw.charAt(raw.length - 1) === '|') {
+		raw = raw.substring(0, raw.length - 1);
+	}
+	var parts = raw.split('|');
+	var out = [];
+	for (var p = 0; p < parts.length; p++) {
+		out.push(parts[p].replace(/^\s+|\s+$/g, ''));
+	}
+	return out;
+}
+
+/**
+ * Persists one row to the agent_run log table capturing the full trace of this run:
+ * prompt, queries, reasoning, skills used/created/updated, errors and the final summary.
+ * Stored on the skill server (skillServerName). Fails soft: if the table is absent the
+ * run itself is unaffected - we just log a warning.
+ * @private
+ * @param {String} status 'success' or 'error'.
+ * @param {Number} startTime The run start time in millis (from new Date().getTime()).
+ * @param {Number} tokenCount Total tokens used by the research call.
+ * @properties={typeid:24,uuid:"6E840E4D-5DDE-4804-944D-17DE66A950BC"}
+ */
+function logAgentRun(status, startTime, tokenCount) {
+	try {
+		// merge query-level errors with tool/run-level errors for the errors column
+		var errs = [];
+		for (var i = 0; i < queryLog.length; i++) {
+			if (queryLog[i].error) {
+				errs.push('Query ' + queryLog[i].seq + ': ' + queryLog[i].error);
+			}
+		}
+		errs = errs.concat(runErrors);
+
+		var fs = databaseManager.getFoundSet('db:/' + skillServerName + '/agent_run');
+		var rec = fs.getRecord(fs.newRecord());
+		rec.created_at = new Date(startTime);
+		rec.finished_at = new Date();
+		rec.duration_ms = new Date().getTime() - startTime;
+		rec.model = modelName;
+		rec.server_name = serverName;
+		rec.skill_server = skillServerName;
+		rec.user_prompt = userMessage;
+		rec.reasoning_trace = reasoningTrace;
+		rec.final_summary = answer;
+		rec.query_count = queryCount;
+		rec.queries = JSON.stringify(queryLog);
+		rec.skills_used = JSON.stringify(skillsUsed);
+		rec.skills_created = JSON.stringify(skillsCreated);
+		rec.skills_updated = JSON.stringify(skillsUpdated);
+		rec.errors = JSON.stringify(errs);
+		rec.status = status;
+		rec.total_tokens = tokenCount || 0;
+		databaseManager.saveData(rec);
+		application.output('[SQLResearcher] logged agent run ' + rec.run_id + ' (' + status + ')', LOGGINGLEVEL.INFO);
+	} catch (e) {
+		application.output('[SQLResearcher] could not log agent run: ' + e['message'], LOGGINGLEVEL.WARNING);
+	}
+}
+
+/**
+ * Escapes text for safe literal display inside HTML.
+ * @private
+ * @param {String} s
+ * @return {String}
+ * @properties={typeid:24,uuid:"952A60EC-B5AA-4460-89B2-AFE39B80C47B"}
+ */
+function escapeHtml(s) {
+	return ('' + (s || '')).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+/**
+ * Assembles the full research run into a single self-contained, print-friendly HTML
+ * document: Findings, Visualization (chart as an embedded PNG), Research Trace, and
+ * Agent Trace (queries, skills used/created/updated, errors, reasoning).
+ *
+ * The returned HTML is deliberately dependency-free (inline CSS, embedded image) so it
+ * can later be fed straight to an HTML->PDF step without changes.
+ * @private
+ * @return {String} A complete HTML document.
+ * @properties={typeid:24,uuid:"EFFC967E-914F-491F-8ECA-ED129BBA1A0C"}
+ */
+function buildReportHtml() {
+
+	// chart as a base64 PNG (client-side export); omitted if there is no chart
+	var chartImg = '';
+	try {
+		var dataUrl = elements.chart.getChartAsImage();
+		if (dataUrl) {
+			chartImg = '<img class="chart" src="' + dataUrl + '" alt="Visualization"/>';
+		}
+	} catch (e) {
+		application.output('[SQLResearcher] no chart image for report: ' + e['message'], LOGGINGLEVEL.INFO);
+	}
+
+	// queries table
+	var queryRows = '';
+	for (var i = 0; i < queryLog.length; i++) {
+		var q = queryLog[i];
+		queryRows += '<tr' + (q.error ? ' class="err"' : '') + '>'
+			+ '<td class="num">' + q.seq + '</td>'
+			+ '<td>' + escapeHtml(q.description) + '</td>'
+			+ '<td><code>' + escapeHtml(q.sql) + '</code></td>'
+			+ '<td class="num">' + (q.error ? 'ERR' : q.rowCount) + '</td>'
+			+ '</tr>';
+	}
+	if (!queryRows) {
+		queryRows = '<tr><td colspan="4" class="muted">no queries</td></tr>';
+	}
+
+	// simple bullet list from a string array
+	var usedList = htmlList(skillsUsed);
+	var createdList = htmlList(skillsCreated);
+	var updatedList = htmlList(skillsUpdated);
+
+	// merge query + tool errors
+	var errs = [];
+	for (i = 0; i < queryLog.length; i++) {
+		if (queryLog[i].error) {
+			errs.push('Query ' + queryLog[i].seq + ': ' + queryLog[i].error);
+		}
+	}
+	errs = errs.concat(runErrors);
+
+	var css = '@page { margin: 20mm; }'
+		+ 'body { font-family: -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; color:#1f2937; font-size:13px; line-height:1.5; margin:24px; }'
+		+ 'h1 { font-size:22px; margin:0 0 4px; }'
+		+ 'h2 { font-size:16px; margin:22px 0 8px; border-bottom:2px solid #e5e7eb; padding-bottom:4px; }'
+		+ 'h3 { font-size:13px; margin:16px 0 6px; color:#374151; }'
+		+ '.meta { color:#6b7280; font-size:12px; margin-bottom:8px; }'
+		+ '.meta b { color:#374151; }'
+		+ 'ul { margin:4px 0; padding-left:20px; } li { margin:2px 0; }'
+		+ 'img.chart { max-width:100%; height:auto; border:1px solid #e5e7eb; border-radius:6px; }'
+		+ 'pre.trace { background:#f9fafb; border:1px solid #e5e7eb; border-radius:6px; padding:10px 12px; white-space:pre-wrap; font-size:11px; font-family:Consolas,Menlo,monospace; }'
+		+ 'table { border-collapse:collapse; width:100%; font-size:11px; }'
+		+ 'th,td { border:1px solid #e5e7eb; padding:4px 6px; text-align:left; vertical-align:top; }'
+		+ 'th { background:#f3f4f6; }'
+		+ 'td.num { text-align:right; white-space:nowrap; } tr.err td { background:#fef2f2; }'
+		+ 'code { font-family:Consolas,Menlo,monospace; font-size:11px; }'
+		+ '.muted { color:#9ca3af; }';
+
+	var html = '<!DOCTYPE html><html><head><meta charset="utf-8"/>'
+		+ '<title>SQL Researcher Report</title><style>' + css + '</style></head><body>'
+		+ '<h1>SQL Researcher Report</h1>'
+		+ '<div class="meta"><b>Question:</b> ' + escapeHtml(userMessage) + '<br/>'
+		+ '<b>Database:</b> ' + escapeHtml(serverName) + ' &nbsp; <b>Model:</b> ' + escapeHtml(modelName)
+		+ ' &nbsp; <b>Queries:</b> ' + queryCount + '</div>'
+
+		+ '<h2>Findings</h2>' + mdToHtml(answer)
+
+		+ (chartImg ? ('<h2>Visualization</h2>' + chartImg) : '')
+
+		+ '<h2>Research Trace</h2><pre class="trace">' + escapeHtml(sqlPlan) + '</pre>'
+
+		+ '<h2>Agent Trace</h2>'
+		+ '<h3>Queries</h3>'
+		+ '<table><thead><tr><th class="num">#</th><th>Description</th><th>SQL</th><th class="num">Rows</th></tr></thead>'
+		+ '<tbody>' + queryRows + '</tbody></table>'
+		+ '<h3>Skill packs used</h3>' + usedList
+		+ '<h3>Learnings created</h3>' + createdList
+		+ '<h3>Learnings updated</h3>' + updatedList
+		+ '<h3>Errors</h3>' + htmlList(errs)
+		+ '<h3>Reasoning</h3><pre class="trace">' + escapeHtml(reasoningTrace) + '</pre>'
+
+		+ '</body></html>';
+
+	return html;
+}
+
+/**
+ * Builds a small HTML bullet list from a string array (or a muted "none").
+ * @private
+ * @param {Array<String>} arr
+ * @return {String}
+ * @properties={typeid:24,uuid:"69AD65DF-7139-418A-86A3-D6D807CD827D"}
+ */
+function htmlList(arr) {
+	if (!arr || arr.length == 0) {
+		return '<p class="muted">none</p>';
+	}
+	var items = '';
+	for (var i = 0; i < arr.length; i++) {
+		items += '<li>' + escapeHtml(arr[i]) + '</li>';
+	}
+	return '<ul>' + items + '</ul>';
+}
+
+/**
+ * Report button action: builds the HTML report and hands it to the browser.
+ * For now this just delivers the HTML (open/download) so the layout can be reviewed;
+ * later this same HTML can be passed to an HTML->PDF step.
+ * @properties={typeid:24,uuid:"3A7CF0EB-DF80-41EB-8462-C5191D2EB082"}
+ */
+function showReport() {
+	if (!answer) {
+		plugins.dialogs.showInfoDialog('Report', 'Run a research query first, then generate the report.');
+		return;
+	}
+	var html = buildReportHtml();
+	// NGClient: delivers the file to the browser (view/download). Swap this line for an
+	// HTML->PDF call when the PDF engine is chosen.
+	plugins.file.writeTXTFile('SQLResearcher_report.html', html, 'UTF-8', 'text/html');
+}
+
