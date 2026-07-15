@@ -1,0 +1,61 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "command": {
+    "sdd": {
+      "description": "Run full Spec-Driven Development pipeline for a Jira issue",
+      "template": "Load the 'sdd' skill and execute the full SDD pipeline for: $ARGUMENTS"
+    }
+  },
+  "mcp": {
+    "eclipse-ide": {
+      "type": "remote",
+      "url": "http://localhost:8089/mcp/eclipse-ide",
+      "headers": { "Authorization": "Bearer 4fab1576-e60a-4add-9262-85ada175cf74" }
+    },
+    "duck-duck-search": {
+      "type": "remote",
+      "url": "http://localhost:8089/mcp/duck-duck-search",
+      "headers": { "Authorization": "Bearer 4fab1576-e60a-4add-9262-85ada175cf74" }
+    },
+    "webpage-reader": {
+      "type": "remote",
+      "url": "http://localhost:8089/mcp/webpage-reader",
+      "headers": { "Authorization": "Bearer 4fab1576-e60a-4add-9262-85ada175cf74" }
+    },
+    "time": {
+      "type": "remote",
+      "url": "http://localhost:8089/mcp/time",
+      "headers": { "Authorization": "Bearer 4fab1576-e60a-4add-9262-85ada175cf74" }
+    },
+    "memory": {
+      "type": "remote",
+      "url": "http://localhost:8089/mcp/memory",
+      "headers": { "Authorization": "Bearer 4fab1576-e60a-4add-9262-85ada175cf74" }
+    },
+    "eclipse-coder": {
+      "type": "remote",
+      "url": "http://localhost:8089/mcp/eclipse-coder",
+      "headers": { "Authorization": "Bearer 4fab1576-e60a-4add-9262-85ada175cf74" }
+    },
+    "eclipse-runner": {
+      "type": "remote",
+      "url": "http://localhost:8089/mcp/eclipse-runner",
+      "headers": { "Authorization": "Bearer 4fab1576-e60a-4add-9262-85ada175cf74" }
+    },
+    "eclipse-context": {
+      "type": "remote",
+      "url": "http://localhost:8089/mcp/eclipse-context",
+      "headers": { "Authorization": "Bearer 4fab1576-e60a-4add-9262-85ada175cf74" }
+    },
+    "eclipse-git": {
+      "type": "remote",
+      "url": "http://localhost:8089/mcp/eclipse-git",
+      "headers": { "Authorization": "Bearer 4fab1576-e60a-4add-9262-85ada175cf74" }
+    },
+    "eclipse-pde": {
+      "type": "remote",
+      "url": "http://localhost:8089/mcp/eclipse-pde",
+      "headers": { "Authorization": "Bearer 4fab1576-e60a-4add-9262-85ada175cf74" }
+    }
+  }
+}
