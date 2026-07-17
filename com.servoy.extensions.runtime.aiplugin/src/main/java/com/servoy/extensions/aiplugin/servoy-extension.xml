@@ -849,7 +849,7 @@ limits for the Gemini model.]]>
                 <functions>
                     <function clientSupport="ng,wc,sc" name="addSystemMessage">
                         <argumentsTypes/>
-                        <return type="com.servoy.extensions.aiplugin.chat.BaseChatBuilder&lt;T&gt;" typecode="com.servoy.extensions.aiplugin.chat.BaseChatBuilder&lt;T&gt;">
+                        <return type="com.servoy.extensions.aiplugin.chat.GeminiChatBuilder" typecode="com.servoy.extensions.aiplugin.chat.GeminiChatBuilder">
                             <![CDATA[This builder instance for chaining.]]>
                         </return>
                         <descriptions>
@@ -979,7 +979,7 @@ of STDIO transport/connection))]]>
                     </function>
                     <function clientSupport="ng,wc,sc" name="maxMemoryTokens">
                         <argumentsTypes/>
-                        <return type="com.servoy.extensions.aiplugin.chat.BaseChatBuilder&lt;T&gt;" typecode="com.servoy.extensions.aiplugin.chat.BaseChatBuilder&lt;T&gt;">
+                        <return type="com.servoy.extensions.aiplugin.chat.GeminiChatBuilder" typecode="com.servoy.extensions.aiplugin.chat.GeminiChatBuilder">
                             <![CDATA[This builder instance.]]>
                         </return>
                         <descriptions>
@@ -1054,7 +1054,7 @@ So it will only send/use the current prompt and not previous messages.]]>
                     </function>
                     <function clientSupport="ng,wc,sc" name="useBuiltInTools">
                         <argumentsTypes/>
-                        <return type="com.servoy.extensions.aiplugin.chat.BaseChatBuilder&lt;T&gt;" typecode="com.servoy.extensions.aiplugin.chat.BaseChatBuilder&lt;T&gt;">
+                        <return type="com.servoy.extensions.aiplugin.chat.GeminiChatBuilder" typecode="com.servoy.extensions.aiplugin.chat.GeminiChatBuilder">
                             <![CDATA[This builder instance for chaining.]]>
                         </return>
                         <descriptions>
@@ -1229,7 +1229,7 @@ The default is 30 seconds.]]>
                     </function>
                     <function clientSupport="ng,wc,sc" name="build">
                         <argumentsTypes/>
-                        <return type="com.servoy.extensions.aiplugin.chat.BaseChatBuilder&lt;T&gt;" typecode="com.servoy.extensions.aiplugin.chat.BaseChatBuilder&lt;T&gt;"/>
+                        <return type="com.servoy.extensions.aiplugin.chat.BaseChatBuilder" typecode="com.servoy.extensions.aiplugin.chat.BaseChatBuilder"/>
                         <descriptions>
                             <description clientSupport="ng,wc,sc">
                                 <![CDATA[Create the actual MCP Client based on what was called already on this builder.<br/><br/>
@@ -1934,7 +1934,7 @@ limits for the OpenAI model.]]>
                 <functions>
                     <function clientSupport="ng,wc,sc" name="addSystemMessage">
                         <argumentsTypes/>
-                        <return type="com.servoy.extensions.aiplugin.chat.BaseChatBuilder&lt;T&gt;" typecode="com.servoy.extensions.aiplugin.chat.BaseChatBuilder&lt;T&gt;">
+                        <return type="com.servoy.extensions.aiplugin.chat.OpenAiChatBuilder" typecode="com.servoy.extensions.aiplugin.chat.OpenAiChatBuilder">
                             <![CDATA[This builder instance for chaining.]]>
                         </return>
                         <descriptions>
@@ -2089,7 +2089,7 @@ of STDIO transport/connection))]]>
                     </function>
                     <function clientSupport="ng,wc,sc" name="maxMemoryTokens">
                         <argumentsTypes/>
-                        <return type="com.servoy.extensions.aiplugin.chat.BaseChatBuilder&lt;T&gt;" typecode="com.servoy.extensions.aiplugin.chat.BaseChatBuilder&lt;T&gt;">
+                        <return type="com.servoy.extensions.aiplugin.chat.OpenAiChatBuilder" typecode="com.servoy.extensions.aiplugin.chat.OpenAiChatBuilder">
                             <![CDATA[This builder instance.]]>
                         </return>
                         <descriptions>
@@ -2164,7 +2164,7 @@ So it will only send/use the current prompt and not previous messages.]]>
                     </function>
                     <function clientSupport="ng,wc,sc" name="useBuiltInTools">
                         <argumentsTypes/>
-                        <return type="com.servoy.extensions.aiplugin.chat.BaseChatBuilder&lt;T&gt;" typecode="com.servoy.extensions.aiplugin.chat.BaseChatBuilder&lt;T&gt;">
+                        <return type="com.servoy.extensions.aiplugin.chat.OpenAiChatBuilder" typecode="com.servoy.extensions.aiplugin.chat.OpenAiChatBuilder">
                             <![CDATA[This builder instance for chaining.]]>
                         </return>
                         <descriptions>
@@ -2669,7 +2669,7 @@ toolBuilder.addStringParameter("param1", "Description", true).addNumberParameter
                     </function>
                     <function clientSupport="ng,wc,sc" name="build">
                         <argumentsTypes/>
-                        <return type="com.servoy.extensions.aiplugin.chat.BaseChatBuilder&lt;T&gt;" typecode="com.servoy.extensions.aiplugin.chat.BaseChatBuilder&lt;T&gt;">
+                        <return type="com.servoy.extensions.aiplugin.chat.BaseChatBuilder" typecode="com.servoy.extensions.aiplugin.chat.BaseChatBuilder">
                             <![CDATA[the chat builder instance]]>
                         </return>
                         <descriptions>
