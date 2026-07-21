@@ -11,6 +11,7 @@ import org.mozilla.javascript.Function;
 import org.mozilla.javascript.annotations.JSFunction;
 
 import com.servoy.extensions.aiplugin.tools.builtin.ServoyBuiltInTools;
+import com.servoy.j2db.documentation.ServoyDocumented;
 import com.servoy.j2db.plugins.IClientPluginAccess;
 import com.servoy.j2db.scripting.FunctionDefinition;
 import com.servoy.j2db.util.Debug;
@@ -55,6 +56,7 @@ import dev.langchain4j.service.tool.ToolExecutor;
  * @author jcompagner
  * @since 2025.12
  */
+@ServoyDocumented
 public abstract class BaseChatBuilder<T extends BaseChatBuilder<T>>
 {
 
