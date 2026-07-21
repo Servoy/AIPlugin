@@ -28,9 +28,18 @@ jobs:
                         **/pom.xml
                         **/flush.txt
 
-      - name: Build with Maven
-        run: ./mvnw -U -B package
+      - name: Build with Maven (with Xvfb virtual display)
+        run: xvfb-run ./mvnw -U -B package
         working-directory: ./com.servoy.extensions.runtime.aiplugin
+
+      - name: Upload Workspace Logs & Target Files
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts-and-logs
+          path: |
+            **/target/eclipserun-work/data/.metadata/.log
+            **/target/servoy-aiplugin.zip
 
       - name: Get project version
         id: get_version
@@ -65,7 +74,7 @@ jobs:
        
       - name: Create release
         run: |
-         gh release create "_${{ github.ref_name }}" --target "${{ env.BRANCH_NAME }}" --prerelease --title "Nighlty Build ${{ env.BRANCH_NAME }}" --notes "Nightly build. Branch: ${{ env.BRANCH_NAME }} Commit: ${{ github.sha }} Package Version: ${{ env.PACKAGE_VERSION }}"
+         gh release create "_${{ github.ref_name }}" --target "${{ env.BRANCH_NAME }}" --prerelease --title "Nightly Build ${{ env.BRANCH_NAME }}" --notes "Nightly build. Branch: ${{ env.BRANCH_NAME }} Commit: ${{ github.sha }} Package Version: ${{ env.PACKAGE_VERSION }}"
          echo "release_exists=true" >> $GITHUB_ENV
         env:
          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -75,4 +84,4 @@ jobs:
         run: |
          gh release upload "_${{ env.BRANCH_NAME }}" ./com.servoy.extensions.runtime.aiplugin/target/servoy-aiplugin.zip
         env:
-         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
