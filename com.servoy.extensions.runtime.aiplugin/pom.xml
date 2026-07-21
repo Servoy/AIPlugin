@@ -23,8 +23,8 @@
         <servoy.version>2026.3.1.4143</servoy.version>
         <rhino.version>1.8.0.s13</rhino.version>
 
-        <langchain4j.version>1.16.1</langchain4j.version>
-        <pdfbox.version>3.0.7</pdfbox.version>
+        <langchain4j.version>1.18.0</langchain4j.version>
+        <pdfbox.version>3.0.8</pdfbox.version>
     </properties>
 
     <repositories>
@@ -68,7 +68,7 @@
         <dependency>
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j-mcp</artifactId>
-            <version>1.16.1-beta26</version>
+            <version>1.18.0-beta28</version>
         </dependency>
         <dependency>
             <groupId>com.pgvector</groupId>
@@ -93,13 +93,13 @@
         <dependency>
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j-web-search-engine-google-custom</artifactId>
-            <version>1.16.1-beta26</version>
+            <version>1.18.0-beta28</version>
         </dependency>
         <!-- TOON Format Support -->
         <dependency>
             <groupId>dev.toonformat</groupId>
             <artifactId>jtoon</artifactId>
-            <version>2.0.0</version>
+            <version>2.0.1</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
