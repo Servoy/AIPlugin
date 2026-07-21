@@ -1,7 +1,6 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
-                             http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.servoy</groupId>
@@ -15,40 +14,47 @@
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
-        
-        <servoy.version>2025.12.0.4122</servoy.version>
+
+        <tycho.version>5.0.3</tycho.version>
+        <workspace_dir>${project.basedir}/../</workspace_dir>
+        <servoy-local.url>${project.baseUri}/target/repository/</servoy-local.url>
+        <doc.version>1.9.0</doc.version>
+
+        <servoy.version>2026.3.1.4143</servoy.version>
+        <rhino.version>1.8.0.s13</rhino.version>
+
         <langchain4j.version>1.16.1</langchain4j.version>
         <pdfbox.version>3.0.7</pdfbox.version>
     </properties>
 
-     <repositories>
-         <repository>
-             <id>servoy</id>
-             <url>https://developer.servoy.com/mvn_repository/</url>
-         </repository>
+    <repositories>
+        <repository>
+            <id>servoy</id>
+            <url>https://developer.servoy.com/mvn_repository/</url>
+        </repository>
     </repositories>
 
     <dependencies>
         <dependency>
-            <artifactId>servoy_shared</artifactId>    
+            <artifactId>servoy_shared</artifactId>
             <groupId>com.servoy</groupId>
             <version>${servoy.version}</version>
         </dependency>
         <dependency>
-            <artifactId>servoy_base</artifactId>    
+            <artifactId>servoy_base</artifactId>
             <groupId>com.servoy</groupId>
             <version>${servoy.version}</version>
         </dependency>
         <dependency>
-        	<groupId>com.servoy</groupId>
-        	<artifactId>org.eclipse.dltk.javascript.rhino</artifactId>
-        	<version>1.8.0.s11</version>
+            <groupId>com.servoy</groupId>
+            <artifactId>org.eclipse.dltk.javascript.rhino</artifactId>
+            <version>${rhino.version}</version>
         </dependency>
         <dependency>
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j</artifactId>
             <version>${langchain4j.version}</version>
-        </dependency>        
+        </dependency>
         <dependency>
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j-google-ai-gemini</artifactId>
@@ -96,38 +102,56 @@
             <version>2.0.0</version>
         </dependency>
         <dependency>
-            <groupId>tools.jackson.core</groupId>
+            <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
-            <version>3.1.4</version>
+            <version>2.22.1</version>
         </dependency>
         <dependency>
-            <groupId>tools.jackson.core</groupId>
+            <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>3.1.4</version>
+            <version>2.22.1</version>
         </dependency>
         <dependency>
-            <groupId>tools.jackson.module</groupId>
+            <groupId>com.fasterxml.jackson.module</groupId>
             <artifactId>jackson-module-blackbird</artifactId>
-            <version>3.1.4</version>
-        </dependency>      
+            <version>2.22.1</version>
+        </dependency>
     </dependencies>
 
     <build>
         <resources>
             <resource>
-              <directory>src/main/resources</directory>
+                <directory>src/main/resources</directory>
             </resource>
             <resource>
-              <directory>src/main/java</directory>
-              <includes>
-                <include>**/*</include>
-              </includes>
-              <excludes>
-                <exclude>**/*.java</exclude>
-              </excludes>
+                <directory>src/main/java</directory>
+                <includes>
+                    <include>**/*</include>
+                </includes>
+                <excludes>
+                    <exclude>**/*.java</exclude>
+                </excludes>
             </resource>
-          </resources>    
+        </resources>
         <plugins>
+            <plugin>
+                <artifactId>maven-clean-plugin</artifactId>
+                <version>3.4.0</version>
+                <configuration>
+                    <filesets>
+                        <fileset>
+                            <directory>${workspace_dir}/servoy_base/</directory>
+                        </fileset>
+                        <fileset>
+                            <directory>${workspace_dir}/servoy_shared/</directory>
+                        </fileset>
+                        <fileset>
+                            <directory>
+                                ${workspace_dir}/org.eclipse.dltk.javascript.rhino/</directory>
+                        </fileset>
+                    </filesets>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-eclipse-plugin</artifactId>
@@ -136,81 +160,194 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.14.0</version> <configuration>
+                <version>3.14.0</version>
+                <configuration>
                     <debug>true</debug>
-                    <debuglevel>lines,vars,source</debuglevel> 
+                    <debuglevel>lines,vars,source</debuglevel>
                 </configuration>
             </plugin>
-              <plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.10.0</version>
+                <executions>
+                    <execution>
+                        <id>unpack</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>unpack</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>com.servoy</groupId>
+                                    <artifactId>
+                                        com.servoy.eclipse.docgenerator.client.product</artifactId>
+                                    <version>${doc.version}</version>
+                                    <type>zip</type>
+                                    <overWrite>true</overWrite>
+                                    <outputDirectory>
+                                        ${project.build.directory}/repository</outputDirectory>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>com.servoy</groupId>
+                                    <artifactId>servoy_base</artifactId>
+                                    <version>${servoy.version}</version>
+                                    <type>zip</type>
+                                    <classifier>project</classifier>
+                                    <overWrite>true</overWrite>
+                                    <outputDirectory>
+                                        ${workspace_dir}/servoy_base/</outputDirectory>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>com.servoy</groupId>
+                                    <artifactId>servoy_shared</artifactId>
+                                    <version>${servoy.version}</version>
+                                    <type>zip</type>
+                                    <classifier>project</classifier>
+                                    <overWrite>true</overWrite>
+                                    <outputDirectory>
+                                        ${workspace_dir}/servoy_shared/</outputDirectory>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>com.servoy</groupId>
+                                    <artifactId>
+                                        org.eclipse.dltk.javascript.rhino</artifactId>
+                                    <version>${rhino.version}</version>
+                                    <type>zip</type>
+                                    <classifier>project</classifier>
+                                    <overWrite>true</overWrite>
+                                    <outputDirectory>
+                                        ${workspace_dir}/org.eclipse.dltk.javascript.rhino/</outputDirectory>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.eclipse.tycho</groupId>
+                <artifactId>tycho-eclipse-plugin</artifactId>
+                <version>${tycho.version}</version>
+                <configuration>
+                    <repositories>
+                        <repository>
+                            <id>servoy_local</id>
+                            <url>${servoy-local.url}</url>
+                            <layout>p2</layout>
+                        </repository>
+                    </repositories>
+                    <dependencies>
+                        <dependency>
+                            <groupId>com.servoy</groupId>
+                            <artifactId>
+                                com.servoy.eclipse.docgenerator.client.feature</artifactId>
+                            <type>eclipse-feature</type>
+                        </dependency>
+                    </dependencies>
+                    <executionEnvironment>JavaSE-21</executionEnvironment>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>generate doc</id>
+                        <phase>generate-resources</phase>
+                        <configuration>
+                            <applicationsArgs>
+                                <args>-clean</args>
+                                <args>-application</args>
+                                <args>
+                                    com.servoy.eclipse.docgenerator.client.default</args>
+                                <args>-data</args>
+                                <args>${workspace_dir}/</args>
+                                <args>--workspace</args>
+                                <args>${workspace_dir}/</args>
+                                <args>--project</args>
+                                <args>servoy_base</args>
+                                <args>com.servoy.base</args>
+                                <args>--project</args>
+                                <args>com.servoy.extensions.runtime.aiplugin</args>
+                                <args>com.servoy.extensions.aiplugin</args>
+                                <args>--autopilot</args>
+                                <args>--import-projects</args>
+                                <args>true</args>
+                            </applicationsArgs>
+                        </configuration>
+                        <goals>
+                            <goal>eclipse-run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
                 <version>3.6.1</version>
                 <executions>
-                  <execution>
-                    <id>copy-dependencies</id>
-                    <phase>package</phase>
-                    <goals>
-                      <goal>copy-dependencies</goal>
-                    </goals>
-                    <configuration>
-                      <outputDirectory>${project.build.directory}/ai</outputDirectory>
-                      <overWriteReleases>false</overWriteReleases>
-                      <overWriteSnapshots>false</overWriteSnapshots>
-                      <overWriteIfNewer>true</overWriteIfNewer>
-                      <includeScope>runtime</includeScope>
-                      <excludeGroupIds>
-                        com.servoy,
-                        org.slf4j,
-                        org.ow2.asm,
-                        com.fasterxml.jackson.core,
-                        org.apache.commons,
-                        jakarta.websocket,
-                        jakarta.servlet,
-                        commons-codec,
-                        commons-io,
-                        org.apache.logging.log4j,
-                        com.google.guava,
-                        org.apache.aries.spifly,
-                        org.postgresql,
-                        commons-logging,
-                        org.jspecify
-                      </excludeGroupIds>
-                    </configuration>
-                  </execution>
+                    <execution>
+                        <id>copy-dependencies</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/ai</outputDirectory>
+                            <overWriteReleases>false</overWriteReleases>
+                            <overWriteSnapshots>false</overWriteSnapshots>
+                            <overWriteIfNewer>true</overWriteIfNewer>
+                            <includeScope>runtime</includeScope>
+                            <excludeGroupIds>
+                                com.servoy,
+                                org.slf4j,
+                                org.ow2.asm,
+                                com.fasterxml.jackson.core,
+                                org.apache.commons,
+                                jakarta.websocket,
+                                jakarta.servlet,
+                                commons-codec,
+                                commons-io,
+                                org.apache.logging.log4j,
+                                com.google.guava,
+                                org.apache.aries.spifly,
+                                org.postgresql,
+                                commons-logging,
+                                org.jspecify
+                            </excludeGroupIds>
+                        </configuration>
+                    </execution>
                 </executions>
-              </plugin>
-              <plugin>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
                 <version>6.0.0</version>
                 <extensions>true</extensions>
                 <configuration>
-                  <instructions>
-                    <Export-Package>com.servoy.extensions.aiplugin.*</Export-Package>
-                  </instructions>
+                    <instructions>
+                        <Export-Package>com.servoy.extensions.aiplugin.*</Export-Package>
+                    </instructions>
                 </configuration>
-              </plugin>
-              <plugin>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>3.7.1</version>
                 <executions>
-                  <execution>
-                    <id>make-assembly</id>
-                    <phase>package</phase> 
-                    <goals>
-                      <goal>single</goal>
-                    </goals>
-                    <configuration>
-                      <descriptors>
-                        <descriptor>src/main/assembly/zip.xml</descriptor> 
-                      </descriptors>
-                      <finalName>${project.artifactId}</finalName>
-                      <appendAssemblyId>false</appendAssemblyId>
-                    </configuration>
-                  </execution>
+                    <execution>
+                        <id>make-assembly</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>src/main/assembly/zip.xml</descriptor>
+                            </descriptors>
+                            <finalName>${project.artifactId}</finalName>
+                            <appendAssemblyId>false</appendAssemblyId>
+                        </configuration>
+                    </execution>
                 </executions>
-              </plugin>
+            </plugin>
         </plugins>
     </build>
 </project>
