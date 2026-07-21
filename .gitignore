@@ -1,3 +1,7 @@
 *.iml
 /.idea/
 **/.opencode/index/
+/.metadata/
+/org.eclipse.dltk.javascript.rhino/
+/servoy_base/
+/servoy_shared/
