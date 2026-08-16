@@ -23,7 +23,7 @@
         <servoy.version>2026.3.1.4143</servoy.version>
         <rhino.version>1.8.0.s13</rhino.version>
 
-        <langchain4j.version>1.18.0</langchain4j.version>
+        <langchain4j.version>1.19.0</langchain4j.version>
         <pdfbox.version>3.0.8</pdfbox.version>
     </properties>
 
@@ -67,8 +67,13 @@
         </dependency>
         <dependency>
             <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-anthropic</artifactId>
+            <version>${langchain4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j-mcp</artifactId>
-            <version>1.18.0-beta28</version>
+            <version>1.19.0-beta29</version>
         </dependency>
         <dependency>
             <groupId>com.pgvector</groupId>
@@ -93,7 +98,7 @@
         <dependency>
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j-web-search-engine-google-custom</artifactId>
-            <version>1.18.0-beta28</version>
+            <version>1.19.0-beta29</version>
         </dependency>
         <!-- TOON Format Support -->
         <dependency>
@@ -115,6 +120,24 @@
             <groupId>com.fasterxml.jackson.module</groupId>
             <artifactId>jackson-module-blackbird</artifactId>
             <version>2.22.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.11.4</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>5.14.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
+            <version>5.14.2</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

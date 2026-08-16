@@ -10,6 +10,7 @@ import java.util.concurrent.Executors;
 import org.mozilla.javascript.NativePromise;
 import org.mozilla.javascript.annotations.JSFunction;
 
+import com.servoy.extensions.aiplugin.chat.AnthropicChatBuilder;
 import com.servoy.extensions.aiplugin.chat.Assistant;
 import com.servoy.extensions.aiplugin.chat.ChatClient;
 import com.servoy.extensions.aiplugin.chat.ChatResponse;
@@ -33,6 +34,7 @@ import com.servoy.j2db.scripting.IReturnedTypesProvider;
 import com.servoy.j2db.scripting.IScriptable;
 import com.servoy.j2db.util.Debug;
 
+import dev.langchain4j.model.anthropic.AnthropicStreamingChatModel;
 import dev.langchain4j.model.googleai.GoogleAiGeminiStreamingChatModel;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
 import dev.langchain4j.service.AiServices;
@@ -107,7 +109,7 @@ public class AIProvider implements IReturnedTypesProvider, IScriptable
 	@Override
 	public Class< ? >[] getAllReturnedTypes()
 	{
-		return new Class[] { ChatClient.class, GeminiChatBuilder.class, OpenAiChatBuilder.class, GeminiEmbeddingModelBuilder.class, OpenAiEmbeddingModelBuilder.class, ServoyEmbeddingStoreBuilder.class, EmbeddingStore.class, EmbeddingModel.class, ChatResponse.class, SearchResult.class, ToolBuilder.class, MCPClientBuilder.class };
+		return new Class[] { ChatClient.class, GeminiChatBuilder.class, OpenAiChatBuilder.class, AnthropicChatBuilder.class, GeminiEmbeddingModelBuilder.class, OpenAiEmbeddingModelBuilder.class, ServoyEmbeddingStoreBuilder.class, EmbeddingStore.class, EmbeddingModel.class, ChatResponse.class, SearchResult.class, ToolBuilder.class, MCPClientBuilder.class };
 	}
 
 	/**
@@ -155,6 +157,18 @@ public class AIProvider implements IReturnedTypesProvider, IScriptable
 	}
 
 	/**
+	 * Creates a builder for Anthropic chat models.
+	 *
+	 * @return AnthropicChatBuilder instance.
+	 */
+	@JSFunction
+	public AnthropicChatBuilder createAnthropicChatBuilder()
+	{
+		return new AnthropicChatBuilder(access);
+	}
+
+
+	/**
 	 * Creates a Gemini chat client using the provided API key and model name. This
 	 * is a quick way to create a client without using the builder.
 	 *
@@ -188,6 +202,24 @@ public class AIProvider implements IReturnedTypesProvider, IScriptable
 		builder.streamingChatModel(model);
 		return new ChatClient(builder.build(), access, null);
 	}
+
+	/**
+	 * Creates an Anthropic chat client using the provided API key and model name. This
+	 * is a quick way to create a client without using the builder.
+	 *
+	 * @param apiKey    The Anthropic API key.
+	 * @param modelName The Anthropic model name.
+	 * @return ChatClient instance for Anthropic.
+	 */
+	@JSFunction
+	public ChatClient createAnthropicClient(String apiKey, String modelName)
+	{
+		AnthropicStreamingChatModel model = AnthropicStreamingChatModel.builder().apiKey(apiKey).modelName(modelName).build();
+		AiServices<Assistant> builder = AiServices.builder(Assistant.class);
+		builder.streamingChatModel(model);
+		return new ChatClient(builder.build(), access, null);
+	}
+
 
 	public NativePromise async(Callable< ? > callable)
 	{
