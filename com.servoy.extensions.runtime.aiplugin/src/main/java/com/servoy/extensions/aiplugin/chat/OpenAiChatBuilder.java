@@ -11,8 +11,8 @@ import com.servoy.j2db.util.Pair;
 
 import dev.langchain4j.memory.chat.TokenWindowChatMemory;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
-import dev.langchain4j.model.openai.OpenAiStreamingChatModel.OpenAiStreamingChatModelBuilder;
 import dev.langchain4j.model.openai.OpenAiTokenCountEstimator;
+import dev.langchain4j.model.openaiofficial.OpenAiOfficialResponsesStreamingChatModel;
 import dev.langchain4j.service.AiServices;
 
 /**
@@ -23,10 +23,11 @@ import dev.langchain4j.service.AiServices;
 @ServoyDocumented
 public class OpenAiChatBuilder extends BaseChatBuilder<OpenAiChatBuilder> implements IJavaScriptType
 {
-	/**
-	 * The builder for the OpenAI streaming chat model.
-	 */
-	private final OpenAiStreamingChatModelBuilder builder;
+	private String apiKey;
+	private String baseUrl;
+	private Double temperature;
+	private String reasoningEffort;
+	private Boolean useResponsesApi;
 
 	/**
 	 * The OpenAI model name (default: "gpt-5").
@@ -41,7 +42,6 @@ public class OpenAiChatBuilder extends BaseChatBuilder<OpenAiChatBuilder> implem
 	public OpenAiChatBuilder(IClientPluginAccess access)
 	{
 		super(access);
-		builder = OpenAiStreamingChatModel.builder().modelName(modelName);
 	}
 
 	/**
@@ -53,7 +53,7 @@ public class OpenAiChatBuilder extends BaseChatBuilder<OpenAiChatBuilder> implem
 	@JSFunction
 	public OpenAiChatBuilder baseUrl(String url)
 	{
-		builder.baseUrl(url);
+		this.baseUrl = url;
 		return this;
 	}
 
@@ -66,7 +66,7 @@ public class OpenAiChatBuilder extends BaseChatBuilder<OpenAiChatBuilder> implem
 	@JSFunction
 	public OpenAiChatBuilder apiKey(String key)
 	{
-		builder.apiKey(key);
+		this.apiKey = key;
 		return this;
 	}
 
@@ -80,7 +80,6 @@ public class OpenAiChatBuilder extends BaseChatBuilder<OpenAiChatBuilder> implem
 	public OpenAiChatBuilder modelName(@SuppressWarnings("hiding") String modelName)
 	{
 		this.modelName = modelName;
-		builder.modelName(modelName);
 		return this;
 	}
 
@@ -93,7 +92,37 @@ public class OpenAiChatBuilder extends BaseChatBuilder<OpenAiChatBuilder> implem
 	@JSFunction
 	public OpenAiChatBuilder temperature(Double temperature)
 	{
-		builder.temperature(temperature);
+		this.temperature = temperature;
+		return this;
+	}
+
+	/**
+	 * Sets the reasoning effort level for reasoning models (e.g. "low", "medium", "high").
+	 * Only effective when using the Responses API; silently ignored for Chat Completions fallback.
+	 *
+	 * @param reasoningEffort The reasoning effort level.
+	 * @return This builder instance.
+	 */
+	@JSFunction
+	public OpenAiChatBuilder reasoningEffort(@SuppressWarnings("hiding") String reasoningEffort)
+	{
+		this.reasoningEffort = reasoningEffort;
+		return this;
+	}
+
+	/**
+	 * Explicitly controls whether to use the OpenAI Responses API.
+	 * When set to true, the Responses API is used regardless of baseUrl.
+	 * When set to false, the Chat Completions API is used regardless of baseUrl.
+	 * When not set, the decision is automatic based on the baseUrl.
+	 *
+	 * @param useResponsesApi Whether to use the Responses API.
+	 * @return This builder instance.
+	 */
+	@JSFunction
+	public OpenAiChatBuilder useResponsesApi(@SuppressWarnings("hiding") Boolean useResponsesApi)
+	{
+		this.useResponsesApi = useResponsesApi;
 		return this;
 	}
 
@@ -114,7 +143,25 @@ public class OpenAiChatBuilder extends BaseChatBuilder<OpenAiChatBuilder> implem
 	{
 		Pair<AiServices<Assistant>, List< ? extends AutoCloseable>> assistantBuilderAndUsedCloseables = createAssistantBuilder();
 		AiServices<Assistant> assistantBuilder = assistantBuilderAndUsedCloseables.getLeft();
-		assistantBuilder.streamingChatModel(builder.build());
+
+		if (shouldUseResponsesApi())
+		{
+			OpenAiOfficialResponsesStreamingChatModel.Builder modelBuilder = OpenAiOfficialResponsesStreamingChatModel.builder()
+				.apiKey(apiKey).modelName(modelName);
+			if (baseUrl != null) modelBuilder.baseUrl(baseUrl);
+			if (temperature != null) modelBuilder.temperature(temperature);
+			if (reasoningEffort != null) modelBuilder.reasoningEffort(reasoningEffort);
+			assistantBuilder.streamingChatModel(modelBuilder.build());
+		}
+		else
+		{
+			var modelBuilder = OpenAiStreamingChatModel.builder()
+				.apiKey(apiKey).modelName(modelName);
+			if (baseUrl != null) modelBuilder.baseUrl(baseUrl);
+			if (temperature != null) modelBuilder.temperature(temperature);
+			assistantBuilder.streamingChatModel(modelBuilder.build());
+		}
+
 		if (tokens != null)
 		{
 			OpenAiTokenCountEstimator tokenCountEstimator = new OpenAiTokenCountEstimator(modelName);
@@ -123,5 +170,12 @@ public class OpenAiChatBuilder extends BaseChatBuilder<OpenAiChatBuilder> implem
 			assistantBuilder.chatMemory(tokenWindowChatMemory);
 		}
 		return new ChatClient(assistantBuilder.build(), access, assistantBuilderAndUsedCloseables.getRight());
+	}
+
+	private boolean shouldUseResponsesApi()
+	{
+		if (Boolean.TRUE.equals(useResponsesApi)) return true;
+		if (Boolean.FALSE.equals(useResponsesApi)) return false;
+		return baseUrl == null || baseUrl.startsWith("https://api.openai.com");
 	}
 }

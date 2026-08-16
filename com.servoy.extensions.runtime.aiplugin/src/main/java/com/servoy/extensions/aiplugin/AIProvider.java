@@ -37,6 +37,7 @@ import com.servoy.j2db.util.Debug;
 import dev.langchain4j.model.anthropic.AnthropicStreamingChatModel;
 import dev.langchain4j.model.googleai.GoogleAiGeminiStreamingChatModel;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
+import dev.langchain4j.model.openaiofficial.OpenAiOfficialResponsesStreamingChatModel;
 import dev.langchain4j.service.AiServices;
 import dev.toonformat.jtoon.JToon;
 
@@ -197,7 +198,7 @@ public class AIProvider implements IReturnedTypesProvider, IScriptable
 	@JSFunction
 	public ChatClient createOpenAIClient(String apiKey, String modelName)
 	{
-		OpenAiStreamingChatModel model = OpenAiStreamingChatModel.builder().apiKey(apiKey).modelName(modelName).build();
+		OpenAiOfficialResponsesStreamingChatModel model = OpenAiOfficialResponsesStreamingChatModel.builder().apiKey(apiKey).modelName(modelName).build();
 		AiServices<Assistant> builder = AiServices.builder(Assistant.class);
 		builder.streamingChatModel(model);
 		return new ChatClient(builder.build(), access, null);
