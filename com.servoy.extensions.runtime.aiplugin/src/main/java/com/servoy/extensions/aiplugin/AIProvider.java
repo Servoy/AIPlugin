@@ -121,6 +121,10 @@ public class AIProvider implements IReturnedTypesProvider, IScriptable
 	@JSFunction
 	public GeminiEmbeddingModelBuilder createGeminiEmbeddingModelBuilder()
 	{
+		ensureProviderAvailable(
+			"dev.langchain4j.model.googleai.GoogleAiGeminiStreamingChatModel",
+			"Gemini",
+			"servoy-ai-provider-gemini");
 		return new GeminiEmbeddingModelBuilder(this);
 	}
 
@@ -132,6 +136,10 @@ public class AIProvider implements IReturnedTypesProvider, IScriptable
 	@JSFunction
 	public OpenAiEmbeddingModelBuilder createOpenAiEmbeddingModelBuilder()
 	{
+		ensureProviderAvailable(
+			"dev.langchain4j.model.openai.OpenAiStreamingChatModel",
+			"OpenAI",
+			"servoy-ai-provider-openai");
 		return new OpenAiEmbeddingModelBuilder(this);
 	}
 
@@ -143,6 +151,10 @@ public class AIProvider implements IReturnedTypesProvider, IScriptable
 	@JSFunction
 	public GeminiChatBuilder createGeminiChatBuilder()
 	{
+		ensureProviderAvailable(
+			"dev.langchain4j.model.googleai.GoogleAiGeminiStreamingChatModel",
+			"Gemini",
+			"servoy-ai-provider-gemini");
 		return new GeminiChatBuilder(access);
 	}
 
@@ -154,6 +166,10 @@ public class AIProvider implements IReturnedTypesProvider, IScriptable
 	@JSFunction
 	public OpenAiChatBuilder createOpenAiChatBuilder()
 	{
+		ensureProviderAvailable(
+			"dev.langchain4j.model.openai.OpenAiStreamingChatModel",
+			"OpenAI",
+			"servoy-ai-provider-openai");
 		return new OpenAiChatBuilder(access);
 	}
 
@@ -165,6 +181,10 @@ public class AIProvider implements IReturnedTypesProvider, IScriptable
 	@JSFunction
 	public AnthropicChatBuilder createAnthropicChatBuilder()
 	{
+		ensureProviderAvailable(
+			"dev.langchain4j.model.anthropic.AnthropicStreamingChatModel",
+			"Anthropic",
+			"servoy-ai-provider-anthropic");
 		return new AnthropicChatBuilder(access);
 	}
 
@@ -180,6 +200,10 @@ public class AIProvider implements IReturnedTypesProvider, IScriptable
 	@JSFunction
 	public ChatClient createGeminiClient(String apiKey, String modelName)
 	{
+		ensureProviderAvailable(
+			"dev.langchain4j.model.googleai.GoogleAiGeminiStreamingChatModel",
+			"Gemini",
+			"servoy-ai-provider-gemini");
 		GoogleAiGeminiStreamingChatModel model = GoogleAiGeminiStreamingChatModel.builder().temperature(null)
 			.apiKey(apiKey).modelName(modelName).build();
 		AiServices<Assistant> builder = AiServices.builder(Assistant.class);
@@ -198,6 +222,10 @@ public class AIProvider implements IReturnedTypesProvider, IScriptable
 	@JSFunction
 	public ChatClient createOpenAIClient(String apiKey, String modelName)
 	{
+		ensureProviderAvailable(
+			"dev.langchain4j.model.openai.OpenAiStreamingChatModel",
+			"OpenAI",
+			"servoy-ai-provider-openai");
 		OpenAiOfficialResponsesStreamingChatModel model = OpenAiOfficialResponsesStreamingChatModel.builder().apiKey(apiKey).modelName(modelName).build();
 		AiServices<Assistant> builder = AiServices.builder(Assistant.class);
 		builder.streamingChatModel(model);
@@ -215,6 +243,10 @@ public class AIProvider implements IReturnedTypesProvider, IScriptable
 	@JSFunction
 	public ChatClient createAnthropicClient(String apiKey, String modelName)
 	{
+		ensureProviderAvailable(
+			"dev.langchain4j.model.anthropic.AnthropicStreamingChatModel",
+			"Anthropic",
+			"servoy-ai-provider-anthropic");
 		AnthropicStreamingChatModel model = AnthropicStreamingChatModel.builder().apiKey(apiKey).modelName(modelName).build();
 		AiServices<Assistant> builder = AiServices.builder(Assistant.class);
 		builder.streamingChatModel(model);
@@ -293,6 +325,21 @@ public class AIProvider implements IReturnedTypesProvider, IScriptable
 		{
 			Debug.error("Failed to decode TOON to JSON format: " + e.getMessage());
 			return null;
+		}
+	}
+
+	private void ensureProviderAvailable(String markerClass, String providerName, String artifactName)
+	{
+		try
+		{
+			Class.forName(markerClass);
+		}
+		catch (ClassNotFoundException e)
+		{
+			throw new RuntimeException(
+				providerName + " provider not installed. " +
+					"Download '" + artifactName + "' from the Servoy AI Plugin releases " +
+					"and place it in your Servoy plugins/ai/ directory.");
 		}
 	}
 }
