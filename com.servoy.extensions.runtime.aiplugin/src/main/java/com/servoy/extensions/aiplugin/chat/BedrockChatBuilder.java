@@ -174,7 +174,9 @@ public class BedrockChatBuilder extends BaseChatBuilder<BedrockChatBuilder> impl
 			assistantBuilder.chatMemory(tokenWindowChatMemory);
 		}
 		Assistant assistant = assistantBuilder.build();
-		List<AutoCloseable> closeables = new ArrayList<>(assistantBuilderAndUsedCloseables.getRight());
+		List<AutoCloseable> closeables = assistantBuilderAndUsedCloseables.getRight() != null
+			? new ArrayList<>(assistantBuilderAndUsedCloseables.getRight())
+			: new ArrayList<>();
 		closeables.add(client);
 		return new ChatClient(assistant, access, closeables);
 	}
