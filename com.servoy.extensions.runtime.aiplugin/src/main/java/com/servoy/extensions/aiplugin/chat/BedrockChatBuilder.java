@@ -131,6 +131,12 @@ public class BedrockChatBuilder extends BaseChatBuilder<BedrockChatBuilder> impl
 			throw new RuntimeException("Region is required for Bedrock. Call .region(\"us-east-1\") before .build().");
 		}
 
+		if ((accessKeyId == null) != (secretAccessKey == null))
+		{
+			throw new RuntimeException(
+				"Both accessKeyId and secretAccessKey must be provided together, or neither (to use the default AWS credentials chain).");
+		}
+
 		Pair<AiServices<Assistant>, List< ? extends AutoCloseable>> assistantBuilderAndUsedCloseables = createAssistantBuilder();
 
 		AwsCredentialsProvider credentialsProvider;
