@@ -40,6 +40,8 @@ jobs:
           path: |
             **/target/eclipserun-work/data/.metadata/.log
             **/target/servoy-aiplugin.zip
+            **/target/servoy-ai-plugin-core.zip
+            **/target/servoy-ai-provider-*.zip
 
       - name: Get project version
         id: get_version
@@ -82,6 +84,12 @@ jobs:
       - name: Upload assets
         if: env.release_exists == 'true'
         run: |
-         gh release upload "_${{ env.BRANCH_NAME }}" ./com.servoy.extensions.runtime.aiplugin/target/servoy-aiplugin.zip
+         gh release upload "_${{ env.BRANCH_NAME }}" \
+           ./com.servoy.extensions.runtime.aiplugin/target/servoy-aiplugin.zip \
+           ./com.servoy.extensions.runtime.aiplugin/target/servoy-ai-plugin-core.zip \
+           ./com.servoy.extensions.runtime.aiplugin/target/servoy-ai-provider-openai.zip \
+           ./com.servoy.extensions.runtime.aiplugin/target/servoy-ai-provider-anthropic.zip \
+           ./com.servoy.extensions.runtime.aiplugin/target/servoy-ai-provider-gemini.zip \
+           ./com.servoy.extensions.runtime.aiplugin/target/servoy-ai-provider-bedrock.zip
         env:
          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
