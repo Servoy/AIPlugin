@@ -12,6 +12,7 @@ import org.mozilla.javascript.annotations.JSFunction;
 
 import com.servoy.extensions.aiplugin.chat.AnthropicChatBuilder;
 import com.servoy.extensions.aiplugin.chat.Assistant;
+import com.servoy.extensions.aiplugin.chat.BedrockChatBuilder;
 import com.servoy.extensions.aiplugin.chat.ChatClient;
 import com.servoy.extensions.aiplugin.chat.ChatResponse;
 import com.servoy.extensions.aiplugin.chat.GeminiChatBuilder;
@@ -35,11 +36,14 @@ import com.servoy.j2db.scripting.IScriptable;
 import com.servoy.j2db.util.Debug;
 
 import dev.langchain4j.model.anthropic.AnthropicStreamingChatModel;
+import dev.langchain4j.model.bedrock.BedrockStreamingChatModel;
 import dev.langchain4j.model.googleai.GoogleAiGeminiStreamingChatModel;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
 import dev.langchain4j.model.openaiofficial.OpenAiOfficialResponsesStreamingChatModel;
 import dev.langchain4j.service.AiServices;
 import dev.toonformat.jtoon.JToon;
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
 
 /**
  * AIProvider class that provides access to create AI chat and embedding
@@ -110,7 +114,7 @@ public class AIProvider implements IReturnedTypesProvider, IScriptable
 	@Override
 	public Class< ? >[] getAllReturnedTypes()
 	{
-		return new Class[] { ChatClient.class, GeminiChatBuilder.class, OpenAiChatBuilder.class, AnthropicChatBuilder.class, GeminiEmbeddingModelBuilder.class, OpenAiEmbeddingModelBuilder.class, ServoyEmbeddingStoreBuilder.class, EmbeddingStore.class, EmbeddingModel.class, ChatResponse.class, SearchResult.class, ToolBuilder.class, MCPClientBuilder.class };
+		return new Class[] { ChatClient.class, GeminiChatBuilder.class, OpenAiChatBuilder.class, AnthropicChatBuilder.class, BedrockChatBuilder.class, GeminiEmbeddingModelBuilder.class, OpenAiEmbeddingModelBuilder.class, ServoyEmbeddingStoreBuilder.class, EmbeddingStore.class, EmbeddingModel.class, ChatResponse.class, SearchResult.class, ToolBuilder.class, MCPClientBuilder.class };
 	}
 
 	/**
@@ -248,6 +252,46 @@ public class AIProvider implements IReturnedTypesProvider, IScriptable
 			"Anthropic",
 			"servoy-ai-provider-anthropic");
 		AnthropicStreamingChatModel model = AnthropicStreamingChatModel.builder().apiKey(apiKey).modelName(modelName).build();
+		AiServices<Assistant> builder = AiServices.builder(Assistant.class);
+		builder.streamingChatModel(model);
+		return new ChatClient(builder.build(), access, null);
+	}
+
+
+	/**
+	 * Creates a builder for Amazon Bedrock chat models.
+	 *
+	 * @return BedrockChatBuilder instance.
+	 */
+	@JSFunction
+	public BedrockChatBuilder createBedrockChatBuilder()
+	{
+		ensureProviderAvailable(
+			"dev.langchain4j.model.bedrock.BedrockStreamingChatModel",
+			"Bedrock",
+			"servoy-ai-provider-bedrock");
+		return new BedrockChatBuilder(access);
+	}
+
+	/**
+	 * Creates a Bedrock chat client using the default AWS credentials provider chain.
+	 * This is a quick way to create a client without using the builder.
+	 *
+	 * @param region  The AWS region (e.g. "us-east-1").
+	 * @param modelId The Bedrock model ID.
+	 * @return ChatClient instance for Bedrock.
+	 */
+	@JSFunction
+	public ChatClient createBedrockClient(String region, String modelId)
+	{
+		ensureProviderAvailable(
+			"dev.langchain4j.model.bedrock.BedrockStreamingChatModel",
+			"Bedrock",
+			"servoy-ai-provider-bedrock");
+		BedrockStreamingChatModel model = BedrockStreamingChatModel.builder()
+			.region(Region.of(region))
+			.modelId(modelId)
+			.build();
 		AiServices<Assistant> builder = AiServices.builder(Assistant.class);
 		builder.streamingChatModel(model);
 		return new ChatClient(builder.build(), access, null);
