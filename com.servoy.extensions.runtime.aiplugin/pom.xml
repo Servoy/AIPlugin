@@ -25,7 +25,20 @@
 
         <langchain4j.version>1.19.0</langchain4j.version>
         <pdfbox.version>3.0.8</pdfbox.version>
+        <netty.version>4.1.135.Final</netty.version>
     </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-bom</artifactId>
+                <version>${netty.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <repositories>
         <repository>
