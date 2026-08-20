@@ -11,7 +11,6 @@ import org.mozilla.javascript.NativePromise;
 import org.mozilla.javascript.annotations.JSFunction;
 
 import com.servoy.extensions.aiplugin.chat.AnthropicChatBuilder;
-import com.servoy.extensions.aiplugin.chat.Assistant;
 import com.servoy.extensions.aiplugin.chat.BedrockChatBuilder;
 import com.servoy.extensions.aiplugin.chat.ChatClient;
 import com.servoy.extensions.aiplugin.chat.ChatResponse;
@@ -117,11 +116,7 @@ public class AIProvider implements IReturnedTypesProvider, IScriptable
 	@JSFunction
 	public GeminiEmbeddingModelBuilder createGeminiEmbeddingModelBuilder()
 	{
-		ProviderLoader.ensureAvailable(
-			"dev.langchain4j.model.googleai.GoogleAiGeminiStreamingChatModel",
-			"Gemini",
-			"gemini");
-		return ProviderLoader.createEmbeddingBuilder("GeminiEmbeddingModelBuilder", this);
+		return new GeminiEmbeddingModelBuilder(this);
 	}
 
 	/**
@@ -132,11 +127,7 @@ public class AIProvider implements IReturnedTypesProvider, IScriptable
 	@JSFunction
 	public OpenAiEmbeddingModelBuilder createOpenAiEmbeddingModelBuilder()
 	{
-		ProviderLoader.ensureAvailable(
-			"dev.langchain4j.model.openai.OpenAiStreamingChatModel",
-			"OpenAI",
-			"openai");
-		return ProviderLoader.createEmbeddingBuilder("OpenAiEmbeddingModelBuilder", this);
+		return new OpenAiEmbeddingModelBuilder(this);
 	}
 
 	/**
@@ -147,11 +138,7 @@ public class AIProvider implements IReturnedTypesProvider, IScriptable
 	@JSFunction
 	public GeminiChatBuilder createGeminiChatBuilder()
 	{
-		ProviderLoader.ensureAvailable(
-			"dev.langchain4j.model.googleai.GoogleAiGeminiStreamingChatModel",
-			"Gemini",
-			"gemini");
-		return ProviderLoader.createChatBuilder("GeminiChatBuilder", access);
+		return new GeminiChatBuilder(access);
 	}
 
 	/**
@@ -162,11 +149,7 @@ public class AIProvider implements IReturnedTypesProvider, IScriptable
 	@JSFunction
 	public OpenAiChatBuilder createOpenAiChatBuilder()
 	{
-		ProviderLoader.ensureAvailable(
-			"dev.langchain4j.model.openai.OpenAiStreamingChatModel",
-			"OpenAI",
-			"openai");
-		return ProviderLoader.createChatBuilder("OpenAiChatBuilder", access);
+		return new OpenAiChatBuilder(access);
 	}
 
 	/**
@@ -177,11 +160,7 @@ public class AIProvider implements IReturnedTypesProvider, IScriptable
 	@JSFunction
 	public AnthropicChatBuilder createAnthropicChatBuilder()
 	{
-		ProviderLoader.ensureAvailable(
-			"dev.langchain4j.model.anthropic.AnthropicStreamingChatModel",
-			"Anthropic",
-			"anthropic");
-		return ProviderLoader.createChatBuilder("AnthropicChatBuilder", access);
+		return new AnthropicChatBuilder(access);
 	}
 
 
@@ -236,11 +215,7 @@ public class AIProvider implements IReturnedTypesProvider, IScriptable
 	@JSFunction
 	public BedrockChatBuilder createBedrockChatBuilder()
 	{
-		ProviderLoader.ensureAvailable(
-			"dev.langchain4j.model.bedrock.BedrockStreamingChatModel",
-			"Bedrock",
-			"bedrock");
-		return ProviderLoader.createChatBuilder("BedrockChatBuilder", access);
+		return new BedrockChatBuilder(access);
 	}
 
 	/**

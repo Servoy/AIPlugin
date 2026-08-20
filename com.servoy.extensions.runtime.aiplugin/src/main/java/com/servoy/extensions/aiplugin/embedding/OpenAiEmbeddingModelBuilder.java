@@ -3,10 +3,9 @@ package com.servoy.extensions.aiplugin.embedding;
 import org.mozilla.javascript.annotations.JSFunction;
 
 import com.servoy.extensions.aiplugin.AIProvider;
+import com.servoy.extensions.aiplugin.ProviderLoader;
 import com.servoy.j2db.documentation.ServoyDocumented;
 import com.servoy.j2db.scripting.IJavaScriptType;
-
-import dev.langchain4j.model.openai.OpenAiEmbeddingModel;
 
 /**
  * OpenAiEmbeddingModelBuilder is a builder for configuring and creating OpenAI
@@ -16,15 +15,10 @@ import dev.langchain4j.model.openai.OpenAiEmbeddingModel;
 @ServoyDocumented
 public class OpenAiEmbeddingModelBuilder implements IJavaScriptType {
 
-	/**
-	 * The ai provider plugin.
-	 */
 	private final AIProvider provider;
-
-	/**
-	 * The builder for the OpenAI embedding model.
-	 */
-	private final OpenAiEmbeddingModel.OpenAiEmbeddingModelBuilder builder = OpenAiEmbeddingModel.builder();
+	private String apiKey;
+	private String modelName;
+	private String baseUrl;
 
 	/**
 	 * Constructs an OpenAiEmbeddingModelBuilder with the given plugin access.
@@ -34,16 +28,16 @@ public class OpenAiEmbeddingModelBuilder implements IJavaScriptType {
 	public OpenAiEmbeddingModelBuilder(AIProvider provider) {
 		this.provider = provider;
 	}
-	
+
 	/**
 	 * Sets base url for an api like IONOS that is compatible with OpenAI API.
-	 * 
+	 *
 	 * @param url The base URL.
 	 * @return This builder instance.
 	 */
 	@JSFunction
 	public OpenAiEmbeddingModelBuilder baseUrl(String url) {
-		builder.baseUrl(url);
+		this.baseUrl = url;
 		return this;
 	}
 
@@ -55,7 +49,7 @@ public class OpenAiEmbeddingModelBuilder implements IJavaScriptType {
 	 */
 	@JSFunction
 	public OpenAiEmbeddingModelBuilder apiKey(String key) {
-		builder.apiKey(key);
+		this.apiKey = key;
 		return this;
 	}
 
@@ -67,7 +61,7 @@ public class OpenAiEmbeddingModelBuilder implements IJavaScriptType {
 	 */
 	@JSFunction
 	public OpenAiEmbeddingModelBuilder modelName(String modelName) {
-		builder.modelName(modelName);
+		this.modelName = modelName;
 		return this;
 	}
 
@@ -79,6 +73,10 @@ public class OpenAiEmbeddingModelBuilder implements IJavaScriptType {
 	 */
 	@JSFunction
 	public EmbeddingModel build() {
-		return new EmbeddingModel(builder.build(), provider);
+		ProviderLoader.ensureAvailable(
+			"dev.langchain4j.model.openai.OpenAiEmbeddingModel",
+			"OpenAI",
+			"openai");
+		return OpenAiEmbeddingModelDelegate.build(apiKey, modelName, baseUrl, provider);
 	}
 }

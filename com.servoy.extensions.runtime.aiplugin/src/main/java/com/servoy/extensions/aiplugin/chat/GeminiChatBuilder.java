@@ -4,14 +4,12 @@ import java.util.List;
 
 import org.mozilla.javascript.annotations.JSFunction;
 
+import com.servoy.extensions.aiplugin.ProviderLoader;
 import com.servoy.j2db.documentation.ServoyDocumented;
 import com.servoy.j2db.plugins.IClientPluginAccess;
 import com.servoy.j2db.scripting.IJavaScriptType;
 import com.servoy.j2db.util.Pair;
 
-import dev.langchain4j.memory.chat.TokenWindowChatMemory;
-import dev.langchain4j.model.googleai.GoogleAiGeminiStreamingChatModel;
-import dev.langchain4j.model.googleai.GoogleAiGeminiTokenCountEstimator;
 import dev.langchain4j.service.AiServices;
 
 /**
@@ -99,21 +97,12 @@ public class GeminiChatBuilder extends BaseChatBuilder<GeminiChatBuilder> implem
 	@JSFunction
 	public ChatClient build()
 	{
+		ProviderLoader.ensureAvailable(
+			"dev.langchain4j.model.googleai.GoogleAiGeminiStreamingChatModel",
+			"Gemini",
+			"gemini");
 		Pair<AiServices<Assistant>, List< ? extends AutoCloseable>> assistantBuilderAndUsedCloseables = createAssistantBuilder();
-		GoogleAiGeminiStreamingChatModel model = GoogleAiGeminiStreamingChatModel.builder().temperature(temperature)
-			.apiKey(apiKey).modelName(modelName).build();
-
-		AiServices<Assistant> assistantBuilder = assistantBuilderAndUsedCloseables.getLeft();
-		assistantBuilder.streamingChatModel(model);
-		if (tokens != null)
-		{
-			GoogleAiGeminiTokenCountEstimator tokenCountEstimator = GoogleAiGeminiTokenCountEstimator.builder()
-				.apiKey(apiKey).modelName(modelName).build();
-			TokenWindowChatMemory tokenWindowChatMemory = TokenWindowChatMemory.builder()
-				.maxTokens(tokens, tokenCountEstimator).build();
-			assistantBuilder.chatMemory(tokenWindowChatMemory);
-		}
-		Assistant assistant = assistantBuilder.build();
-		return new ChatClient(assistant, access, assistantBuilderAndUsedCloseables.getRight());
+		return GeminiChatDelegate.build(access, assistantBuilderAndUsedCloseables,
+			apiKey, modelName, temperature, tokens);
 	}
 }

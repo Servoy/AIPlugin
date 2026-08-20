@@ -3,11 +3,9 @@ package com.servoy.extensions.aiplugin.embedding;
 import org.mozilla.javascript.annotations.JSFunction;
 
 import com.servoy.extensions.aiplugin.AIProvider;
+import com.servoy.extensions.aiplugin.ProviderLoader;
 import com.servoy.j2db.documentation.ServoyDocumented;
 import com.servoy.j2db.scripting.IJavaScriptType;
-
-import dev.langchain4j.model.googleai.GoogleAiEmbeddingModel;
-import dev.langchain4j.model.googleai.GoogleAiEmbeddingModel.GoogleAiEmbeddingModelBuilder;
 
 /**
  * GeminiEmbeddingModelBuilder is a builder for configuring and creating Gemini
@@ -17,15 +15,9 @@ import dev.langchain4j.model.googleai.GoogleAiEmbeddingModel.GoogleAiEmbeddingMo
 @ServoyDocumented
 public class GeminiEmbeddingModelBuilder implements IJavaScriptType {
 
-	/**
-	 * The ai provider plugin.
-	 */
 	private final AIProvider provider;
-
-	/**
-	 * The builder for the Gemini embedding model.
-	 */
-	private final GoogleAiEmbeddingModelBuilder builder = GoogleAiEmbeddingModel.builder();
+	private String apiKey;
+	private String modelName;
 
 	/**
 	 * Constructs a GeminiEmbeddingModelBuilder with the given plugin access.
@@ -44,7 +36,7 @@ public class GeminiEmbeddingModelBuilder implements IJavaScriptType {
 	 */
 	@JSFunction
 	public GeminiEmbeddingModelBuilder apiKey(String key) {
-		builder.apiKey(key);
+		this.apiKey = key;
 		return this;
 	}
 
@@ -56,7 +48,7 @@ public class GeminiEmbeddingModelBuilder implements IJavaScriptType {
 	 */
 	@JSFunction
 	public GeminiEmbeddingModelBuilder modelName(String modelName) {
-		builder.modelName(modelName);
+		this.modelName = modelName;
 		return this;
 	}
 
@@ -68,6 +60,10 @@ public class GeminiEmbeddingModelBuilder implements IJavaScriptType {
 	 */
 	@JSFunction
 	public EmbeddingModel build() {
-		return new EmbeddingModel(builder.build(), provider);
+		ProviderLoader.ensureAvailable(
+			"dev.langchain4j.model.googleai.GoogleAiEmbeddingModel",
+			"Gemini",
+			"gemini");
+		return GeminiEmbeddingModelDelegate.build(apiKey, modelName, provider);
 	}
 }
