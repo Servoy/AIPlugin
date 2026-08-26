@@ -46,16 +46,6 @@ INSERT INTO skill_packs (name, description, content, kind, tags, source) VALUES
  || E'- Join path: customers -> orders (customerid) -> order_details (orderid) -> products (productid).\n',
  'pack', 'orders,revenue,products', 'human');
 
-INSERT INTO skill_packs (name, description, content, kind, tags, source) VALUES
-('openedge-pub-conventions',
- 'Identifier quoting and schema rules for the Progress OpenEdge (PUB) database',
- E'# Progress OpenEdge (PUB) conventions\n\n'
- || E'- All application tables live in the "PUB" schema.\n'
- || E'- Always schema-qualify and double-quote identifiers: SELECT * FROM "PUB"."Customer".\n'
- || E'- Identifiers are case-sensitive; match the exact casing from describeTables.\n'
- || E'- Use FETCH FIRST n ROWS ONLY (not TOP / LIMIT) to cap rows.\n',
- 'pack', 'openedge,dialect,quoting', 'human');
-
 -- Agent-written rows are added automatically by saveLearning with kind = 'learning'.
 -- To promote a good learning into an authoritative pack, set its kind to 'pack'
 -- (and optionally clear confidence): UPDATE skill_packs SET kind = 'pack' WHERE name = '...';

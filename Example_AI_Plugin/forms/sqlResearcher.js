@@ -59,18 +59,15 @@ If the data does not lend itself to a meaningful chart, return an empty JSON obj
 var userMessage = 'Which products and customers drive our revenue, and where are we at risk of losing sales?';
 
 /**
- * Free-form hints about how to query THIS database: dialect quirks, schema prefixes,
- * identifier quoting, join tips, etc. These are injected into the agent's context and
- * strongly influence the SQL it writes. Leave empty for a plain database.
- *
- * Example for a Progress OpenEdge DB whose tables sit in a "PUB" schema:
- *   'Tables live in the "PUB" schema. Always schema-qualify and double-quote identifiers,
- *    e.g. SELECT * FROM PUB."Customer". Identifiers are case-sensitive.'
+ * Optional free-form hints about how to query THIS database: dialect quirks, join tips,
+ * naming conventions, etc. Injected into the agent's context to steer the SQL it writes.
+ * Leave empty (the default) for a plain database - the agent then relies on the database
+ * product name plus the table/column metadata alone, which works well for PostgreSQL.
  *
  * @type {String}
  * @properties={typeid:35,uuid:"1C1FBED4-03C8-4942-A24D-B0E70FCCDB52"}
  */
-var dbHints = 'Tables live in the "PUB" schema. Always schema-qualify and double-quote identifiers, e.g. SELECT * FROM "PUB"."Customer". Identifiers are case-sensitive.';
+var dbHints = '';
 
 /**
  * The agent's final findings and recommendations report, as raw markdown.
@@ -139,7 +136,7 @@ var chartData = '';
  * @type {String}
  * @properties={typeid:35,uuid:"D1BEE57F-ADFA-46F2-AEE5-A83A98B044BB"}
  */
-var serverName = 'picas';
+var serverName = 'example_data';
 
 /**
  * The Servoy database server that holds the "skill_packs" table (curated guidance
@@ -242,7 +239,11 @@ function research() {
 		+ '\n\nAvailable tables (use the describeTables tool to get columns for the ones you need):\n' + listTableNames().join(', ')
 		+ '\n\nResearch Question:\n' + userMessage;
 
-	plugins.svyBlockUI.show('Researching your data...');
+	// Don't block the whole screen - keep the research trace visible so the user can
+	// watch each step stream in. Just signal "running" via the status line + button.
+	queryStatus = 'Researching…  (steps appear in the trace as they run)';
+	elements.button_research.enabled = false;
+
 	client.chat(prompt).then(function(response) {
 		queryStatus = 'Queries: ' + queryCount
 			+ '  |  Time: ' + (new Date().getTime() - startTime) + ' ms'
@@ -265,7 +266,6 @@ function research() {
 		if (showReasoning && reasoningTrace) {
 			sqlPlan += '--- reasoning ---\n' + reasoningTrace + '\n';
 		}
-		plugins.svyBlockUI.stop();
 
 		// persist the full trace of this run for auditing / analytics / review
 		logAgentRun('success', startTime, response.getTokenUsage().totalTokenCount());
@@ -274,12 +274,12 @@ function research() {
 		generateChart();
 
 	}).catch(function(e) {
-		plugins.svyBlockUI.stop();
 		answer = 'Error: ' + e.message;
 		answerHtml = mdToHtml(answer);
 		runErrors.push('Run failed: ' + e.message);
 		logAgentRun('error', startTime, 0);
 	}).finally(function() {
+		elements.button_research.enabled = true;
 		// release resources (no MCP here, but good practice per the plugin docs)
 		client.close();
 	});
@@ -403,7 +403,7 @@ function generateChart() {
 		+ '\n\nFindings Summary:\n' + answer
 		+ '\n\nDatasets collected during research (CSV):\n' + context;
 
-	plugins.svyBlockUI.show('Generating visualization...');
+	queryStatus += '  |  building chart…';
 	client.chat(chartPrompt).then(function(response) {
 		chartData = response.getResponse();
 		application.output('Chart Data:\n' + chartData);
@@ -424,7 +424,7 @@ function generateChart() {
 	}).catch(function(e) {
 		application.output('Error generating chart data: ' + e.message, LOGGINGLEVEL.WARNING);
 	}).finally(function() {
-		plugins.svyBlockUI.stop();
+		queryStatus = queryStatus.replace('  |  building chart…', '');
 		client.close();
 	});
 }

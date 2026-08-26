@@ -75,11 +75,11 @@
                     "width":"120"
                 },
                 "onActionMethodID":"3A7CF0EB-DF80-41EB-8462-C5191D2EB082",
-                "styleClass":"btn btn-outline-secondary",
+                "styleClass":"btn btn-default",
                 "text":"Report"
             },
             "name":"button_report",
-            "styleClass":"btn btn-outline-secondary",
+            "styleClass":"btn btn-default",
             "typeName":"bootstrapcomponents-button",
             "typeid":47,
             "uuid":"B8CB8747-1FFC-4BEF-9C6B-1C5CFF27A00A"
