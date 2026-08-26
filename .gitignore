@@ -1,3 +1,7 @@
 *.iml
 /.idea/
 .claude/
+/CLAUDE.Servoy.md
+/AGENTS.md
+/.opencode/*
+/handoff/*
