@@ -38,7 +38,7 @@ jobs:
         with:
           name: build-artifacts-and-logs
           path: |
-            **/target/eclipserun-work/data/.metadata/.log
+            .metadata/.log
             **/target/servoy-aiplugin.zip
             **/target/servoy-ai-plugin-core.zip
             **/target/servoy-ai-provider-*.zip
