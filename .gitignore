@@ -5,3 +5,8 @@
 /org.eclipse.dltk.javascript.rhino/
 /servoy_base/
 /servoy_shared/
+/AGENTS.md
+/CLAUDE.Servoy.md
+/.claude/*
+/.opencode/*
+/handoff/*
