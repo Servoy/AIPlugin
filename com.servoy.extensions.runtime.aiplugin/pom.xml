@@ -375,6 +375,10 @@
                                 commons-logging,
                                 org.jspecify
                             </excludeGroupIds>
+                            <excludeArtifactIds>
+                                kotlin-stdlib-jdk7,
+                                kotlin-stdlib-jdk8
+                            </excludeArtifactIds>
                         </configuration>
                     </execution>
                     <execution>
@@ -462,7 +466,9 @@
                                 langchain4j-web-search-engine-google-custom,
                                 langchain4j-anthropic,
                                 langchain4j-google-ai-gemini,
-                                langchain4j-bedrock
+                                langchain4j-bedrock,
+                                kotlin-stdlib-jdk7,
+                                kotlin-stdlib-jdk8
                             </excludeArtifactIds>
                         </configuration>
                     </execution>
