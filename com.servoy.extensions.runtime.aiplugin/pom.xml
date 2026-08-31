@@ -419,7 +419,8 @@
                                 langchain4j-google-ai-gemini,
                                 langchain4j-bedrock,
                                 kotlin-stdlib-jdk7,
-                                kotlin-stdlib-jdk8
+                                kotlin-stdlib-jdk8,
+                                annotations
                             </excludeArtifactIds>
                         </configuration>
                     </execution>
