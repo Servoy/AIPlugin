@@ -476,7 +476,6 @@
                                 io.grpc,
                                 com.google.auto.value,
                                 com.google.errorprone,
-                                com.google.guava,
                                 com.google.j2objc,
                                 javax.annotation,
                                 org.apache.httpcomponents
