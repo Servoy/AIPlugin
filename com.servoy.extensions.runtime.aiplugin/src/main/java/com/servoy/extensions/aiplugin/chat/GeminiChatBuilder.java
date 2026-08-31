@@ -32,6 +32,10 @@ public class GeminiChatBuilder extends BaseChatBuilder<GeminiChatBuilder> implem
 	 * The temperature for the Gemini model (controls randomness).
 	 */
 	private Double temperature;
+	/**
+	 * Whether to enable Google Search grounding for up-to-date web results.
+	 */
+	private Boolean useGoogleSearch;
 
 	/**
 	 * Constructs a GeminiChatBuilder with the given plugin access.
@@ -83,6 +87,25 @@ public class GeminiChatBuilder extends BaseChatBuilder<GeminiChatBuilder> implem
 	}
 
 	/**
+	 * Enables Google Search grounding, allowing the model to search the web for up-to-date information.
+	 *
+	 * @sample
+	 * var client = plugins.ai.gemini()
+	 *   .apiKey('your-api-key')
+	 *   .useGoogleSearch(true)
+	 *   .build();
+	 *
+	 * @param useGoogleSearch True to enable Google Search grounding.
+	 * @return This builder instance.
+	 */
+	@JSFunction
+	public GeminiChatBuilder useGoogleSearch(@SuppressWarnings("hiding") Boolean useGoogleSearch)
+	{
+		this.useGoogleSearch = useGoogleSearch;
+		return this;
+	}
+
+	/**
 	 * Builds and returns a ChatClient configured with the specified Gemini model
 	 * settings.
 	 *
@@ -103,6 +126,6 @@ public class GeminiChatBuilder extends BaseChatBuilder<GeminiChatBuilder> implem
 			"gemini");
 		Pair<AiServices<Assistant>, List< ? extends AutoCloseable>> assistantBuilderAndUsedCloseables = createAssistantBuilder();
 		return GeminiChatDelegate.build(access, assistantBuilderAndUsedCloseables,
-			apiKey, modelName, temperature, tokens);
+			apiKey, modelName, temperature, tokens, useGoogleSearch);
 	}
 }

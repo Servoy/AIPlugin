@@ -13,10 +13,10 @@ import dev.langchain4j.service.AiServices;
 class GeminiChatDelegate {
 
 	static ChatClient build(IClientPluginAccess access, Pair<AiServices<Assistant>, List< ? extends AutoCloseable>> assistantBuilderAndUsedCloseables,
-		String apiKey, String modelName, Double temperature, Integer tokens)
+		String apiKey, String modelName, Double temperature, Integer tokens, Boolean useGoogleSearch)
 	{
 		GoogleAiGeminiStreamingChatModel model = GoogleAiGeminiStreamingChatModel.builder().temperature(temperature)
-			.apiKey(apiKey).modelName(modelName).build();
+			.apiKey(apiKey).modelName(modelName).allowGoogleSearch(useGoogleSearch).build();
 
 		AiServices<Assistant> assistantBuilder = assistantBuilderAndUsedCloseables.getLeft();
 		assistantBuilder.streamingChatModel(model);
