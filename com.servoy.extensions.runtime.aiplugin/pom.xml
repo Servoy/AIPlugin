@@ -29,7 +29,7 @@
 
         <langchain4j.version>1.19.0</langchain4j.version>
         <pdfbox.version>3.0.8</pdfbox.version>
-        <netty.version>4.1.137.Final</netty.version>
+        <netty.version>4.2.17.Final</netty.version>
     </properties>
 
     <dependencyManagement>
@@ -122,11 +122,6 @@
             <artifactId>jabsorb</artifactId>
             <version>1.3.3.s1</version>
         </dependency>
-        <dependency>
-            <groupId>dev.langchain4j</groupId>
-            <artifactId>langchain4j-web-search-engine-google-custom</artifactId>
-            <version>1.19.0-beta29</version>
-        </dependency>
         <!-- TOON Format Support -->
         <dependency>
             <groupId>dev.toonformat</groupId>
@@ -147,6 +142,56 @@
             <groupId>com.fasterxml.jackson.module</groupId>
             <artifactId>jackson-module-blackbird</artifactId>
             <version>2.22.2</version>
+        </dependency>
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-buffer</artifactId>
+            <version>${netty.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-codec</artifactId>
+            <version>${netty.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-codec-http</artifactId>
+            <version>${netty.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-codec-http2</artifactId>
+            <version>${netty.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-common</artifactId>
+            <version>${netty.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-handler</artifactId>
+            <version>${netty.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-resolver</artifactId>
+            <version>${netty.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-transport</artifactId>
+            <version>${netty.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-transport-classes-epoll</artifactId>
+            <version>${netty.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-transport-native-unix-common</artifactId>
+            <version>${netty.version}</version>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -286,101 +331,6 @@
                             </artifactItems>
                         </configuration>
                     </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.eclipse.tycho</groupId>
-                <artifactId>tycho-eclipse-plugin</artifactId>
-                <version>${tycho.version}</version>
-                <configuration>
-                    <repositories>
-                        <repository>
-                            <id>servoy_local</id>
-                            <url>${servoy-local.url}</url>
-                            <layout>p2</layout>
-                        </repository>
-                    </repositories>
-                    <dependencies>
-                        <dependency>
-                            <groupId>com.servoy</groupId>
-                            <artifactId>
-                                com.servoy.eclipse.docgenerator.client.feature</artifactId>
-                            <type>eclipse-feature</type>
-                        </dependency>
-                    </dependencies>
-                    <executionEnvironment>JavaSE-21</executionEnvironment>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>generate doc</id>
-                        <phase>generate-resources</phase>
-                        <configuration>
-                            <applicationsArgs>
-                                <args>-clean</args>
-                                <args>-application</args>
-                                <args>
-                                    com.servoy.eclipse.docgenerator.client.default</args>
-                                <args>-data</args>
-                                <args>${workspace_dir}/</args>
-                                <args>--workspace</args>
-                                <args>${workspace_dir}/</args>
-                                <args>--project</args>
-                                <args>servoy_base</args>
-                                <args>com.servoy.base</args>
-                                <args>--project</args>
-                                <args>com.servoy.extensions.runtime.aiplugin</args>
-                                <args>com.servoy.extensions.aiplugin</args>
-                                <args>--autopilot</args>
-                                <args>--import-projects</args>
-                                <args>true</args>
-                            </applicationsArgs>
-                        </configuration>
-                        <goals>
-                            <goal>eclipse-run</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <version>3.6.1</version>
-                <executions>
-                    <execution>
-                        <id>copy-dependencies</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>copy-dependencies</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>${project.build.directory}/ai</outputDirectory>
-                            <overWriteReleases>false</overWriteReleases>
-                            <overWriteSnapshots>false</overWriteSnapshots>
-                            <overWriteIfNewer>true</overWriteIfNewer>
-                            <includeScope>runtime</includeScope>
-                            <excludeGroupIds>
-                                com.servoy,
-                                org.slf4j,
-                                org.ow2.asm,
-                                com.fasterxml.jackson.core,
-                                org.apache.commons,
-                                jakarta.websocket,
-                                jakarta.servlet,
-                                commons-codec,
-                                commons-io,
-                                org.apache.logging.log4j,
-                                com.google.guava,
-                                org.apache.aries.spifly,
-                                org.postgresql,
-                                commons-logging,
-                                org.jspecify
-                            </excludeGroupIds>
-                            <excludeArtifactIds>
-                                kotlin-stdlib-jdk7,
-                                kotlin-stdlib-jdk8
-                            </excludeArtifactIds>
-                        </configuration>
-                    </execution>
                     <execution>
                         <id>copy-core-deps</id>
                         <phase>package</phase>
@@ -426,7 +376,8 @@
                                 com.google.j2objc,
                                 javax.annotation,
                                 org.apache.httpcomponents,
-                                software.amazon.awssdk
+                                software.amazon.awssdk,
+                                io.netty
                             </excludeGroupIds>
                             <excludeArtifactIds>
                                 langchain4j-open-ai,
@@ -557,7 +508,8 @@
                             <includeScope>runtime</includeScope>
                             <includeGroupIds>
                                 dev.langchain4j,
-                                software.amazon.awssdk
+                                software.amazon.awssdk,
+                                io.netty
                             </includeGroupIds>
                             <excludeArtifactIds>
                                 langchain4j-core,
@@ -572,6 +524,59 @@
                                 langchain4j-google-ai-gemini
                             </excludeArtifactIds>
                         </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.eclipse.tycho</groupId>
+                <artifactId>tycho-eclipse-plugin</artifactId>
+                <version>${tycho.version}</version>
+                <configuration>
+                    <repositories>
+                        <repository>
+                            <id>servoy_local</id>
+                            <url>${servoy-local.url}</url>
+                            <layout>p2</layout>
+                        </repository>
+                    </repositories>
+                    <dependencies>
+                        <dependency>
+                            <groupId>com.servoy</groupId>
+                            <artifactId>
+                                com.servoy.eclipse.docgenerator.client.feature</artifactId>
+                            <type>eclipse-feature</type>
+                        </dependency>
+                    </dependencies>
+                    <executionEnvironment>JavaSE-21</executionEnvironment>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>generate doc</id>
+                        <phase>generate-resources</phase>
+                        <configuration>
+                            <applicationsArgs>
+                                <args>-clean</args>
+                                <args>-application</args>
+                                <args>
+                                    com.servoy.eclipse.docgenerator.client.default</args>
+                                <args>-data</args>
+                                <args>${workspace_dir}/</args>
+                                <args>--workspace</args>
+                                <args>${workspace_dir}/</args>
+                                <args>--project</args>
+                                <args>servoy_base</args>
+                                <args>com.servoy.base</args>
+                                <args>--project</args>
+                                <args>com.servoy.extensions.runtime.aiplugin</args>
+                                <args>com.servoy.extensions.aiplugin</args>
+                                <args>--autopilot</args>
+                                <args>--import-projects</args>
+                                <args>true</args>
+                            </applicationsArgs>
+                        </configuration>
+                        <goals>
+                            <goal>eclipse-run</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>
