@@ -47,12 +47,19 @@ public class ChatClient implements IScriptable, IJavaScriptType
 	private final IClientPluginAccess access;
 	private final List<Pair<Object, String>> files = new ArrayList<>();
 	private final List< ? extends AutoCloseable> closeables;
+	private final FileStore fileStore;
 
 	public ChatClient(Assistant assistant, IClientPluginAccess access, List< ? extends AutoCloseable> closeables)
+	{
+		this(assistant, access, closeables, null);
+	}
+
+	public ChatClient(Assistant assistant, IClientPluginAccess access, List< ? extends AutoCloseable> closeables, FileStore fileStore)
 	{
 		this.assistant = assistant;
 		this.access = access;
 		this.closeables = closeables;
+		this.fileStore = fileStore;
 	}
 
 	/**
@@ -223,7 +230,7 @@ public class ChatClient implements IScriptable, IJavaScriptType
 		UserMessage msg;
 		if (!files.isEmpty())
 		{
-			List<Content> list = files.stream().map(pair -> createContent(pair.getLeft(), pair.getRight()))
+			List<Content> list = files.stream().map(pair -> toContent(pair.getLeft(), pair.getRight()))
 				.collect(Collectors.toCollection(ArrayList::new));
 			list.add(TextContent.from(userMessage));
 			msg = new UserMessage(list);
@@ -233,6 +240,26 @@ public class ChatClient implements IScriptable, IJavaScriptType
 			msg = new UserMessage(userMessage);
 		}
 		return msg;
+	}
+
+	private Content toContent(Object fileOrBytes, String contenttType)
+	{
+		String ct = getContentType(fileOrBytes, contenttType);
+		if (fileStore != null && ct != null && !ct.startsWith("text/") && fileStore.supports(ct))
+		{
+			Content uploaded = fileStore.upload(getBytes(fileOrBytes), ct, getFileName(fileOrBytes));
+			if (uploaded != null) return uploaded;
+		}
+		return createContent(fileOrBytes, ct);
+	}
+
+	private static String getFileName(Object fileOrBytes)
+	{
+		if (fileOrBytes instanceof IFile file)
+			return file.getName();
+		if (fileOrBytes instanceof String fileName)
+			return new File(fileName).getName();
+		return "file";
 	}
 
 	private Content createContent(Object fileOrBytes, String contenttType)

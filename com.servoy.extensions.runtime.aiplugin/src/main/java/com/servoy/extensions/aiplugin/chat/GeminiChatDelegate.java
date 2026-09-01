@@ -1,5 +1,6 @@
 package com.servoy.extensions.aiplugin.chat;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.servoy.j2db.plugins.IClientPluginAccess;
@@ -10,7 +11,8 @@ import dev.langchain4j.model.googleai.GoogleAiGeminiStreamingChatModel;
 import dev.langchain4j.model.googleai.GoogleAiGeminiTokenCountEstimator;
 import dev.langchain4j.service.AiServices;
 
-class GeminiChatDelegate {
+class GeminiChatDelegate
+{
 
 	static ChatClient build(IClientPluginAccess access, Pair<AiServices<Assistant>, List< ? extends AutoCloseable>> assistantBuilderAndUsedCloseables,
 		String apiKey, String modelName, Double temperature, Integer tokens, Boolean useGoogleSearch)
@@ -29,6 +31,12 @@ class GeminiChatDelegate {
 			assistantBuilder.chatMemory(tokenWindowChatMemory);
 		}
 		Assistant assistant = assistantBuilder.build();
-		return new ChatClient(assistant, access, assistantBuilderAndUsedCloseables.getRight());
+
+		GeminiFileStore fileStore = new GeminiFileStore(apiKey, null);
+		List<AutoCloseable> closeables = assistantBuilderAndUsedCloseables.getRight() != null
+			? new ArrayList<>(assistantBuilderAndUsedCloseables.getRight())
+			: new ArrayList<>();
+		closeables.add(fileStore);
+		return new ChatClient(assistant, access, closeables, fileStore);
 	}
 }
