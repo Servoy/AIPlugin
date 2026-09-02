@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Test-only Log4j2 configuration (on the test classpath, never shipped).
+
+  The file-store unit tests deliberately drive the failure path (upload throws),
+  and the production code logs that at ERROR before falling back to inline base64.
+  Log4j2's default configuration would print those expected stack traces to the
+  console and make the test output look like something failed. Silence those two
+  loggers here; everything else still logs at WARN so genuine problems surface.
+-->
+<Configuration status="WARN">
+	<Appenders>
+		<Console name="Console" target="SYSTEM_OUT">
+			<PatternLayout pattern="%d{HH:mm:ss.SSS} %-5level %logger{36} - %msg%n"/>
+		</Console>
+	</Appenders>
+	<Loggers>
+		<Logger name="com.servoy.extensions.aiplugin.chat.OpenAiFileStore" level="OFF"/>
+		<Logger name="com.servoy.extensions.aiplugin.chat.GeminiFileStore" level="OFF"/>
+		<Root level="WARN">
+			<AppenderRef ref="Console"/>
+		</Root>
+	</Loggers>
+</Configuration>
