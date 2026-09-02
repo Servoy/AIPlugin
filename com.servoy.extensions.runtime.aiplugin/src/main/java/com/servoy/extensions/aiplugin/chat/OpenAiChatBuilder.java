@@ -1,9 +1,11 @@
 package com.servoy.extensions.aiplugin.chat;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.mozilla.javascript.annotations.JSFunction;
 
+import com.openai.models.ReasoningEffort;
 import com.servoy.extensions.aiplugin.ProviderLoader;
 import com.servoy.j2db.documentation.ServoyDocumented;
 import com.servoy.j2db.plugins.IClientPluginAccess;
@@ -94,8 +96,17 @@ public class OpenAiChatBuilder extends BaseChatBuilder<OpenAiChatBuilder> implem
 	}
 
 	/**
-	 * Sets the reasoning effort level for reasoning models (e.g. "low", "medium", "high").
-	 * Only effective when using the Responses API; silently ignored for Chat Completions fallback.
+	 * The reasoning effort levels accepted by the OpenAI Responses API, derived from the SDK's
+	 * {@link ReasoningEffort.Known} enum so it tracks SDK changes automatically.
+	 */
+	private static final List<String> VALID_REASONING_EFFORTS = Arrays.stream(ReasoningEffort.Known.values())
+		.map(known -> known.name().toLowerCase()).toList();
+
+	/**
+	 * Sets the reasoning effort level for reasoning models. Must be one of the values accepted by
+	 * the OpenAI Responses API (case-insensitive): {@code none}, {@code minimal}, {@code low},
+	 * {@code medium}, {@code high} or {@code xhigh}. Only effective when using the Responses API;
+	 * silently ignored for the Chat Completions fallback.
 	 *
 	 * @param reasoningEffort The reasoning effort level.
 	 * @return This builder instance.
@@ -103,7 +114,20 @@ public class OpenAiChatBuilder extends BaseChatBuilder<OpenAiChatBuilder> implem
 	@JSFunction
 	public OpenAiChatBuilder reasoningEffort(@SuppressWarnings("hiding") String reasoningEffort)
 	{
-		this.reasoningEffort = reasoningEffort;
+		if (reasoningEffort != null)
+		{
+			String normalized = reasoningEffort.trim().toLowerCase();
+			if (!VALID_REASONING_EFFORTS.contains(normalized))
+			{
+				throw new IllegalArgumentException(
+					"Invalid reasoning effort '" + reasoningEffort + "'. Must be one of: " + String.join(", ", VALID_REASONING_EFFORTS));
+			}
+			this.reasoningEffort = normalized;
+		}
+		else
+		{
+			this.reasoningEffort = null;
+		}
 		return this;
 	}
 

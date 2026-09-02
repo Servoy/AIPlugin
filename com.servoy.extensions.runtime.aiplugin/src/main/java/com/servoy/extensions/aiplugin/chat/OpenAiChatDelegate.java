@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.openai.client.OpenAIClient;
 import com.openai.client.okhttp.OpenAIOkHttpClient;
+import com.openai.models.ReasoningEffort;
 import com.servoy.extensions.aiplugin.chat.openai.OpenAiFilesResponsesStreamingChatModel;
 import com.servoy.j2db.plugins.IClientPluginAccess;
 import com.servoy.j2db.util.Pair;
@@ -31,7 +32,7 @@ class OpenAiChatDelegate
 			OpenAiFilesResponsesStreamingChatModel.Builder modelBuilder = OpenAiFilesResponsesStreamingChatModel.builder()
 				.client(client).modelName(modelName);
 			if (temperature != null) modelBuilder.temperature(temperature);
-			if (reasoningEffort != null) modelBuilder.reasoningEffort(reasoningEffort);
+			if (reasoningEffort != null) modelBuilder.reasoningEffort(ReasoningEffort.of(reasoningEffort));
 			assistantBuilder.streamingChatModel(modelBuilder.build());
 
 			fileStore = new OpenAiFileStore(client);
