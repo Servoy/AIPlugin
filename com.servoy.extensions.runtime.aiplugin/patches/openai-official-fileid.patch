@@ -1,0 +1,57 @@
+# openai-official-fileid.patch
+#
+# Modification applied to the vendored copy of LangChain4j's
+# dev.langchain4j.model.openaiofficial.OpenAiOfficialResponsesStreamingChatModel
+# (LangChain4j 1.19.0-beta29), which lives in this repo as:
+#   src/main/java/com/servoy/extensions/aiplugin/chat/openai/OpenAiFilesResponsesStreamingChatModel.java
+#
+# The vendored file is a VERBATIM copy of the upstream source EXCEPT:
+#   1. the `package` line is changed to `com.servoy.extensions.aiplugin.chat.openai`
+#      (and the same-package siblings OpenAiOfficialResponsesChatRequestParameters,
+#      OpenAiOfficialResponsesChatResponseMetadata, OpenAiOfficialTokenUsage are now
+#      imported from dev.langchain4j.model.openaiofficial.*);
+#   2. the class + Builder are renamed OpenAiOfficialResponsesStreamingChatModel ->
+#      OpenAiFilesResponsesStreamingChatModel;
+#   3. the ONE behavioural change captured below: file_id support in createUserMessage.
+#
+# This patch documents change (3) — the only functional modification. It is expressed
+# as a unified diff against the pristine upstream (with the package/class rename already
+# applied) so the re-patch skill (.opencode/skills/langchain4j-openai-repatch) can
+# re-apply it on each langchain4j-open-ai-official bump. Whitespace/formatting is
+# indicative; re-apply by locating the `createUserMessage` PdfFileContent branch and
+# adding the `extractOpenAiFileId` guard + helper, not by strict `patch` context match.
+
+--- a/OpenAiFilesResponsesStreamingChatModel.java
++++ b/OpenAiFilesResponsesStreamingChatModel.java
+@@ createUserMessage(UserMessage userMessage) — PdfFileContent branch
+             } else if (content instanceof PdfFileContent pdfFileContent) {
+                 ResponseInputFile.Builder pdfInput = ResponseInputFile.builder();
+-                if (pdfFileContent.pdfFile().url() != null) {
++                String fileId = extractOpenAiFileId(pdfFileContent);
++                if (fileId != null) {
++                    pdfInput.fileId(fileId);
++                } else if (pdfFileContent.pdfFile().url() != null) {
+                     pdfInput.fileUrl(pdfFileContent.pdfFile().url().toString());
+                 } else if (pdfFileContent.pdfFile().base64Data() != null) {
+                     pdfInput.filename("document.pdf");
+                     pdfInput.fileData("data:" + pdfFileContent.pdfFile().mimeType() + ";base64,"
+                             + pdfFileContent.pdfFile().base64Data());
+                 } else {
+                     throw new IllegalArgumentException("PDF must have either url or base64Data");
+                 }
+                 contentList.add(ResponseInputContent.ofInputFile(pdfInput.build()));
+             }
+
+@@ new private helper — inserted immediately after createUserMessage(...)
++
++    // Recognises the OpenAiFileStore marker "openai-file://<id>" on a PdfFileContent url and returns
++    // the OpenAI file_id, so the request references the uploaded file instead of inlining base64.
++    // Delegates to OpenAiFileStore so the mint and parse sides share one scheme definition.
++    // Returns null for any other content, preserving the original url/base64 behaviour.
++    private static String extractOpenAiFileId(PdfFileContent pdfFileContent) {
++        return com.servoy.extensions.aiplugin.chat.OpenAiFileStore.extractFileId(pdfFileContent);
++    }
+#
+# Note: the marker parsing itself lives in OpenAiFileStore.extractFileId (public static), so the
+# "openai-file" URI scheme is defined once (OpenAiFileStore.FILE_ID_SCHEME) and shared by the store
+# that mints the marker and this vendored model that reads it back.

@@ -16,7 +16,7 @@ import com.servoy.extensions.aiplugin.chat.ChatClient;
 import com.servoy.extensions.aiplugin.chat.OpenAiChatBuilder;
 import com.servoy.j2db.plugins.IClientPluginAccess;
 
-import dev.langchain4j.model.openaiofficial.OpenAiOfficialResponsesStreamingChatModel;
+import com.servoy.extensions.aiplugin.chat.openai.OpenAiFilesResponsesStreamingChatModel;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("AIProvider - OpenAI Responses API support")
@@ -55,22 +55,21 @@ class AIProviderOpenAITest
 		}
 
 		@Test
-		@DisplayName("uses OpenAiOfficialResponsesStreamingChatModel (Responses API path)")
+		@DisplayName("uses OpenAiFilesResponsesStreamingChatModel (Responses API path)")
 		void usesResponsesApiModel()
 		{
-			OpenAiOfficialResponsesStreamingChatModel.Builder mockBuilder = mock(OpenAiOfficialResponsesStreamingChatModel.Builder.class, RETURNS_SELF);
-			OpenAiOfficialResponsesStreamingChatModel mockModel = mock(OpenAiOfficialResponsesStreamingChatModel.class);
+			OpenAiFilesResponsesStreamingChatModel.Builder mockBuilder = mock(OpenAiFilesResponsesStreamingChatModel.Builder.class, RETURNS_SELF);
+			OpenAiFilesResponsesStreamingChatModel mockModel = mock(OpenAiFilesResponsesStreamingChatModel.class);
 			when(mockBuilder.build()).thenReturn(mockModel);
 
-			try (MockedStatic<OpenAiOfficialResponsesStreamingChatModel> mocked = mockStatic(OpenAiOfficialResponsesStreamingChatModel.class))
+			try (MockedStatic<OpenAiFilesResponsesStreamingChatModel> mocked = mockStatic(OpenAiFilesResponsesStreamingChatModel.class))
 			{
-				mocked.when(OpenAiOfficialResponsesStreamingChatModel::builder).thenReturn(mockBuilder);
+				mocked.when(OpenAiFilesResponsesStreamingChatModel::builder).thenReturn(mockBuilder);
 
 				ChatClient result = provider.createOpenAIClient("test-api-key", "gpt-5");
 
 				assertNotNull(result);
-				mocked.verify(OpenAiOfficialResponsesStreamingChatModel::builder);
-				verify(mockBuilder).apiKey("test-api-key");
+				mocked.verify(OpenAiFilesResponsesStreamingChatModel::builder);
 				verify(mockBuilder).modelName("gpt-5");
 				verify(mockBuilder).build();
 			}

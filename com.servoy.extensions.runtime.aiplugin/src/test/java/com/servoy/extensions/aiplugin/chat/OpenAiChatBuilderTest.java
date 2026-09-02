@@ -16,8 +16,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.servoy.j2db.plugins.IClientPluginAccess;
 
+import com.servoy.extensions.aiplugin.chat.openai.OpenAiFilesResponsesStreamingChatModel;
+
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
-import dev.langchain4j.model.openaiofficial.OpenAiOfficialResponsesStreamingChatModel;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("OpenAiChatBuilder")
@@ -284,21 +285,21 @@ class OpenAiChatBuilderTest
 	class BuildVerifiesModelPath
 	{
 		@Test
-		@DisplayName("Responses mode invokes OpenAiOfficialResponsesStreamingChatModel.builder()")
+		@DisplayName("Responses mode invokes OpenAiFilesResponsesStreamingChatModel.builder()")
 		void responseModeUsesResponsesModel()
 		{
-			OpenAiOfficialResponsesStreamingChatModel.Builder mockBuilder = mock(OpenAiOfficialResponsesStreamingChatModel.Builder.class, RETURNS_SELF);
-			OpenAiOfficialResponsesStreamingChatModel mockModel = mock(OpenAiOfficialResponsesStreamingChatModel.class);
+			OpenAiFilesResponsesStreamingChatModel.Builder mockBuilder = mock(OpenAiFilesResponsesStreamingChatModel.Builder.class, RETURNS_SELF);
+			OpenAiFilesResponsesStreamingChatModel mockModel = mock(OpenAiFilesResponsesStreamingChatModel.class);
 			when(mockBuilder.build()).thenReturn(mockModel);
 
-			try (MockedStatic<OpenAiOfficialResponsesStreamingChatModel> mocked = mockStatic(OpenAiOfficialResponsesStreamingChatModel.class))
+			try (MockedStatic<OpenAiFilesResponsesStreamingChatModel> mocked = mockStatic(OpenAiFilesResponsesStreamingChatModel.class))
 			{
-				mocked.when(OpenAiOfficialResponsesStreamingChatModel::builder).thenReturn(mockBuilder);
+				mocked.when(OpenAiFilesResponsesStreamingChatModel::builder).thenReturn(mockBuilder);
 
 				ChatClient client = builder.apiKey("test-key").modelName("gpt-5").build();
 
 				assertNotNull(client);
-				mocked.verify(OpenAiOfficialResponsesStreamingChatModel::builder);
+				mocked.verify(OpenAiFilesResponsesStreamingChatModel::builder);
 			}
 		}
 

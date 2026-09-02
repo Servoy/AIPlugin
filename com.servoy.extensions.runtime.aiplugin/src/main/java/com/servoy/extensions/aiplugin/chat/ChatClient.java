@@ -46,6 +46,7 @@ public class ChatClient implements IScriptable, IJavaScriptType
 	private final Assistant assistant;
 	private final IClientPluginAccess access;
 	private final List<Pair<Object, String>> files = new ArrayList<>();
+	private final List<Content> resolvedContents = new ArrayList<>();
 	private final List< ? extends AutoCloseable> closeables;
 	private final FileStore fileStore;
 
@@ -230,8 +231,11 @@ public class ChatClient implements IScriptable, IJavaScriptType
 		UserMessage msg;
 		if (!files.isEmpty())
 		{
-			List<Content> list = files.stream().map(pair -> toContent(pair.getLeft(), pair.getRight()))
-				.collect(Collectors.toCollection(ArrayList::new));
+			// Resolve each pending file to a Content once and cache it, so that a file added via
+			// addFile()/addBytes() is uploaded to the provider file store at most once even when the
+			// same ChatClient is reused across multiple chat() turns.
+			resolveFiles();
+			List<Content> list = new ArrayList<>(resolvedContents);
 			list.add(TextContent.from(userMessage));
 			msg = new UserMessage(list);
 		}
@@ -240,6 +244,15 @@ public class ChatClient implements IScriptable, IJavaScriptType
 			msg = new UserMessage(userMessage);
 		}
 		return msg;
+	}
+
+	private void resolveFiles()
+	{
+		for (int i = resolvedContents.size(); i < files.size(); i++)
+		{
+			Pair<Object, String> pair = files.get(i);
+			resolvedContents.add(toContent(pair.getLeft(), pair.getRight()));
+		}
 	}
 
 	private Content toContent(Object fileOrBytes, String contenttType)
