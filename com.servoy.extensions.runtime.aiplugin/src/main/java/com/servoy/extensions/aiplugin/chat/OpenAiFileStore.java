@@ -8,7 +8,9 @@ import com.openai.client.OpenAIClient;
 import com.openai.models.files.FileCreateParams;
 import com.openai.models.files.FileObject;
 import com.openai.models.files.FilePurpose;
-import com.servoy.j2db.util.Debug;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import dev.langchain4j.data.message.Content;
 import dev.langchain4j.data.message.PdfFileContent;
@@ -35,6 +37,8 @@ import dev.langchain4j.data.message.PdfFileContent;
  */
 public class OpenAiFileStore implements FileStore, AutoCloseable
 {
+	private static final Logger log = LoggerFactory.getLogger(OpenAiFileStore.class);
+
 	/**
 	 * URI scheme used to carry an uploaded OpenAI {@code file_id} on a {@link PdfFileContent}. The
 	 * vendored {@code OpenAiFilesResponsesStreamingChatModel} reads it back via {@link #extractFileId}
@@ -103,7 +107,7 @@ public class OpenAiFileStore implements FileStore, AutoCloseable
 		catch (Exception e)
 		{
 			if (e instanceof InterruptedException) Thread.currentThread().interrupt();
-			Debug.error("Could not upload file '" + fileName + "' to the OpenAI Files API, falling back to inline base64.", e);
+			log.error("Could not upload file '{}' to the OpenAI Files API, falling back to inline base64.", fileName, e);
 			return null;
 		}
 	}
@@ -125,7 +129,7 @@ public class OpenAiFileStore implements FileStore, AutoCloseable
 			}
 			catch (Exception e)
 			{
-				Debug.log("Could not delete uploaded OpenAI file '" + id + "'.", e);
+				log.warn("Could not delete uploaded OpenAI file '{}'.", id, e);
 			}
 		}
 		try
@@ -134,7 +138,7 @@ public class OpenAiFileStore implements FileStore, AutoCloseable
 		}
 		catch (Exception e)
 		{
-			Debug.log("Could not close the OpenAI client.", e);
+			log.warn("Could not close the OpenAI client.", e);
 		}
 	}
 }

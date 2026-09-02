@@ -9,12 +9,13 @@ import org.jabsorb.serializer.MarshallException;
 import org.json.JSONObject;
 import org.mozilla.javascript.Function;
 import org.mozilla.javascript.annotations.JSFunction;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.servoy.extensions.aiplugin.tools.builtin.ServoyBuiltInTools;
 import com.servoy.j2db.documentation.ServoyDocumented;
 import com.servoy.j2db.plugins.IClientPluginAccess;
 import com.servoy.j2db.scripting.FunctionDefinition;
-import com.servoy.j2db.util.Debug;
 import com.servoy.j2db.util.Pair;
 import com.servoy.j2db.util.serialize.JSONSerializerWrapper;
 
@@ -59,6 +60,8 @@ import dev.langchain4j.service.tool.ToolExecutor;
 @ServoyDocumented
 public abstract class BaseChatBuilder<T extends BaseChatBuilder<T>>
 {
+
+	private static final Logger log = LoggerFactory.getLogger(BaseChatBuilder.class);
 
 	/**
 	 * Indicates whether built-in Servoy tools should be injected into the AI agent.
@@ -266,7 +269,7 @@ public abstract class BaseChatBuilder<T extends BaseChatBuilder<T>>
 				}
 				catch (MarshallException e)
 				{
-					Debug.error(e);
+					log.error("Could not serialize tool return value to JSON.", e);
 				}
 				return "Failure";
 			}

@@ -14,6 +14,8 @@ import java.util.stream.Collectors;
 import org.mozilla.javascript.Function;
 import org.mozilla.javascript.NativePromise;
 import org.mozilla.javascript.annotations.JSFunction;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.servoy.j2db.documentation.ServoyDocumented;
 import com.servoy.j2db.plugins.IClientPluginAccess;
@@ -22,7 +24,6 @@ import com.servoy.j2db.scripting.Deferred;
 import com.servoy.j2db.scripting.FunctionDefinition;
 import com.servoy.j2db.scripting.IJavaScriptType;
 import com.servoy.j2db.scripting.IScriptable;
-import com.servoy.j2db.util.Debug;
 import com.servoy.j2db.util.MimeTypes;
 import com.servoy.j2db.util.Pair;
 import com.servoy.j2db.util.Utils;
@@ -42,6 +43,8 @@ import dev.langchain4j.data.message.VideoContent;
 @ServoyDocumented
 public class ChatClient implements IScriptable, IJavaScriptType
 {
+
+	private static final Logger log = LoggerFactory.getLogger(ChatClient.class);
 
 	private final Assistant assistant;
 	private final IClientPluginAccess access;
@@ -372,7 +375,7 @@ public class ChatClient implements IScriptable, IJavaScriptType
 			}
 			catch (Exception e)
 			{
-				Debug.log(e); // log all, and throw only once at the end; in this way, all closable .close() get a chance to execute
+				log.warn("Could not release resources of one auto-closeable.", e); // log all, and throw only once at the end; in this way, all closable .close() get a chance to execute
 				exception[0] = new RuntimeException("Could not release resources of of one or more auto-closeables: ", e);
 			}
 		});

@@ -4,7 +4,8 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.servoy.j2db.util.Debug;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import dev.langchain4j.data.message.AudioContent;
 import dev.langchain4j.data.message.Content;
@@ -31,6 +32,8 @@ import dev.langchain4j.model.googleai.GeminiFiles.GeminiFile;
  */
 class GeminiFileStore implements FileStore, AutoCloseable
 {
+	private static final Logger log = LoggerFactory.getLogger(GeminiFileStore.class);
+
 	private static final long POLL_INTERVAL_MILLIS = 500;
 	private static final long POLL_TIMEOUT_MILLIS = 30_000;
 
@@ -76,12 +79,12 @@ class GeminiFileStore implements FileStore, AutoCloseable
 		catch (InterruptedException e)
 		{
 			Thread.currentThread().interrupt();
-			Debug.error("Interrupted while uploading file '" + fileName + "' to the Gemini Files API, falling back to inline base64.", e);
+			log.error("Interrupted while uploading file '{}' to the Gemini Files API, falling back to inline base64.", fileName, e);
 			return null;
 		}
 		catch (Exception e)
 		{
-			Debug.error("Could not upload file '" + fileName + "' to the Gemini Files API, falling back to inline base64.", e);
+			log.error("Could not upload file '{}' to the Gemini Files API, falling back to inline base64.", fileName, e);
 			return null;
 		}
 	}
@@ -99,7 +102,7 @@ class GeminiFileStore implements FileStore, AutoCloseable
 			}
 			catch (Exception e)
 			{
-				Debug.log("Could not poll Gemini file metadata for '" + current.name() + "'.", e);
+				log.warn("Could not poll Gemini file metadata for '{}'.", current.name(), e);
 				return current;
 			}
 		}
@@ -123,7 +126,7 @@ class GeminiFileStore implements FileStore, AutoCloseable
 			}
 			catch (Exception e)
 			{
-				Debug.log("Could not delete uploaded Gemini file '" + name + "'; it will expire per Gemini's retention.", e);
+				log.warn("Could not delete uploaded Gemini file '{}'; it will expire per Gemini's retention.", name, e);
 			}
 		}
 	}

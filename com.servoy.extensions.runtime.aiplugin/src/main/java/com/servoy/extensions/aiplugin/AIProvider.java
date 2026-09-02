@@ -9,6 +9,8 @@ import java.util.concurrent.Executors;
 
 import org.mozilla.javascript.NativePromise;
 import org.mozilla.javascript.annotations.JSFunction;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.servoy.extensions.aiplugin.chat.AnthropicChatBuilder;
 import com.servoy.extensions.aiplugin.chat.BedrockChatBuilder;
@@ -32,7 +34,6 @@ import com.servoy.j2db.plugins.IClientPluginAccess;
 import com.servoy.j2db.scripting.Deferred;
 import com.servoy.j2db.scripting.IReturnedTypesProvider;
 import com.servoy.j2db.scripting.IScriptable;
-import com.servoy.j2db.util.Debug;
 
 import dev.toonformat.jtoon.JToon;
 
@@ -43,6 +44,8 @@ import dev.toonformat.jtoon.JToon;
 @ServoyDocumented(publicName = PLUGIN_NAME, scriptingName = "plugins." + PLUGIN_NAME)
 public class AIProvider implements IReturnedTypesProvider, IScriptable
 {
+	private static final Logger log = LoggerFactory.getLogger(AIProvider.class);
+
 	private final IClientPluginAccess access;
 	private AiPluginService aiPluginService;
 
@@ -249,7 +252,7 @@ public class AIProvider implements IReturnedTypesProvider, IScriptable
 				}
 				catch (Exception ex)
 				{
-					Debug.error(ex);
+					log.error("Error while running an async AI operation.", ex);
 					deferred.reject(ex);
 				}
 			});
@@ -277,7 +280,7 @@ public class AIProvider implements IReturnedTypesProvider, IScriptable
 		}
 		catch (Exception e)
 		{
-			Debug.error("Failed to encode JSON to TOON format: " + e.getMessage());
+			log.error("Failed to encode JSON to TOON format.", e);
 			return null;
 		}
 	}
@@ -302,7 +305,7 @@ public class AIProvider implements IReturnedTypesProvider, IScriptable
 		}
 		catch (Exception e)
 		{
-			Debug.error("Failed to decode TOON to JSON format: " + e.getMessage());
+			log.error("Failed to decode TOON to JSON format.", e);
 			return null;
 		}
 	}

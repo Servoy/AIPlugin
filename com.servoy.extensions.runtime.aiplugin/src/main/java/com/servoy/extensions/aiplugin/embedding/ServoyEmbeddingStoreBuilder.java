@@ -16,6 +16,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.mozilla.javascript.annotations.JSFunction;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.servoy.extensions.aiplugin.AIProvider;
 import com.servoy.j2db.documentation.ServoyDocumented;
@@ -23,12 +25,14 @@ import com.servoy.j2db.persistence.Column;
 import com.servoy.j2db.persistence.ITable;
 import com.servoy.j2db.persistence.RepositoryException;
 import com.servoy.j2db.scripting.IJavaScriptType;
-import com.servoy.j2db.util.Debug;
 
 import dev.langchain4j.model.embedding.DimensionAwareEmbeddingModel;
 
 @ServoyDocumented
-public class ServoyEmbeddingStoreBuilder implements IJavaScriptType {
+public class ServoyEmbeddingStoreBuilder implements IJavaScriptType
+{
+
+	private static final Logger log = LoggerFactory.getLogger(ServoyEmbeddingStoreBuilder.class);
 	/**
 	 * The ai provider plugin.
 	 */
@@ -48,7 +52,8 @@ public class ServoyEmbeddingStoreBuilder implements IJavaScriptType {
 	 * @param provider ai provider plugin.
 	 * @param model    embedding model.
 	 */
-	public ServoyEmbeddingStoreBuilder(AIProvider provider, DimensionAwareEmbeddingModel model) {
+	public ServoyEmbeddingStoreBuilder(AIProvider provider, DimensionAwareEmbeddingModel model)
+	{
 		this.provider = provider;
 		this.model = model;
 	}
@@ -61,7 +66,8 @@ public class ServoyEmbeddingStoreBuilder implements IJavaScriptType {
 	 * @return This builder instance.
 	 */
 	@JSFunction
-	public ServoyEmbeddingStoreBuilder recreate(boolean recreate) {
+	public ServoyEmbeddingStoreBuilder recreate(boolean recreate)
+	{
 		this.recreate = recreate;
 		return this;
 	}
@@ -73,7 +79,8 @@ public class ServoyEmbeddingStoreBuilder implements IJavaScriptType {
 	 * @return This builder instance.
 	 */
 	@JSFunction
-	public ServoyEmbeddingStoreBuilder addText(boolean addText) {
+	public ServoyEmbeddingStoreBuilder addText(boolean addText)
+	{
 		this.addText = addText;
 		return this;
 	}
@@ -85,7 +92,8 @@ public class ServoyEmbeddingStoreBuilder implements IJavaScriptType {
 	 * @return This builder instance.
 	 */
 	@JSFunction
-	public ServoyEmbeddingStoreBuilder dataSource(String dataSource) {
+	public ServoyEmbeddingStoreBuilder dataSource(String dataSource)
+	{
 		this.dataSource = dataSource;
 		return this;
 	}
@@ -97,7 +105,8 @@ public class ServoyEmbeddingStoreBuilder implements IJavaScriptType {
 	 * @return A meta data column adder instance.
 	 */
 	@JSFunction
-	public EmbeddingMetaDataColumnAdder metaDataColumn() {
+	public EmbeddingMetaDataColumnAdder metaDataColumn()
+	{
 		return new EmbeddingMetaDataColumnAdder(this);
 	}
 
@@ -109,7 +118,8 @@ public class ServoyEmbeddingStoreBuilder implements IJavaScriptType {
 	 * @return This builder instance.
 	 */
 	@JSFunction
-	public ServoyEmbeddingStoreBuilder metaDataColumn(String name) {
+	public ServoyEmbeddingStoreBuilder metaDataColumn(String name)
+	{
 		new EmbeddingMetaDataColumnAdder(this).name(name).add();
 		return this;
 	}
@@ -121,7 +131,8 @@ public class ServoyEmbeddingStoreBuilder implements IJavaScriptType {
 	 * @return This builder instance.
 	 */
 	@JSFunction
-	public ServoyEmbeddingStoreBuilder tableName(String tableName) {
+	public ServoyEmbeddingStoreBuilder tableName(String tableName)
+	{
 		this.tableName = tableName;
 		return this;
 	}
@@ -134,7 +145,8 @@ public class ServoyEmbeddingStoreBuilder implements IJavaScriptType {
 	 * @return This builder instance.
 	 */
 	@JSFunction
-	public ServoyEmbeddingStoreBuilder serverName(String serverName) {
+	public ServoyEmbeddingStoreBuilder serverName(String serverName)
+	{
 		this.serverName = serverName;
 		return this;
 	}
@@ -150,28 +162,35 @@ public class ServoyEmbeddingStoreBuilder implements IJavaScriptType {
 	 *         fails.
 	 */
 	@JSFunction
-	public EmbeddingStore build() {
-		try {
+	public EmbeddingStore build()
+	{
+		try
+		{
 			deriveOptionsFromExistingTable();
 
 			String localServerName = ensureNotBlank(
-					serverName == null ? getDataSourceServerName(dataSource) : serverName,
-					"either a dataSource or serverName (with metaDataColumns) must be specified");
-			if (dataSource == null) {
+				serverName == null ? getDataSourceServerName(dataSource) : serverName,
+				"either a dataSource or serverName (with metaDataColumns) must be specified");
+			if (dataSource == null)
+			{
 				ensureTrue(metaDataKeys != null,
-						"either a dataSource or serverName (with metaDataColumns) must be specified");
-			} else if (metaDataKeys == null) {
+					"either a dataSource or serverName (with metaDataColumns) must be specified");
+			}
+			else if (metaDataKeys == null)
+			{
 				metaDataKeys = getSourceTableMetaDataKeys(dataSource);
 			}
 
 			String remoteServerName = provider.getDatabaseManager().getSwitchedToServerName(localServerName);
 			ServoyEmbeddingStoreServer servoyEmbeddingStoreServer = provider.getAiPluginService()
-					.servoyEmbeddingStoreFactory().create(remoteServerName, metaDataKeys, tableName, recreate, true,
-							model.dimension(), TRUE.equals(addText));
+				.servoyEmbeddingStoreFactory().create(remoteServerName, metaDataKeys, tableName, recreate, true,
+					model.dimension(), TRUE.equals(addText));
 			return new EmbeddingStore(provider, new ServoyEmbeddingStore(provider,
-					createDBTableDataSource(localServerName, tableName), servoyEmbeddingStoreServer), model);
-		} catch (Exception e) {
-			Debug.error(e);
+				createDBTableDataSource(localServerName, tableName), servoyEmbeddingStoreServer), model);
+		}
+		catch (Exception e)
+		{
+			log.error("Could not build the Servoy embedding store.", e);
 		}
 		return null;
 	}
@@ -182,43 +201,52 @@ public class ServoyEmbeddingStoreBuilder implements IJavaScriptType {
 	 *
 	 * @throws RepositoryException
 	 */
-	private void deriveOptionsFromExistingTable() throws RepositoryException {
-		if (metaDataKeys != null && addText != null) {
+	private void deriveOptionsFromExistingTable() throws RepositoryException
+	{
+		if (metaDataKeys != null && addText != null)
+		{
 			// all options we can derive have already been set
 			return;
 		}
 
-		if (serverName == null) {
+		if (serverName == null)
+		{
 			serverName = getDataSourceServerName(dataSource);
 		}
-		if (serverName != null) {
+		if (serverName != null)
+		{
 			ITable existingTable = provider.getDatabaseManager()
-					.getTable(createDBTableDataSource(serverName, tableName));
-			if (existingTable != null) {
+				.getTable(createDBTableDataSource(serverName, tableName));
+			if (existingTable != null)
+			{
 				List<Column> metaDataColumns = new ArrayList<>();
 				boolean hasText = false;
 				// Derive options from existing table
-				for (Column column : existingTable.getColumns()) {
-					switch (column.getName()) {
-					case EMBEDDING_ID_COLUMN:
-					case EMBEDDING_COLUMN:
-						break;
+				for (Column column : existingTable.getColumns())
+				{
+					switch (column.getName())
+					{
+						case EMBEDDING_ID_COLUMN :
+						case EMBEDDING_COLUMN :
+							break;
 
-					case TEXT_COLUMN:
-						hasText = true;
-						break;
+						case TEXT_COLUMN :
+							hasText = true;
+							break;
 
-					default: // not a fixed column, must be a meta data column
-						metaDataColumns.add(column);
+						default : // not a fixed column, must be a meta data column
+							metaDataColumns.add(column);
 					}
 				}
-				if (metaDataKeys == null) {
+				if (metaDataKeys == null)
+				{
 					// metaDataKeys were not set yet, we use the columns we found in the existing
 					// table
 					metaDataKeys = metaDataColumns.stream().map(column -> new MetaDataKey(column.getSQLName(),
-							column.getColumnType(), column.getFlags(), column.getAllowNull())).toList();
+						column.getColumnType(), column.getFlags(), column.getAllowNull())).toList();
 				}
-				if (addText == null) {
+				if (addText == null)
+				{
 					// addText option was not set yet
 					addText = hasText;
 				}
@@ -226,19 +254,22 @@ public class ServoyEmbeddingStoreBuilder implements IJavaScriptType {
 		}
 	}
 
-	private List<MetaDataKey> getSourceTableMetaDataKeys(String dataSource) throws RepositoryException {
+	private List<MetaDataKey> getSourceTableMetaDataKeys(String dataSource) throws RepositoryException
+	{
 		var sourceTable = ensureNotNull(provider.getDatabaseManager().getTable(dataSource),
-				"Cannot find source table %s", dataSource);
+			"Cannot find source table %s", dataSource);
 		var sourcePkColumns = sourceTable.getRowIdentColumns();
 		ensureTrue(!sourcePkColumns.isEmpty(),
-				"Cannot work without PK column on source table " + sourceTable.getName());
+			"Cannot work without PK column on source table " + sourceTable.getName());
 		return sourcePkColumns.stream().map(sourcePkColumn -> new MetaDataKey(sourcePkColumn.getSQLName(),
-				sourcePkColumn.getColumnType(), sourcePkColumn.getFlags() & ~(PK_COLUMN | USER_ROWID_COLUMN), false))
-				.toList();
+			sourcePkColumn.getColumnType(), sourcePkColumn.getFlags() & ~(PK_COLUMN | USER_ROWID_COLUMN), false))
+			.toList();
 	}
 
-	ServoyEmbeddingStoreBuilder addMetaDataKey(MetaDataKey metaDataKey) {
-		if (metaDataKeys == null) {
+	ServoyEmbeddingStoreBuilder addMetaDataKey(MetaDataKey metaDataKey)
+	{
+		if (metaDataKeys == null)
+		{
 			metaDataKeys = new ArrayList<>();
 		}
 		metaDataKeys.add(metaDataKey);
