@@ -93,29 +93,33 @@ The build produces:
 
 ### Eclipse MCP Server Tools — PREFERRED
 
-This project is developed inside Eclipse. **Always prefer Eclipse MCP server tools over built-in file tools** for all file operations:
+This project is developed inside Eclipse. **Always prefer Eclipse MCP server tools over built-in file tools** for all file operations.
 
-| Operation | Use (Eclipse MCP) | Do NOT use |
+**⚠️ Everything runs through Code Mode.** The Eclipse MCP servers (`eclipse-coder`, `eclipse-ide`, `eclipse-git`, `eclipse-pde`, `eclipse-runner`, `eclipse-context`) and the other MCP tools (`memory`, `time`, `codebase-memory-mcp`) are exposed **only through Code Mode** — there is no direct top-level tool. Call each from inside the **`execute`** tool using bracket notation, e.g. `await tools["eclipse-coder"].replaceString({ ... })` or `await tools["eclipse-ide"].getCompilationErrors({ ... })`. **NEVER** call them as plain tools (`eclipse-coder_replaceString`, `eclipse-ide_getCompilationErrors`, `tools.eclipse_ide...`) — those names do not exist in Code Mode and the call fails with *"No tool named ... is currently available."* When that happens, **do not fall back to the built-in `edit`/`write`** — fix the call by wrapping it in `execute` with the bracket form. If a tool is not shown, find it with `search(...)` inside an `execute` script (synchronous — no `await`). The only tools called directly are the built-in `read`, `grep`, `glob`, and `shell`.
+
+**Every file inside the Eclipse project MUST be edited through `eclipse-coder`**, never the built-in `edit`/`write` (they write behind Eclipse's back and desync the editor, JDT model and undo history). In the table below, each "Use" entry is shorthand for the bracketed Code Mode call, e.g. `tools["eclipse-ide"].readProjectResource(...)`.
+
+| Operation | Use (via `execute`) | Do NOT use |
 |---|---|---|
-| Read files | `eclipse-ide readProjectResource` | built-in `Read` tool |
-| Write/create files | `eclipse-coder createFile` / `replaceFileContent` | built-in `Write` tool |
-| Edit files | `eclipse-coder replaceString` / `applyPatch` / `applyTextEdits` | built-in `Edit` tool |
-| Search text | `eclipse-ide fileSearch` / `fileSearchRegExp` | built-in `grep` |
-| Find files | `eclipse-ide findFiles` | built-in `glob` |
-| Find types | `eclipse-ide searchTypes` | — |
-| Find methods | `eclipse-ide searchMethods` | — |
-| Find references | `eclipse-ide findReferences` | — |
-| Class outline | `eclipse-ide getClassOutline` | — |
-| Read method source | `eclipse-ide getMethodSource` | — |
-| Type hierarchy | `eclipse-ide getTypeHierarchy` | — |
-| Compilation errors | `eclipse-ide getCompilationErrors` | — |
-| Quick fixes | `eclipse-ide executeQuickFix` | — |
-| Organize imports | `eclipse-coder organizeImports` | — |
-| Format code | `eclipse-coder formatFile` | — |
-| Java refactoring | `eclipse-coder refactorRename*` / `refactorMove*` | manual find-replace |
-| Git operations | `eclipse-git git*` | — |
-| Run tests | `eclipse-ide runJUnitTests` | — |
-| Project layout | `eclipse-ide getProjectLayout` | `ls` / `dir` |
+| Read files | `tools["eclipse-ide"].readProjectResource` | built-in `read` tool |
+| Write/create files | `tools["eclipse-coder"].createFile` / `replaceFileContent` | built-in `write` tool |
+| Edit files | `tools["eclipse-coder"].replaceString` / `applyPatch` / `applyTextEdits` | built-in `edit` tool |
+| Search text | `tools["eclipse-ide"].fileSearch` / `fileSearchRegExp` | built-in `grep` |
+| Find files | `tools["eclipse-ide"].findFiles` | built-in `glob` |
+| Find types | `tools["eclipse-ide"].searchTypes` | — |
+| Find methods | `tools["eclipse-ide"].searchMethods` | — |
+| Find references | `tools["eclipse-ide"].findReferences` | — |
+| Class outline | `tools["eclipse-ide"].getClassOutline` | — |
+| Read method source | `tools["eclipse-ide"].getMethodSource` | — |
+| Type hierarchy | `tools["eclipse-ide"].getTypeHierarchy` | — |
+| Compilation errors | `tools["eclipse-ide"].getCompilationErrors` | — |
+| Quick fixes | `tools["eclipse-ide"].executeQuickFix` | — |
+| Organize imports | `tools["eclipse-coder"].organizeImports` | — |
+| Format code | `tools["eclipse-coder"].formatFile` | — |
+| Java refactoring | `tools["eclipse-coder"].refactorRename*` / `refactorMove*` | manual find-replace |
+| Git operations | `tools["eclipse-git"].git*` | — |
+| Run tests | `tools["eclipse-ide"].runJUnitTests` | — |
+| Project layout | `tools["eclipse-ide"].getProjectLayout` | `ls` / `dir` |
 
 ### Exceptions — Bash is fine for:
 
@@ -135,16 +139,16 @@ Use this as the `projectName` parameter for all Eclipse MCP tool calls.
 
 ## After Every Code Change
 
-1. **Check compilation errors**: Run `eclipse-ide getCompilationErrors` after every change to verify the code compiles cleanly.
-2. **Fix errors with quick fixes**: Use `eclipse-ide executeQuickFix` to resolve compilation errors whenever possible — prefer this over manual edits.
-3. **Organize imports**: Run `eclipse-coder organizeImports` on every modified Java file to clean up unused imports and sort them correctly.
+1. **Check compilation errors**: Run `tools["eclipse-ide"].getCompilationErrors` (via `execute`) after every change to verify the code compiles cleanly.
+2. **Fix errors with quick fixes**: Use `tools["eclipse-ide"].executeQuickFix` to resolve compilation errors whenever possible — prefer this over manual edits.
+3. **Organize imports**: Run `tools["eclipse-coder"].organizeImports` on every modified Java file to clean up unused imports and sort them correctly.
 4. **Use Eclipse refactoring tools for renames**: Never manually find-replace to rename fields, methods, classes, or packages. Always use:
-   - `eclipse-coder refactorRenameJavaType` — for class/interface/enum renames
-   - `eclipse-coder refactorRenamePackage` — for package renames
-   - `eclipse-coder refactorMoveJavaType` — for moving types between packages
-   - `eclipse-coder refactorExtractTypeToNewFile` — for extracting nested types
+   - `tools["eclipse-coder"].refactorRenameJavaType` — for class/interface/enum renames
+   - `tools["eclipse-coder"].refactorRenamePackage` — for package renames
+   - `tools["eclipse-coder"].refactorMoveJavaType` — for moving types between packages
+   - `tools["eclipse-coder"].refactorExtractTypeToNewFile` — for extracting nested types
    These tools update all references across the entire workspace automatically.
-5. **Format code**: Run `eclipse-coder formatFile` on modified files to ensure consistent formatting.
+5. **Format code**: Run `tools["eclipse-coder"].formatFile` on modified files to ensure consistent formatting.
 
 ## Code Conventions
 
