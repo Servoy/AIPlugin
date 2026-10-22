@@ -28,6 +28,7 @@
         <rhino.version>1.8.0.s13</rhino.version>
 
         <langchain4j.version>1.19.3</langchain4j.version>
+        <jackson3.version>3.2.4</jackson3.version>
         <pdfbox.version>3.0.8</pdfbox.version>
         <netty.version>4.2.19.Final</netty.version>
     </properties>
@@ -38,6 +39,15 @@
                 <groupId>io.netty</groupId>
                 <artifactId>netty-bom</artifactId>
                 <version>${netty.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <!-- Jackson 3 (tools.jackson.*) comes in transitively via jtoon; pin it here
+                 so we control the micro version (security fixes) instead of jtoon's pin. -->
+            <dependency>
+                <groupId>tools.jackson</groupId>
+                <artifactId>jackson-bom</artifactId>
+                <version>${jackson3.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
