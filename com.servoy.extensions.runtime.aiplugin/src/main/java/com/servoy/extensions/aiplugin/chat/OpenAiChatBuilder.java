@@ -1,11 +1,9 @@
 package com.servoy.extensions.aiplugin.chat;
 
-import java.util.Arrays;
 import java.util.List;
 
 import org.mozilla.javascript.annotations.JSFunction;
 
-import com.openai.models.ReasoningEffort;
 import com.servoy.extensions.aiplugin.ProviderLoader;
 import com.servoy.j2db.documentation.ServoyDocumented;
 import com.servoy.j2db.plugins.IClientPluginAccess;
@@ -96,11 +94,17 @@ public class OpenAiChatBuilder extends BaseChatBuilder<OpenAiChatBuilder> implem
 	}
 
 	/**
-	 * The reasoning effort levels accepted by the OpenAI Responses API, derived from the SDK's
-	 * {@link ReasoningEffort.Known} enum so it tracks SDK changes automatically.
+	 * The reasoning effort levels accepted by the OpenAI Responses API.
+	 *
+	 * <p>
+	 * Kept as a plain literal list on purpose: this class is loaded by the Servoy documentation
+	 * loader ({@code ScriptObjectRegistry.getScriptObjectForClass}) even when the OpenAI provider
+	 * JARs are not installed. Referencing an OpenAI SDK type (such as {@code ReasoningEffort.Known})
+	 * here would run during class initialization and fail with a {@link NoClassDefFoundError} before
+	 * {@link #build()} gets a chance to report the missing provider cleanly via {@link ProviderLoader}.
+	 * </p>
 	 */
-	private static final List<String> VALID_REASONING_EFFORTS = Arrays.stream(ReasoningEffort.Known.values())
-		.map(known -> known.name().toLowerCase()).toList();
+	public static final List<String> VALID_REASONING_EFFORTS = List.of("none", "minimal", "low", "medium", "high", "xhigh");
 
 	/**
 	 * Sets the reasoning effort level for reasoning models. Must be one of the values accepted by

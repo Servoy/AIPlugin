@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -14,6 +16,7 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.openai.models.ReasoningEffort;
 import com.servoy.j2db.plugins.IClientPluginAccess;
 
 import com.servoy.extensions.aiplugin.chat.openai.OpenAiFilesResponsesStreamingChatModel;
@@ -322,6 +325,31 @@ class OpenAiChatBuilderTest
 				assertNotNull(client);
 				mocked.verify(OpenAiStreamingChatModel::builder);
 			}
+		}
+	}
+
+	@Nested
+	@DisplayName("reasoningEffort validation list")
+	class ReasoningEffortValidationList
+	{
+		/**
+		 * The valid reasoning efforts are kept as a plain literal list in OpenAiChatBuilder on purpose: that class is
+		 * loaded by the Servoy documentation loader even when the OpenAI provider JARs are absent, so it must not touch
+		 * an OpenAI SDK type during class initialization. This guard test lives in the test module (where the OpenAI SDK
+		 * is on the classpath) and fails if the SDK's ReasoningEffort.Known enum drifts away from the literal list, so
+		 * the hard-coded values stay in sync without reintroducing the runtime dependency.
+		 */
+		@Test
+		@DisplayName("matches the OpenAI SDK's ReasoningEffort.Known enum")
+		void matchesSdkEnum()
+		{
+			List<String> expectedFromSdk = Arrays.stream(ReasoningEffort.Known.values())
+				.map(known -> known.name().toLowerCase()).sorted().toList();
+			List<String> literal = OpenAiChatBuilder.VALID_REASONING_EFFORTS.stream().sorted().toList();
+
+			assertEquals(expectedFromSdk, literal,
+				"OpenAiChatBuilder.VALID_REASONING_EFFORTS is out of sync with the OpenAI SDK's ReasoningEffort.Known enum. " +
+					"Update the literal list in OpenAiChatBuilder to match (keep it a literal; do not reference the SDK type there).");
 		}
 	}
 
